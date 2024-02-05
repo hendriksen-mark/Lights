@@ -1,1 +1,5 @@
 *.elf
+ESP32/ESP32_C3_Dimmable_i2c/ESP32_C3_Dimmable_i2c.ino.esp32.bin
+.vscode/arduino.json
+ESP32/.DS_Store
+ESP32/ESP32_C3_Dimmable_i2c/.DS_Store
