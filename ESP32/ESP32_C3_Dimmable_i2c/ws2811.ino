@@ -28,19 +28,8 @@ uint8_t lightsCount = 9;
 uint16_t pixelCount = 9;
 uint8_t transitionLeds = 0; // pixelCount must be divisible by this value
 
-#ifdef ethernet
-WebServer server_ws(81);
-//EthernetWebServer server_ws(80);
-//EthernetUDP Udp;
-WiFiUDP Udp;
-#endif
-
-#ifdef wifi
 WebServer server_ws(81);
 WiFiUDP Udp;
-HTTPUpdateServer httpUpdateServer;
-WiFiManager wm;
-#endif
 
 NeoPixelBus<NeoRgbFeature, NeoEsp32Rmt1Ws2812xMethod>* strip = NULL;
 
@@ -433,7 +422,7 @@ void lightEngine() {  // core function executed in loop()
 }
 
 void saveState() { // save the lights state on LittleFS partition in JSON format
-  LOG_DEBUG(F("save state"));
+  LOG_DEBUG("save state");
   DynamicJsonDocument json(1024);
   for (uint8_t i = 0; i < lightsCount; i++) {
     JsonObject light = json.createNestedObject((String)i);
@@ -455,7 +444,7 @@ void saveState() { // save the lights state on LittleFS partition in JSON format
 }
 
 void restoreState() { // restore the lights state from LittleFS partition
-  LOG_DEBUG(F("restore state"));
+  LOG_DEBUG("restore state");
   File stateFile = LittleFS.open("/state.json", "r");
   if (!stateFile) {
     saveState();
@@ -466,7 +455,7 @@ void restoreState() { // restore the lights state from LittleFS partition
   DeserializationError error = deserializeJson(json, stateFile.readString());
   if (error) {
     //Serial.println("Failed to parse config file");
-    LOG_DEBUG(F("Failed to parse config file"));
+    LOG_DEBUG("Failed to parse config file");
     return;
   }
   for (JsonPair state : json.as<JsonObject>()) {
@@ -516,7 +505,7 @@ bool saveConfig() { // save config in LittleFS partition in JSON file
   json["bpct"] = rgb_multiplier[2];
   File configFile = LittleFS.open("/config.json", "w");
   if (!configFile) {
-    LOG_DEBUG(F("Failed to open config file for writing"));
+    LOG_DEBUG("Failed to open config file for writing");
     //Serial.println("Failed to open config file for writing");
     return false;
   }
@@ -526,23 +515,23 @@ bool saveConfig() { // save config in LittleFS partition in JSON file
 }
 
 bool loadConfig() { // load the configuration from LittleFS partition
-  LOG_DEBUG(F("loadConfig file"));
+  LOG_DEBUG("loadConfig file");
   File configFile = LittleFS.open("/config.json", "r");
   if (!configFile) {
-    LOG_DEBUG(F("Create new file with default values"));
+    LOG_DEBUG("Create new file with default values");
     //Serial.println("Create new file with default values");
     return saveConfig();
   }
 
   size_t size = configFile.size();
   if (size > 1024) {
-    LOG_DEBUG(F("Config file size is too large"));
+    LOG_DEBUG("Config file size is too large");
     //Serial.println("Config file size is too large");
     return false;
   }
 
   if (configFile.size() > 1024) {
-    LOG_DEBUG(F("Config file size is too large"));
+    LOG_DEBUG("Config file size is too large");
     //Serial.println("Config file size is too large");
     return false;
   }
@@ -551,7 +540,7 @@ bool loadConfig() { // load the configuration from LittleFS partition
   DeserializationError error = deserializeJson(json, configFile.readString());
   if (error) {
     //Serial.println("Failed to parse config file");
-    LOG_DEBUG(F("Failed to parse config file"));
+    LOG_DEBUG("Failed to parse config file");
     return false;
   }
 
@@ -586,22 +575,22 @@ void ChangeNeoPixels(uint16_t newCount) // this set the number of leds of the st
 }
 
 void ws_setup() {
-  LOG_DEBUG(F("Setup WS2811"));
+  LOG_DEBUG("Setup WS2811");
   //pinMode(POWER_MOSFET_PIN, OUTPUT);
   blinkLed(2);
   //digitalWrite(POWER_MOSFET_PIN, HIGH); mosftetState = true; // reuired if HIGH logic power the strip, otherwise must be commented.
 
-  if (!LittleFS.begin()) {
-    LOG_DEBUG(F("Failed to mount file system"));
+  /*if (!LittleFS.begin()) {
+    LOG_DEBUG("Failed to mount file system");
     //Serial.println("Failed to mount file system");
     LittleFS.format();
-  }
+  }*/
 
   if (!loadConfig()) {
-    LOG_DEBUG(F("Failed to load config"));
+    LOG_DEBUG("Failed to load config");
     //Serial.println("Failed to load config");
   } else {
-    LOG_DEBUG(F("Config loaded"));
+    LOG_DEBUG("Config loaded");
     //Serial.println("Config loaded");
   }
 
@@ -914,14 +903,4 @@ void ws_loop() {
     }
   }
   entertainment(); // process entertainment data on UDP server
-
-  // blink the led if signal is lost
-#ifdef wifi
-  if (millis() >=  lastWiFiCheck + 10000)  {
-    if (WiFi.status() != WL_CONNECTED) {
-      blinkLed(5);
-    }
-    lastWiFiCheck = millis();
-  }
-#endif
 }

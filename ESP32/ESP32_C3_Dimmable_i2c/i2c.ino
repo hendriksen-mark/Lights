@@ -20,17 +20,7 @@ float step_level_i2c[LIGHTS_COUNT_i2c], current_bri_i2c[LIGHTS_COUNT_i2c];
 
 byte hb, lb;
 
-#ifdef ethernet
 WebServer server_i2c(80);
-//EthernetWebServer server_i2c(80);
-//EthernetUDP Udp;
-#endif
-
-#ifdef wifi
-WebServer server_i2c(80);
-HTTPUpdateServer httpUpdateServer;
-WiFiManager wm;
-#endif
 
 void handleNotFound_i2c() {
   String message = "File Not Found\n\n";
@@ -59,14 +49,14 @@ void apply_scene_i2c(uint8_t new_scene,  uint8_t light) {
 }
 
 void process_lightdata_i2c(uint8_t light) {
-  Wire.begin();
+  //Wire.begin();
   Wire.beginTransmission(lightadress_i2c[light]);
   Wire.write(bri_i2c[light]);
   Wire.write(light_state_i2c[light]);
   Wire.write(highByte(transitiontime_i2c));
   Wire.write(lowByte(transitiontime_i2c));
   error_code = Wire.endTransmission(true);
-  Wire.end();
+  //Wire.end();
 
   if (error_code) {
     debug_light = light;
@@ -77,16 +67,16 @@ void process_lightdata_i2c(uint8_t light) {
       debug_code = 0x7F;
     }
   }
-  LOG_DEBUG(F("Light:"), light);
-  LOG_DEBUG(F("bri:"), bri_i2c[light]);
-  LOG_DEBUG(F("state:"), light_state_i2c[light]);
-  LOG_DEBUG(F("transitiontime:"), transitiontime_i2c);
-  if (error_code == 0) LOG_DEBUG(F("wire code:"), F("success"));
-  if (error_code == 1) LOG_DEBUG(F("wire code:"), F("data too long to fit in transmit buffer"));
-  if (error_code == 2) LOG_DEBUG(F("wire code:"), F("received NO ACK on transmit of address"));
-  if (error_code == 3) LOG_DEBUG(F("wire code:"), F("received NO ACK on transmit of data"));
-  if (error_code == 4) LOG_DEBUG(F("wire code:"), F("other error"));
-  if (error_code == 5) LOG_DEBUG(F("wire code:"), F("timeout"));
+  LOG_DEBUG("Light:", light);
+  LOG_DEBUG("bri:", bri_i2c[light]);
+  LOG_DEBUG("state:", light_state_i2c[light]);
+  LOG_DEBUG("transitiontime:", transitiontime_i2c);
+  if (error_code == 0) LOG_DEBUG("wire code:", "success");
+  if (error_code == 1) LOG_DEBUG("wire code:", "data too long to fit in transmit buffer");
+  if (error_code == 2) LOG_DEBUG("wire code:", "received NO ACK on transmit of address");
+  if (error_code == 3) LOG_DEBUG("wire code:", "received NO ACK on transmit of data");
+  if (error_code == 4) LOG_DEBUG("wire code:", "other error");
+  if (error_code == 5) LOG_DEBUG("wire code:", "timeout");
 }
 
 void lightEngine_i2c() {
@@ -106,11 +96,11 @@ void lightEngine_i2c() {
 }
 
 void request_lightdata(uint8_t light) {
-  Wire.begin();
+  //Wire.begin();
   light_rec = Wire.requestFrom(lightadress_i2c[light], 2, true);
   byte buff[2];
   Wire.readBytes(buff, 2);
-  Wire.end();
+  //Wire.end();
   if (light_rec > 0) {
     bri_i2c[light] = buff[0];
     light_state_i2c[light] = buff[1];
@@ -123,22 +113,23 @@ void request_lightdata(uint8_t light) {
       debug_code = 0x7F;
     }
 
-    LOG_DEBUG(F("Light:"), light);
-    LOG_DEBUG(F("bri:"), bri_i2c[light]);
-    LOG_DEBUG(F("state:"), light_state_i2c[light]);
+    LOG_DEBUG("Light:", light);
+    LOG_DEBUG("bri:", bri_i2c[light]);
+    LOG_DEBUG("state:", light_state_i2c[light]);
   } else {
     rec = 0;
     debug_light = light;
-    LOG_ERROR(F("Light:"), light, F("no response"));
+    LOG_ERROR("Light:", light, "no response");
   }
 }
 
 void i2c_setup() {
-  LOG_DEBUG(F("Setup I2C"));
+  Wire.begin();
+  LOG_DEBUG("Setup I2C");
 
-  /*for (int i = 0; i < LIGHTS_COUNT_i2c; i++) {
+  for (int i = 0; i < LIGHTS_COUNT_i2c; i++) {
     request_lightdata(i);
-    }*/
+  }
 
   server_i2c.on("/state", HTTP_PUT, []() { // HTTP PUT request used to set a new light state
     DynamicJsonDocument root(1024);
@@ -184,7 +175,7 @@ void i2c_setup() {
       }
       String output;
       serializeJson(root, output);
-      LOG_DEBUG(F("/state put"), output);
+      LOG_DEBUG("/state put", output);
       server_i2c.send(200, "text/plain", output);
     }
   });
@@ -196,8 +187,8 @@ void i2c_setup() {
     root["bri"] = bri_i2c[light];
     String output;
     serializeJson(root, output);
-    LOG_DEBUG(F("/state get"), output);
-    LOG_DEBUG(F("light :"), light);
+    LOG_DEBUG("/state get", output);
+    LOG_DEBUG("light :", light);
     server_i2c.send(200, "text/plain", output);
   });
 
@@ -351,12 +342,12 @@ void i2c_loop() {
   server_i2c.handleClient();
   lightEngine_i2c();
 
-  /*unsigned long currentMillis = millis();
+  unsigned long currentMillis = millis();
 
-    if (currentMillis - previousMillis >= LIGHT_interval) {
+  if (currentMillis - previousMillis >= LIGHT_interval) {
     previousMillis = currentMillis;
-    for (int i = 0; i < LIGHTS_COUNT; i++) {
+    for (int i = 0; i < LIGHTS_COUNT_i2c; i++) {
       request_lightdata(i);
     }
-    }*/
+  }
 }
