@@ -43,7 +43,7 @@ jobs:
                 - name: WiFiManager
                 - name: NeoPixelBus
               platforms: |
-                - source-path: "https://github.com/esp8266/Arduino.git"
+                - source-url: "https://github.com/esp8266/Arduino.git"
                   name: "esp8266:esp8266"
               sketch-paths: |
                 - ESP8266
