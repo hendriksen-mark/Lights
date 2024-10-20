@@ -37,7 +37,7 @@ jobs:
       - name: Compile Arduino Sketches
         uses: arduino/compile-sketches@v1
         with:
-              fqbn: 'esp8266:esp8266'
+              fqbn: 'esp8266:esp8266:generic'
               libraries: |
                 - source-url: "https://github.com/bblanchon/ArduinoJson.git"
                   name: ArduinoJson
