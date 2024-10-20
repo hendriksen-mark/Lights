@@ -39,9 +39,13 @@ jobs:
         with:
               fqbn: 'esp8266:esp8266'
               libraries: |
-                - name: ArduinoJson
-                - name: WiFiManager
-                - name: NeoPixelBus
+                - source-url: "https://github.com/bblanchon/ArduinoJson.git"
+                  name: ArduinoJson
+                  version: "6.21.5"
+                - source-url: "https://github.com/tzapu/WiFiManager.git"
+                  name: WiFiManager
+                - source-url: "https://github.com/Makuna/NeoPixelBus.git"
+                  name: NeoPixelBus
               platforms: |
                 - source-url: "https://github.com/esp8266/Arduino.git"
                   name: "esp8266:esp8266"
