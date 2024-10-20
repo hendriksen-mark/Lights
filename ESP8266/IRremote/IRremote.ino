@@ -17,7 +17,7 @@ IPAddress address ( 192,  168,   0,  95); // choose an unique IP Adress
 IPAddress gateway ( 192,  168,   0,   1); // Router IP
 IPAddress submask(255, 255, 255,   0);
 
-const uint16_t kIrLed = D2;  // ESP8266 GPIO pin to use. Recommended: 4 (D2).
+const uint16_t kIrLed = 4;  // ESP8266 GPIO pin to use. Recommended: 4 (D2).
 IRCoolixAC ac(kIrLed);  // Set the GPIO to be used to sending the message
 
 #define minDelay 1000 // millis
