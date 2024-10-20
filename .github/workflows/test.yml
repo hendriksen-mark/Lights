@@ -41,7 +41,7 @@ jobs:
               libraries: |
                 - source-url: "https://github.com/bblanchon/ArduinoJson.git"
                   name: ArduinoJson
-                  version: "6.21.5"
+                  version: "v6.21.5"
                 - source-url: "https://github.com/tzapu/WiFiManager.git"
                   name: WiFiManager
                 - source-url: "https://github.com/Makuna/NeoPixelBus.git"
