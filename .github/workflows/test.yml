@@ -47,6 +47,12 @@ jobs:
                   name: WiFiManager
                 - source-url: "https://github.com/Makuna/NeoPixelBus.git"
                   name: NeoPixelBus
+                - source-url: "https://github.com/sui77/rc-switch.git"
+                  name: rc-switch
+                - source-url: "https://github.com/crankyoldgit/IRremoteESP8266.git"
+                  name: IRremoteESP8266
+                - source-url: "https://github.com/FastLED/FastLED.git"
+                  name: FastLED
               #platforms: |
               #  - source-url: "https://github.com/esp8266/Arduino.git"
               #    name: "esp8266:esp8266"
