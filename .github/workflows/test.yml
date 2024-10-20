@@ -15,29 +15,30 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
+    name: ${{ matrix.board.fqbn }}
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
+    strategy:
+      matrix:
+        board:
+          - fqbn: "esp8266:esp8266:generic"
+            platform-name: esp8266:esp8266
+        include:
+          - board:
+              platform-name: esp8266:esp8266
+            platforms: |
+              # Install ESP8266 platform via Boards Manager
+              - name: esp8266:esp8266
+                source-url: https://arduino.esp8266.com/stable/package_esp8266com_index.json
+                version: 3.1.1
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
-
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
-
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
-        run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+      - uses: actions/checkout@v4
       - name: Compile Arduino Sketches
         uses: arduino/compile-sketches@v1
         with:
-              fqbn: 'esp8266:esp8266:generic'
+              platforms: ${{ matrix.platforms }}
+              fqbn: ${{ matrix.board.fqbn }}
               libraries: |
                 - source-url: "https://github.com/bblanchon/ArduinoJson.git"
                   name: ArduinoJson
@@ -46,8 +47,8 @@ jobs:
                   name: WiFiManager
                 - source-url: "https://github.com/Makuna/NeoPixelBus.git"
                   name: NeoPixelBus
-              platforms: |
-                - source-url: "https://github.com/esp8266/Arduino.git"
-                  name: "esp8266:esp8266"
+              #platforms: |
+              #  - source-url: "https://github.com/esp8266/Arduino.git"
+              #    name: "esp8266:esp8266"
               sketch-paths: |
                 - ESP8266
