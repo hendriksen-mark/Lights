@@ -5,17 +5,16 @@
 
 //define pins
 #define LIGHTS_COUNT_i2c 7
-//                    kamer    woonkamer      keuken    slaapkamer      gang    badkamer
-//                    nummer   1    2   3     4         5               6       7
-//                    array    0    1   2     3         4               5       6
+//                            kamer    woonkamer      keuken    slaapkamer      gang    badkamer
+//                            nummer   1    2   3     4         5               6       7
+//                            array    0    1   2     3         4               5       6
 int lightadress_i2c[LIGHTS_COUNT_i2c] {9,   10, 11,   12,       13,             14,     15};
 
 unsigned long previousMillis = 0;
 #define LIGHT_interval 60000
 
-
-bool light_state_i2c[LIGHTS_COUNT_i2c], in_transition_i2c;
-int transitiontime_i2c, bri_i2c[LIGHTS_COUNT_i2c], error_code;
+bool light_state_i2c[LIGHTS_COUNT_i2c], in_transition_i2c, alert = false;
+int transitiontime_i2c, bri_i2c[LIGHTS_COUNT_i2c], error_code, debug_light, light_rec, rec, debug_code;
 float step_level_i2c[LIGHTS_COUNT_i2c], current_bri_i2c[LIGHTS_COUNT_i2c];
 
 byte hb, lb;
@@ -48,15 +47,44 @@ void apply_scene_i2c(uint8_t new_scene,  uint8_t light) {
   }
 }
 
+void send_alert(uint8_t light) {
+  bool prev_light_state_i2c = light_state_i2c[light];
+  int prev_bri_i2c = bri_i2c[light];
+  int prev_transitiontime_i2c = transitiontime_i2c;
+
+  light_state_i2c[light] = false;
+  transitiontime_i2c = 1;
+  bri_i2c[light] = 255;
+
+  process_lightdata_i2c(light);
+
+  delay(10);
+
+  light_state_i2c[light] = true;
+
+  process_lightdata_i2c(light);
+  delay(10);
+
+  light_state_i2c[light] = false;
+
+  process_lightdata_i2c(light);
+  delay(10);
+
+  light_state_i2c[light] = prev_light_state_i2c;
+  bri_i2c[light] = prev_bri_i2c;
+  transitiontime_i2c = prev_transitiontime_i2c;
+
+  process_lightdata_i2c(light);
+
+}
+
 void process_lightdata_i2c(uint8_t light) {
-  //Wire.begin();
   Wire.beginTransmission(lightadress_i2c[light]);
   Wire.write(bri_i2c[light]);
   Wire.write(light_state_i2c[light]);
   Wire.write(highByte(transitiontime_i2c));
   Wire.write(lowByte(transitiontime_i2c));
   error_code = Wire.endTransmission(true);
-  //Wire.end();
 
   if (error_code) {
     debug_light = light;
@@ -96,15 +124,13 @@ void lightEngine_i2c() {
 }
 
 void request_lightdata(uint8_t light) {
-  //Wire.begin();
-  light_rec = Wire.requestFrom(lightadress_i2c[light], 2, true);
+  light_rec = Wire.requestFrom(lightadress_i2c[light], 2, 1);
   byte buff[2];
   Wire.readBytes(buff, 2);
-  //Wire.end();
   if (light_rec > 0) {
     bri_i2c[light] = buff[0];
     light_state_i2c[light] = buff[1];
-    current_bri_i2c[light] = bri_i2c[light];
+    //current_bri_i2c[light] = bri_i2c[light];
 
     rec = light_rec;
 
@@ -166,6 +192,10 @@ void i2c_setup() {
           bri_i2c[light] += (int) values["bri_inc"];
           if (bri_i2c[light] > 255) bri_i2c[light] = 255;
           else if (bri_i2c[light] < 1) bri_i2c[light] = 1;
+        }
+
+        if (values.containsKey("alert") && values["alert"] == "select") {
+          send_alert(light);
         }
 
         if (values.containsKey("transitiontime")) {
@@ -246,11 +276,7 @@ void i2c_setup() {
         }
         EEPROM.commit();
       } else if (server_i2c.hasArg("alert")) {
-        if (light_state_i2c[light]) {
-          current_bri_i2c[light] = 0;
-        } else {
-          current_bri_i2c[light] = 255;
-        }
+        send_alert(light);
       }
       if (light_state_i2c[light]) {
         step_level_i2c[light] = ((float)bri_i2c[light] - current_bri_i2c[light]) / transitiontime_i2c;
@@ -341,6 +367,7 @@ void i2c_setup() {
 void i2c_loop() {
   server_i2c.handleClient();
   lightEngine_i2c();
+  //i2c_http_loop();
 
   unsigned long currentMillis = millis();
 

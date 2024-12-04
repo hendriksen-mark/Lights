@@ -1,18 +1,18 @@
 WiFiClient client;
 
 //const char* bridgeIp = "192.168.1.25";
-IPAddress bridgeIp(192, 168, 1, 25);
+//IPAddress bridgeIp(192, 168, 1, 25);
 //const char* switchType = "ZLLSwitch";
 #define switchType "ZLLSwitch"
 #define motionType "ZLLPresence"
 
-String sendHttpRequest(int button, String mac) {
+String sendHttpRequest(int button, String mac, IPAddress bridgeIp) {
   String msg = "";
   int val = true;
 
   while (val) {
     if (!client.connect(bridgeIp, 80)) {
-      LOG_ERROR("Connection failed");
+      //LOG_ERROR("Connection failed");
       return "Connection failed";
     }
     LOG_INFO("Connected!");
@@ -64,7 +64,7 @@ String sendHttpRequest(int button, String mac) {
 
 
     if (client.println() == 0) {
-      LOG_ERROR("Failed to send request");
+      //LOG_ERROR("Failed to send request");
       client.stop();
       return "Failed to send request";
     }
@@ -73,7 +73,7 @@ String sendHttpRequest(int button, String mac) {
     char status[32] = {0};
     client.readBytesUntil('\r', status, sizeof(status));
     if (strcmp(status, "HTTP/1.1 200 OK") != 0) {
-      LOG_ERROR("Unexpected response:", status);
+      //LOG_ERROR("Unexpected response:", status);
       client.stop();
       return "Unexpected response: ";
     }
@@ -81,7 +81,7 @@ String sendHttpRequest(int button, String mac) {
     // Skip HTTP headers
     char endOfHeaders[] = "\r\n\r\n";
     if (!client.find(endOfHeaders)) {
-      LOG_ERROR("Invalid response");
+      //LOG_ERROR("Invalid response");
       client.stop();
       return "Invalid response";
     }
@@ -94,7 +94,7 @@ String sendHttpRequest(int button, String mac) {
     // Parse JSON object
     DeserializationError error = deserializeJson(doc, client);
     if (error) {
-      LOG_ERROR("deserializeJson() failed:", error.f_str());
+      //LOG_ERROR("deserializeJson() failed:", error.f_str());
       client.stop();
       return "deserializeJson() failed: ";
     }

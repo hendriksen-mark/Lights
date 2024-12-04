@@ -18,7 +18,7 @@ unsigned long lastEPMillis, lastWiFiCheck;
 
 //settings
 char lightName[LIGHT_NAME_MAX_LENGTH] = "Hue WS2811 strip";
-uint8_t scene, startup, onPin = 8, offPin = 9 ;
+uint8_t effect, scene, startup, onPin = 8, offPin = 9 ;
 bool hwSwitch = false;
 uint8_t rgb_multiplier[] = {100, 100, 100}; // light multiplier in percentage /R, G, B/
 
@@ -247,6 +247,28 @@ RgbColor blending(float left[3], float right[3], uint8_t pixel) { // return RgbC
   return RgbColor((uint8_t)result[0], (uint8_t)result[1], (uint8_t)result[2]);
 }
 
+void candleEffect() {
+  for (uint8_t light = 0; light < lightsCount; light++) {
+    lights[light].colors[0] = random(170, 254);
+    lights[light].colors[1] = random(37, 62);
+    lights[light].colors[2] = 0;
+    for (uint8_t i = 0; i < 3; i++) {
+      lights[light].stepLevel[i] = ((float)lights[light].colors[i] - lights[light].currentColors[i]) / random(5, 15);
+    }
+  }
+}
+
+void firePlaceEffect() {
+    for (uint8_t light = 0; light < lightsCount; light++) {
+    lights[light].colors[0] = random(100, 254);
+    lights[light].colors[1] = random(10, 35);
+    lights[light].colors[2] = 0;
+    for (uint8_t i = 0; i < 3; i++) {
+      lights[light].stepLevel[i] = ((float)lights[light].colors[i] - lights[light].currentColors[i]) / random(5, 15);
+    }
+  }
+}
+
 RgbColor convFloat(float color[3]) { // return RgbColor from float
   return RgbColor((uint8_t)color[0], (uint8_t)color[1], (uint8_t)color[2]);
 }
@@ -376,45 +398,52 @@ void lightEngine() {  // core function executed in loop()
   if (inTransition) { // wait 6ms for a nice transition effect
     delay(6);
     inTransition = false; // set inTransition bash to false (will be set bach to true on next level execution if desired state is not reached)
-  } else if (hwSwitch == true) { // if you want to use some GPIO's for on/off and brightness controll
-    if (digitalRead(onPin) == LOW) { // on button pressed
-      int i = 0;
-      while (digitalRead(onPin) == LOW && i < 30) { // count how log is the button pressed
-        delay(20);
-        i++;
-      }
-      for (int light = 0; light < lightsCount; light++) {
-        if (i < 30) { // there was a short press
-          lights[light].lightState = true;
+  } else {
+    if (effect == 1) { // candle effect
+        candleEffect();
+      } else if (effect == 2) { // fireplace effect
+        firePlaceEffect();
+    }
+    if (hwSwitch == true) { // if you want to use some GPIO's for on/off and brightness controll
+      if (digitalRead(onPin) == LOW) { // on button pressed
+        int i = 0;
+        while (digitalRead(onPin) == LOW && i < 30) { // count how log is the button pressed
+          delay(20);
+          i++;
         }
-        else { // there was a long press
-          if (lights[light].bri < 198) {
-            lights[light].bri += 56;
-          } else {
-            lights[light].bri = 254;
+        for (int light = 0; light < lightsCount; light++) {
+          if (i < 30) { // there was a short press
+            lights[light].lightState = true;
           }
-          processLightdata(light);
-        }
-      }
-    } else if (digitalRead(offPin) == LOW) { // off button pressed
-      int i = 0;
-      while (digitalRead(offPin) == LOW && i < 30) {
-        delay(20);
-        i++;
-      }
-      for (int light = 0; light < lightsCount; light++) {
-        if (i < 30) {
-          // there was a short press
-          lights[light].lightState = false;
-        }
-        else {
-          // there was a long press
-          if (lights[light].bri > 57) {
-            lights[light].bri -= 56;
-          } else {
-            lights[light].bri = 1;
+          else { // there was a long press
+            if (lights[light].bri < 198) {
+              lights[light].bri += 56;
+            } else {
+              lights[light].bri = 254;
+            }
+            processLightdata(light);
           }
-          processLightdata(light);
+        }
+      } else if (digitalRead(offPin) == LOW) { // off button pressed
+        int i = 0;
+        while (digitalRead(offPin) == LOW && i < 30) {
+          delay(20);
+          i++;
+        }
+        for (int light = 0; light < lightsCount; light++) {
+          if (i < 30) {
+            // there was a short press
+            lights[light].lightState = false;
+          }
+          else {
+            // there was a long press
+            if (lights[light].bri > 57) {
+              lights[light].bri -= 56;
+            } else {
+              lights[light].bri = 1;
+            }
+            processLightdata(light);
+          }
         }
       }
     }
@@ -454,7 +483,6 @@ void restoreState() { // restore the lights state from LittleFS partition
   DynamicJsonDocument json(1024);
   DeserializationError error = deserializeJson(json, stateFile.readString());
   if (error) {
-    //Serial.println("Failed to parse config file");
     LOG_DEBUG("Failed to parse config file");
     return;
   }
@@ -506,7 +534,6 @@ bool saveConfig() { // save config in LittleFS partition in JSON file
   File configFile = LittleFS.open("/config.json", "w");
   if (!configFile) {
     LOG_DEBUG("Failed to open config file for writing");
-    //Serial.println("Failed to open config file for writing");
     return false;
   }
 
@@ -519,27 +546,18 @@ bool loadConfig() { // load the configuration from LittleFS partition
   File configFile = LittleFS.open("/config.json", "r");
   if (!configFile) {
     LOG_DEBUG("Create new file with default values");
-    //Serial.println("Create new file with default values");
     return saveConfig();
   }
 
   size_t size = configFile.size();
   if (size > 1024) {
     LOG_DEBUG("Config file size is too large");
-    //Serial.println("Config file size is too large");
-    return false;
-  }
-
-  if (configFile.size() > 1024) {
-    LOG_DEBUG("Config file size is too large");
-    //Serial.println("Config file size is too large");
     return false;
   }
 
   DynamicJsonDocument json(1024);
   DeserializationError error = deserializeJson(json, configFile.readString());
   if (error) {
-    //Serial.println("Failed to parse config file");
     LOG_DEBUG("Failed to parse config file");
     return false;
   }
@@ -584,14 +602,12 @@ void ws_setup() {
     LOG_DEBUG("Failed to mount file system");
     //Serial.println("Failed to mount file system");
     LittleFS.format();
-  }*/
+    }*/
 
   if (!loadConfig()) {
     LOG_DEBUG("Failed to load config");
-    //Serial.println("Failed to load config");
   } else {
     LOG_DEBUG("Config loaded");
-    //Serial.println("Config loaded");
   }
 
   dividedLightsArray[lightsCount];
@@ -638,6 +654,16 @@ void ws_setup() {
         int light = atoi(key) - 1;
         JsonObject values = state.value();
         int transitiontime = 4;
+
+        if (values.containsKey("effect")) {
+          if (values["effect"] == "no_effect") {
+            effect = 0;
+          } else if (values["effect"] == "candle") {
+            effect = 1;
+          } else if (values["effect"] == "fire") {
+            effect = 2;
+          }
+        }
 
         if (values.containsKey("xy")) {
           lights[light].x = values["xy"][0];

@@ -20,8 +20,6 @@ RgbColor black = RgbColor(0);
 
 #define INFO_DATA_PIN 12
 
-int debug_light, light_rec, rec, debug_code;
-
 byte mac[] = { 0xDA, 0xAD, 0xEB, 0xFF, 0xEF, 0xDE };
 
 NeoPixelBus<NeoRgbFeature, NeoEsp32Rmt0Ws2812xMethod>* strip_info = NULL;
@@ -68,7 +66,7 @@ void setup() {
     LOG_DEBUG("Failed to mount file system");
     //Serial.println("Failed to mount file system");
     LittleFS.format();
-  }else{
+  } else {
     //LOG_ATTACH_FS_AUTO(LittleFS, "/log.txt", FILE_WRITE);
   }
   LOG_DEBUG("Start ESP32");
@@ -84,14 +82,13 @@ void setup() {
 
   infoLight(white); // play white anymation
   while (!ESP32_W5500_isConnected()) { // connection to wifi still not ready
-    LOG_DEBUG("W5500_isConnected: ", ESP32_W5500_isConnected());
+    LOG_DEBUG("W5500_isConnected:", ESP32_W5500_isConnected());
     infoLight(red); // play red animation
     delay(500);
   }
   // Show that we are connected
-  LOG_DEBUG("W5500_isConnected: ", ESP32_W5500_isConnected());
+  LOG_DEBUG("W5500_isConnected:", ESP32_W5500_isConnected(), "IP Address:", ETH.localIP());
   infoLight(green); // connected, play green animation
-
 
   i2c_setup();
   ws_setup();
