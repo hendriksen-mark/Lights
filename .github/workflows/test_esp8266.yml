@@ -1,0 +1,61 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Arduino Build
+
+# Controls when the action will run. 
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [ master ]
+    paths:
+      - "ESP8266/**"
+  pull_request:
+    branches: [ master ]
+    paths:
+      - "ESP8266/**"
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  build:
+    name: ${{ matrix.board.fqbn }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        board:
+          - fqbn: "esp8266:esp8266:generic"
+            platform-name: esp8266:esp8266
+        include:
+          - board:
+              platform-name: esp8266:esp8266
+            platforms: |
+              # Install ESP8266 platform via Boards Manager
+              - name: esp8266:esp8266
+                source-url: https://arduino.esp8266.com/stable/package_esp8266com_index.json
+                version: 3.1.1
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v4
+      - name: Compile Arduino Sketches
+        uses: arduino/compile-sketches@v1
+        with:
+              platforms: ${{ matrix.platforms }}
+              fqbn: ${{ matrix.board.fqbn }}
+              libraries: |
+                - source-url: "https://github.com/bblanchon/ArduinoJson.git"
+                  name: ArduinoJson
+                  version: "v6.21.5"
+                - source-url: "https://github.com/tzapu/WiFiManager.git"
+                  name: WiFiManager
+                - source-url: "https://github.com/Makuna/NeoPixelBus.git"
+                  name: NeoPixelBus
+                - source-url: "https://github.com/sui77/rc-switch.git"
+                  name: rc-switch
+                - source-url: "https://github.com/crankyoldgit/IRremoteESP8266.git"
+                  name: IRremoteESP8266
+                - source-url: "https://github.com/FastLED/FastLED.git"
+                  name: FastLED
+              sketch-paths: |
+                - ESP8266
