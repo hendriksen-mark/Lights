@@ -9,6 +9,7 @@ on:
     branches: [ master ]
     paths:
       - "ESP32/**"
+      - ".github/workflows/test_esp32.yml"
   pull_request:
     branches: [ master ]
     paths:
@@ -25,7 +26,7 @@ jobs:
     strategy:
       matrix:
         board:
-          - fqbn: "esp32:esp32:esp32"
+          - fqbn: "esp32:esp32:esp32wrover"
             platform-name: esp32:esp32
         include:
           - board:
@@ -65,5 +66,9 @@ jobs:
                   name: DebugLog
                 - source-url: "https://github.com/khoih-prog/WebServer_ESP32_W5500.git"
                   name: WebServer_ESP32_W5500
+                - source-url: "https://github.com/hideakitai/ArxTypeTraits.git"
+                  name: ArxTypeTraits
+                - source-url: "https://github.com/256dpi/arduino-mqtt.git"
+                  name: arduino-mqtt
               sketch-paths: |
                 - ESP32
