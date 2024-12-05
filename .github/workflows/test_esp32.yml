@@ -57,5 +57,13 @@ jobs:
                   name: IRremoteESP8266
                 - source-url: "https://github.com/FastLED/FastLED.git"
                   name: FastLED
+                - source-url: "https://github.com/gmag11/painlessMesh.git"
+                  name: painlessMesh
+                - source-url: "https://github.com/arduino-libraries/Arduino_JSON.git"
+                  name: Arduino_JSON
+                - source-url: "https://github.com/hideakitai/DebugLog.git"
+                  name: DebugLog
+                - source-url: "https://github.com/khoih-prog/WebServer_ESP32_W5500.git"
+                  name: WebServer_ESP32_W5500
               sketch-paths: |
                 - ESP32
