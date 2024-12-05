@@ -189,8 +189,7 @@ void lightEngine() {
 
 void setup() {
   EEPROM.begin(512);
-  ledcSetup(LEDC_CHANNEL_0, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
-  ledcAttachPin(LED_PIN, LEDC_CHANNEL_0);
+  ledcAttach(LED_PIN, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
   pinMode(ledGPIO, OUTPUT);
   blinkLed(1);
   ledcAnalogWrite(LEDC_CHANNEL_0, 50);
