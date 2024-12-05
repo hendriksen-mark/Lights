@@ -68,6 +68,8 @@ jobs:
                   name: WebServer_ESP32_W5500
                 - source-url: "https://github.com/hideakitai/ArxTypeTraits.git"
                   name: ArxTypeTraits
+                - source-url: "https://github.com/hideakitai/ArxContainer.git"
+                  name: ArxContainer
                 - source-url: "https://github.com/256dpi/arduino-mqtt.git"
                   name: arduino-mqtt
               sketch-paths: |
