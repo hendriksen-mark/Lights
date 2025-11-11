@@ -5,10 +5,10 @@
 
 #include "debug.h"
 
-RgbColor red = RgbColor(255, 0, 0);
-RgbColor green = RgbColor(0, 255, 0);
-RgbColor white = RgbColor(255);
-RgbColor black = RgbColor(0);
+extern RgbColor red;
+extern RgbColor green;
+extern RgbColor white;
+extern RgbColor black;
 
 void functions_setup();
 void ChangeNeoPixels_info();

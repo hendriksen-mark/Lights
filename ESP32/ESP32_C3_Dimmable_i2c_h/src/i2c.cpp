@@ -1,4 +1,5 @@
 #include "i2c.h"
+#include <WebServer.h>
 
 extern byte mac[];
 
@@ -292,62 +293,9 @@ void i2c_setup() {
       ESP.restart();
     }
 
+    const char http_content[] PROGMEM = R"=====(<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Light Setup</title><style>body{font-family:Arial,sans-serif;max-width:600px;margin:20px auto;padding:20px}label{display:inline-block;width:100px}input,select{margin:5px 0;padding:5px}.btn{background:#4CAF50;color:white;padding:10px 20px;border:none;cursor:pointer;margin:5px}.btn:hover{background:#45a049}.off{background:#f44336}.off:hover{background:#da190b}</style></head><body><h2>Light Setup</h2><form method="post"><div><label>Power:</label><a class="btn" href="/?on=true">ON</a><a class="btn off" href="/?on=false">OFF</a></div><div><label>Startup:</label><select name="startup" onchange="this.form.submit()"><option value="0">Last state</option><option value="1">On</option><option value="2">Off</option></select></div><div><label>Scene:</label><select name="scene" onchange="this.form.submit()"><option value="0">Relax</option><option value="1">Bright</option><option value="2">Nightly</option></select></div><div><label>Brightness:</label><input name="bri" type="number" min="1" max="254"></div><div><button type="submit" class="btn">Save</button></div><div><a href="/?alert=1">Alert</a> | <a href="/?reset=1">Reset</a></div></form></body></html>)=====";
 
-    String http_content = "<!doctype html>";
-    http_content += "<html>";
-    http_content += "<head>";
-    http_content += "<meta charset=\"utf-8\">";
-    http_content += "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">";
-    http_content += "<title>Light Setup</title>";
-    http_content += "<link rel=\"stylesheet\" href=\"https://unpkg.com/purecss@0.6.2/build/pure-min.css\">";
-    http_content += "</head>";
-    http_content += "<body>";
-    http_content += "<fieldset>";
-    http_content += "<h3>Light Setup</h3>";
-    http_content += "<form class=\"pure-form pure-form-aligned\" action=\"/\" method=\"post\">";
-    http_content += "<div class=\"pure-control-group\">";
-    http_content += "<label for=\"power\"><strong>Power</strong></label>";
-    http_content += "<a class=\"pure-button"; if (light_state_i2c[0]) http_content += "  pure-button-primary"; http_content += "\" href=\"/?on=true\">ON</a>";
-    http_content += "<a class=\"pure-button"; if (!light_state_i2c[0]) http_content += "  pure-button-primary"; http_content += "\" href=\"/?on=false\">OFF</a>";
-    http_content += "</div>";
-    http_content += "<div class=\"pure-control-group\">";
-    http_content += "<label for=\"startup\">Startup</label>";
-    http_content += "<select onchange=\"this.form.submit()\" id=\"startup\" name=\"startup\">";
-    http_content += "<option "; if (EEPROM.read(1) == 0) http_content += "selected=\"selected\""; http_content += " value=\"0\">Last state</option>";
-    http_content += "<option "; if (EEPROM.read(1) == 1) http_content += "selected=\"selected\""; http_content += " value=\"1\">On</option>";
-    http_content += "<option "; if (EEPROM.read(1) == 2) http_content += "selected=\"selected\""; http_content += " value=\"2\">Off</option>";
-    http_content += "</select>";
-    http_content += "</div>";
-    http_content += "<div class=\"pure-control-group\">";
-    http_content += "<label for=\"scene\">Scene</label>";
-    http_content += "<select onchange = \"this.form.submit()\" id=\"scene\" name=\"scene\">";
-    http_content += "<option "; if (EEPROM.read(2) == 0) http_content += "selected=\"selected\""; http_content += " value=\"0\">Relax</option>";
-    http_content += "<option "; if (EEPROM.read(2) == 1) http_content += "selected=\"selected\""; http_content += " value=\"1\">Bright</option>";
-    http_content += "<option "; if (EEPROM.read(2) == 2) http_content += "selected=\"selected\""; http_content += " value=\"2\">Nightly</option>";
-    http_content += "</select>";
-    http_content += "</div>";
-    http_content += "<br>";
-    http_content += "<div class=\"pure-control-group\">";
-    http_content += "<label for=\"state\"><strong>State</strong></label>";
-    http_content += "</div>";
-    http_content += "<div class=\"pure-control-group\">";
-    http_content += "<label for=\"bri\">Bri</label>";
-    http_content += "<input id=\"bri\" name=\"bri\" type=\"text\" placeholder=\"" + (String)bri_i2c[0] + "\">";
-    http_content += "</div>";
-
-    http_content += "<div class=\"pure-controls\">";
-    http_content += "<span class=\"pure-form-message\"><a href=\"/?alert=1\">alert</a> or <a href=\"/?reset=1\">reset</a></span>";
-    http_content += "<label for=\"cb\" class=\"pure-checkbox\">";
-    http_content += "</label>";
-    http_content += "<button type=\"submit\" class=\"pure-button pure-button-primary\">Save</button>";
-    http_content += "</div>";
-    http_content += "</fieldset>";
-    http_content += "</form>";
-    http_content += "</body>";
-    http_content += "</html>";
-
-
-    server_i2c.send(200, "text/html", http_content);
+    server_i2c.send_P(200, "text/html", http_content);
 
   });
 

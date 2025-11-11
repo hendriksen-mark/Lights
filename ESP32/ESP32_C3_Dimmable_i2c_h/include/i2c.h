@@ -4,7 +4,9 @@
 #include <ArduinoJson.h>
 #include <EEPROM.h>
 #include "debug.h"
-#include "server.h"
+#include "ethernet_server.h"
+
+#define I2C_DEV_ADDR 0x55
 
 void handleNotFound_i2c();
 void apply_scene_i2c(uint8_t new_scene,  uint8_t light);

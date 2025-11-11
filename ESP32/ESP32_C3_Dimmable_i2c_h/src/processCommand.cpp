@@ -1,4 +1,5 @@
 #include "processCommand.h"
+#include <WiFi.h>
 
 WiFiClient client;
 

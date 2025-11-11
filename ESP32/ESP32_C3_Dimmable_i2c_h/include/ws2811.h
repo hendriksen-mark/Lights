@@ -4,11 +4,9 @@
 #include <LittleFS.h>
 #include <ArduinoJson.h>
 #include <EEPROM.h>
-#include <HTTPUpdateServer.h>
 
 #include "debug.h"
 #include "functions.h"
-#include "server.h"
 
 void convertHue(uint8_t light);
 void convertXy(uint8_t light);

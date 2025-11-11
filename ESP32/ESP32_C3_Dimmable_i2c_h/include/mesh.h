@@ -1,12 +1,10 @@
 #pragma once
 
 #include "painlessMesh.h"
-#include <Arduino_JSON.h>
 #include <ArduinoJson.h>
 
 #include "debug.h"
 #include "processCommand.h"
-#include "server.h"
 
 void mesh_setup();
 void mesh_loop();

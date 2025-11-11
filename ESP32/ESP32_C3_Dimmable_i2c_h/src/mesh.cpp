@@ -1,4 +1,5 @@
 #include "mesh.h"
+#include <WebServer.h>
 
 int subip = 25;
 IPAddress bridgeIp(192, 168, 1, subip);
