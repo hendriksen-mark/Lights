@@ -6,6 +6,14 @@
 // ============================================
 #define WIFI_CHECK_INTERVAL 30000  // Check WiFi every 30 seconds (millis)
 
+// MAC Address Configuration
+#define MAC_ADDR_0  0xDA
+#define MAC_ADDR_1  0xAD
+#define MAC_ADDR_2  0xEB
+#define MAC_ADDR_3  0xFF
+#define MAC_ADDR_4  0xEF
+#define MAC_ADDR_5  0xDE
+
 // ============================================
 // WS2811 LED Strip Configuration
 // ============================================
