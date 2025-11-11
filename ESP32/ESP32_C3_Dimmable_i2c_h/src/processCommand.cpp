@@ -1,17 +1,14 @@
 #include "processCommand.h"
+#include "config.h"
 #include <WiFi.h>
 
 WiFiClient client;
 
-//const char* bridgeIp = "192.168.1.25";
-//IPAddress bridgeIp(192, 168, 1, 25);
-//const char* switchType = "ZLLSwitch";
-#define switchType "ZLLSwitch"
-#define motionType "ZLLPresence"
-
 String sendHttpRequest(int button, String mac, IPAddress bridgeIp) {
   LOG_SET_LEVEL(DebugLevel);
-  String msg = "";
+  String msg;
+  msg.reserve(50); // Pre-allocate to reduce memory fragmentation
+  msg = "";
   int val = true;
 
   while (val) {
@@ -21,7 +18,9 @@ String sendHttpRequest(int button, String mac, IPAddress bridgeIp) {
     }
     LOG_INFO("Connected!");
     LOG_DEBUG("msg:", msg);
-    String url = "/switch";
+    String url;
+    url.reserve(100); // Pre-allocate to reduce memory fragmentation
+    url = "/switch";
     //url += "?mac=";
     //url += mac;
 
@@ -56,7 +55,9 @@ String sendHttpRequest(int button, String mac, IPAddress bridgeIp) {
     }
     LOG_DEBUG("url:", url);
 
-    String message = String("GET ");
+    String message;
+    message.reserve(150); // Pre-allocate to reduce memory fragmentation
+    message = String("GET ");
     message += url;
     message += " HTTP/1.1\r\n";
     message += "Host: ";

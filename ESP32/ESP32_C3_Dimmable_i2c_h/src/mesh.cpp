@@ -1,15 +1,10 @@
 #include "mesh.h"
+#include "config.h"
 #include <WebServer.h>
 
-int subip = 25;
-IPAddress bridgeIp(192, 168, 1, subip);
+int subip = BRIDGE_IP_OCTET_4;
+IPAddress bridgeIp(BRIDGE_IP_OCTET_1, BRIDGE_IP_OCTET_2, BRIDGE_IP_OCTET_3, subip);
 
-#define   MESH_PREFIX     "HomeMesh"
-#define   MESH_PASSWORD   "Qwertyuiop1"
-#define   MESH_PORT       5555
-#define   connectMode     WIFI_AP_STA
-#define   channel         1
-#define   hidden          true
 painlessMesh  mesh;
 
 int value;
@@ -28,20 +23,6 @@ bool fout = false;
 int state_ont;//0 1 2
 
 int ishome;
-
-#define RES 2
-
-#define ESP_SW_RX            "A0"
-#define ESP_SW_TX            "A1"
-
-#define DEBUG "false"
-
-#define totalrond 123
-
-#define DIR 8
-#define STEP 7
-#define ENABLE 4
-#define DRIVER_ADDRESS "0b00"  // Set by MS1/MS2. LOW/LOW in this case
 #define R_SENSE "0.11f"
 #define SW_RX            6
 #define SW_TX            5
@@ -70,7 +51,7 @@ void mesh_setup() {
   //mesh.setDebugMsgTypes( ERROR | CONNECTION | S_TIME );  // set before init() so that you can see startup messages
   mesh.setDebugMsgTypes( ERROR | MESH_STATUS | CONNECTION | COMMUNICATION );
   //mesh.init(MESH_PREFIX, MESH_PASSWORD, MESH_PORT);
-  mesh.init (MESH_PREFIX, MESH_PASSWORD, MESH_PORT, connectMode, hidden);
+  mesh.init (MESH_PREFIX, MESH_PASSWORD, MESH_PORT, MESH_CONNECT_MODE, MESH_HIDDEN);
   mesh.onReceive(&receivedCallback);
   mesh.onNewConnection(&newConnectionCallback);
   newConnectionCallback(0);
@@ -468,7 +449,7 @@ void mesh_handleRoot() {
   message += "<input type=\"submit\" value=\"Submit\">";
   message += "</form>";
   message += "Current IP = ";
-  message += "192.168.1." + (String)subip;
+  message += String(BRIDGE_IP_OCTET_1) + "." + String(BRIDGE_IP_OCTET_2) + "." + String(BRIDGE_IP_OCTET_3) + "." + String(subip);
 
   message += "<br><br>";
   message += "<a href=\"/\"\"><button>RELOAD PAGE</button></a><br/>";
@@ -483,7 +464,7 @@ void set_IP() {
       subip = server_mesh.arg(i).toInt();
     }
   }
-  bridgeIp = IPAddress(192, 168, 1, subip);
+  bridgeIp = IPAddress(BRIDGE_IP_OCTET_1, BRIDGE_IP_OCTET_2, BRIDGE_IP_OCTET_3, subip);
   server_mesh.sendHeader("Location", "/", true); //Redirect to our html web page
   server_mesh.send(302, "text/plane", "");
 }

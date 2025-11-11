@@ -1,4 +1,5 @@
 #include "ws2811.h"
+#include "config.h"
 #include <WiFi.h>
 #include <WebServer.h>
 #include <HTTPUpdateServer.h>
@@ -6,12 +7,6 @@
 HTTPUpdateServer httpUpdateServer;
 
 extern byte mac[];
-
-#define LIGHT_VERSION 4.1
-#define LIGHT_NAME_MAX_LENGTH 32 // Longer name will get stripped
-#define ENTERTAINMENT_TIMEOUT 1500 // millis
-//#define POWER_MOSFET_PIN 35 // WS2812 consume ~1mA/led when off. By installing a MOSFET it will cut the power to the leds when lights ore off.
-#define DATA_PIN 4
 
 struct state {
   uint8_t colors[3], bri = 100, sat = 254, colorMode = 2;
@@ -23,10 +18,10 @@ struct state {
 state lights[10];
 bool inTransition, entertainmentRun, mosftetState, useDhcp = true;
 byte packetBuffer[46];
-unsigned long lastEPMillis, lastWiFiCheck;
+unsigned long lastEPMillis;
 
 //settings
-char lightName[LIGHT_NAME_MAX_LENGTH] = "Hue WS2811 strip";
+char lightName[LIGHT_NAME_MAX_LENGTH] = LIGHT_NAME_WS2811;
 uint8_t effect, scene, startup, onPin = 8, offPin = 9 ;
 bool hwSwitch = false;
 uint8_t rgb_multiplier[] = {100, 100, 100}; // light multiplier in percentage /R, G, B/
@@ -187,7 +182,9 @@ void convertCt(uint8_t light) // convert ct (color temperature) value from HUE A
 }
 
 void handleNotFound_ws() { // default webserver response for unknow requests
-  String message = "File Not Found\n\n";
+  String message;
+  message.reserve(200); // Pre-allocate to reduce memory fragmentation
+  message = "File Not Found\n\n";
   message += "URI: ";
   message += server_ws.uri();
   message += "\nMethod: ";

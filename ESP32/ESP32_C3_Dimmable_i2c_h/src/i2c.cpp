@@ -1,21 +1,16 @@
 #include "i2c.h"
+#include "config.h"
 #include <WebServer.h>
 
 extern byte mac[];
 
-#define light_name_i2c "Dimmable Hue Light ESP32"  //default light name
-#define LIGHT_VERSION_i2c 2.1
-
 //define pins
-#define LIGHTS_COUNT_i2c 7
 //                              kamer    woonkamer      keuken    slaapkamer      gang    badkamer
 //                              nummer   1    2   3     4         5               6       7
 //                              array    0    1   2     3         4               5       6
 int lightadress_i2c[LIGHTS_COUNT_i2c] = {9,   10, 11,   12,       13,             14,     15};
 
 unsigned long previousMillis = 0;
-#define LIGHT_interval 60000
-
 
 bool light_state_i2c[LIGHTS_COUNT_i2c], in_transition_i2c, alert = false;
 int transitiontime_i2c, bri_i2c[LIGHTS_COUNT_i2c], error_code;
@@ -27,7 +22,9 @@ byte hb, lb;
 WebServer server_i2c(80);
 
 void handleNotFound_i2c() {
-  String message = "File Not Found\n\n";
+  String message;
+  message.reserve(200); // Pre-allocate to reduce memory fragmentation
+  message = "File Not Found\n\n";
   message += "URI: ";
   message += server_i2c.uri();
   message += "\nMethod: ";
@@ -163,7 +160,7 @@ void i2c_setup() {
   }
 
   server_i2c.on("/state", HTTP_PUT, []() { // HTTP PUT request used to set a new light state
-    DynamicJsonDocument root(1024);
+    DynamicJsonDocument root(512); // Reduced from 1024 - more efficient for actual usage
     DeserializationError error = deserializeJson(root, server_i2c.arg("plain"));
 
     if (error) {
@@ -178,13 +175,15 @@ void i2c_setup() {
         if (values.containsKey("on")) {
           if (values["on"]) {
             light_state_i2c[light] = true;
-            if (EEPROM.read(1) == 0 && EEPROM.read(0) == 0) {
+            if (EEPROM.read(1) == 0 && EEPROM.read(0) != 1) {
               EEPROM.write(0, 1);
+              EEPROM.commit();
             }
           } else {
             light_state_i2c[light] = false;
-            if (EEPROM.read(1) == 0 && EEPROM.read(0) == 1) {
+            if (EEPROM.read(1) == 0 && EEPROM.read(0) != 0) {
               EEPROM.write(0, 0);
+              EEPROM.commit();
             }
           }
         }
@@ -217,10 +216,11 @@ void i2c_setup() {
 
   server_i2c.on("/state", HTTP_GET, []() { // HTTP GET request used to fetch current light state
     uint8_t light = server_i2c.arg("light").toInt() - 1;
-    DynamicJsonDocument root(1024);
+    DynamicJsonDocument root(128); // Reduced from 1024 - only needs 2 values
     root["on"] = light_state_i2c[light];
     root["bri"] = bri_i2c[light];
     String output;
+    output.reserve(50); // Pre-allocate to reduce memory fragmentation
     serializeJson(root, output);
     LOG_DEBUG("/state get", output);
     LOG_DEBUG("light :", light);
@@ -231,7 +231,7 @@ void i2c_setup() {
   server_i2c.on("/detect", []() { // HTTP GET request used to discover the light type
     char macString[32] = {0};
     sprintf(macString, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-    DynamicJsonDocument root(1024);
+    DynamicJsonDocument root(256); // Reduced from 1024 - optimized for actual content
     root["name"] = light_name_i2c;
     root["lights"] = LIGHTS_COUNT_i2c;
     root["protocol"] = "native_multi";
@@ -240,6 +240,7 @@ void i2c_setup() {
     root["mac"] = String(macString);
     root["version"] = LIGHT_VERSION_i2c;
     String output;
+    output.reserve(200); // Pre-allocate to reduce memory fragmentation
     serializeJson(root, output);
     server_i2c.send(200, "text/plain", output);
   });
@@ -269,17 +270,18 @@ void i2c_setup() {
       } else if (server_i2c.hasArg("on")) {
         if (server_i2c.arg("on") == "true") {
           light_state_i2c[light] = true; {
-            if (EEPROM.read(1) == 0 && EEPROM.read(0) == 0) {
+            if (EEPROM.read(1) == 0 && EEPROM.read(0) != 1) {
               EEPROM.write(0, 1);
+              EEPROM.commit();
             }
           }
         } else {
           light_state_i2c[light] = false;
-          if (EEPROM.read(1) == 0 && EEPROM.read(0) == 1) {
+          if (EEPROM.read(1) == 0 && EEPROM.read(0) != 0) {
             EEPROM.write(0, 0);
+            EEPROM.commit();
           }
         }
-        EEPROM.commit();
       } else if (server_i2c.hasArg("alert")) {
         send_alert(light);
       }

@@ -3,10 +3,14 @@
 #include "ws2811.h"
 #include "debug.h"
 #include "functions.h"
+#include "config.h"
+#include <WiFi.h>
 
 byte mac[] = { 0xDA, 0xAD, 0xEB, 0xFF, 0xEF, 0xDE };
 
 void ESP_Server_setup(); // Forward declaration
+
+unsigned long lastWiFiCheck = 0;
 
 void setup() {
   Serial.begin(115200);
@@ -25,7 +29,18 @@ void setup() {
 }
 
 void loop() {
+  // WiFi reconnection logic
+  unsigned long currentMillis = millis();
+  if (currentMillis - lastWiFiCheck >= WIFI_CHECK_INTERVAL) {
+    lastWiFiCheck = currentMillis;
+    if (WiFi.status() != WL_CONNECTED) {
+      LOG_ERROR("WiFi disconnected, attempting reconnection...");
+      WiFi.reconnect();
+    }
+  }
+
   i2c_loop();
   ws_loop();
   mesh_loop();
+  yield(); // Prevent watchdog reset - allows ESP32 to handle WiFi/background tasks
 }
