@@ -9,11 +9,13 @@ on:
     branches: [ master ]
     paths:
       - "ESP32/**"
+      - "!ESP32/ESP32_C3_Dimmable_i2c_h/**"
       - ".github/workflows/test_esp32.yml"
   pull_request:
     branches: [ master ]
     paths:
       - "ESP32/**"
+      - "!ESP32/ESP32_C3_Dimmable_i2c_h/**"
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
