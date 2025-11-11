@@ -5,3 +5,5 @@ ESP32/ESP32_C3_Dimmable_i2c/ESP32_C3_Dimmable_i2c.ino.esp32.bin
 .vscode/c_cpp_properties.json
 */build
 *.pyc
+/build
+.vscode/settings.json
