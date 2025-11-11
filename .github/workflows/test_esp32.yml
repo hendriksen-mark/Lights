@@ -39,6 +39,11 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
+      - name: Hide PlatformIO project (exclude from Arduino build)
+        run: |
+          if [ -d ESP32/ESP32_C3_Dimmable_i2c_h ]; then
+            mv ESP32/ESP32_C3_Dimmable_i2c_h ESP32/ESP32_C3_Dimmable_i2c_h.skip
+          fi
       - name: Compile Arduino Sketches
         uses: arduino/compile-sketches@v1
         with:
