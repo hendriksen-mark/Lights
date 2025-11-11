@@ -1,0 +1,30 @@
+name: PlatformIO CI
+
+on: 
+  push:
+    paths:
+      - "ESP32/ESP32_C3_Dimmable_i2c_h/**"
+      - ".github/workflows/test_platform.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/ESP32/ESP32_C3_Dimmable_i2c_h/.cache/pip
+            ~/ESP32/ESP32_C3_Dimmable_i2c_h/.platformio/.cache
+          key: ${{ runner.os }}-pio
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install PlatformIO Core
+        run: pip install --upgrade platformio
+
+      - name: Build PlatformIO Project
+        run: |
+          cd ESP32/ESP32_C3_Dimmable_i2c_h
+          pio run
