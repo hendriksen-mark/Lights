@@ -12,7 +12,7 @@ String sendHttpRequest(int button, String mac, IPAddress bridgeIp) {
   int val = true;
 
   while (val) {
-    if (!client.connect(bridgeIp, 80)) {
+    if (!client.connect(bridgeIp, BRIDGE_PORT)) {
       //LOG_ERROR("Connection failed");
       return "Connection failed";
     }

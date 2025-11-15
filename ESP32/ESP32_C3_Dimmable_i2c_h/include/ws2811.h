@@ -3,14 +3,11 @@
 #include <NeoPixelBus.h>
 #include <LittleFS.h>
 #include <ArduinoJson.h>
-#include <EEPROM.h>
 
 #include "debug.h"
 #include "functions.h"
+#include "color.h"
 
-void convertHue(uint8_t light);
-void convertXy(uint8_t light);
-void convertCt(uint8_t light);
 void handleNotFound_ws();
 void apply_scene_ws(uint8_t new_scene);
 void processLightdata(uint8_t light, float transitiontime = 4);

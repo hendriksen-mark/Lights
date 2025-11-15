@@ -40,8 +40,8 @@ int ishome;
 
 unsigned long lastreq = 0;
 
-WebServer server_gordijn(82);
-WebServer server_mesh(83);
+WebServer server_gordijn(gordijn_port);
+WebServer server_mesh(mesh_port);
 
 
 void mesh_setup() {

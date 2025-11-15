@@ -2,7 +2,6 @@
 
 #include <Wire.h>
 #include <ArduinoJson.h>
-#include <EEPROM.h>
 #include "debug.h"
 #include "ethernet_server.h"
 
