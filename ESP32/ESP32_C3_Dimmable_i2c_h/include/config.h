@@ -4,7 +4,9 @@
 // ============================================
 // General Configuration
 // ============================================
+#ifndef INFO_DATA_PIN
 #define INFO_DATA_PIN 12               // Data pin for info LED strip
+#endif
 
 // ============================================
 // WiFi Configuration
@@ -30,7 +32,9 @@
 #define LIGHT_NAME_MAX_LENGTH 32        // Longer name will get stripped
 #define LIGHT_PORT_WS 81                // Web server port for WS2811 lights
 #define ENTERTAINMENT_TIMEOUT 1500      // Entertainment stream timeout (millis)
+#ifndef DATA_PIN
 #define DATA_PIN 4                      // WS2811 data pin
+#endif
 // #define POWER_MOSFET_PIN 35          // WS2812 consume ~1mA/led when off. By installing a MOSFET it will cut the power to the leds when lights are off.
 
 // ============================================

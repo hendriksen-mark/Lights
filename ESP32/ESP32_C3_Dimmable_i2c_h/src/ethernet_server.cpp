@@ -12,7 +12,7 @@ void ESP_Server_setup(){
 	LOG_DEBUG("start W5500");
 	ESP32_W5500_onEvent();
 
-	ETH.begin( MISO_GPIO, MOSI_GPIO, SCK_GPIO, CS_GPIO, INT_GPIO, SPI_CLOCK_MHZ, ETH_SPI_HOST, mac);
+	ETH.begin( MISO, MOSI, SCK, SS, W5500_INT_GPIO, SPI_CLOCK_MHZ, ETH_SPI_HOST, mac);
 
 	infoLight(white); // play white anymation
 	while (!ESP32_W5500_isConnected()) { // connection to wifi still not ready
