@@ -1,3 +1,4 @@
+#include "config.h"
 #include "functions.h"
 
 // Define the color constants
@@ -22,7 +23,6 @@ void functions_setup()
 
 void ChangeNeoPixels_info() // this set the number of leds of the strip based on web configuration
 {
-	#define INFO_DATA_PIN 12
 	if (strip_info != NULL) {
 		delete strip_info; // delete the previous dynamically created strip
 	}

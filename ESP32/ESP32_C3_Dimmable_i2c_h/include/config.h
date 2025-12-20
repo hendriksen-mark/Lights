@@ -2,6 +2,11 @@
 #define CONFIG_H
 
 // ============================================
+// General Configuration
+// ============================================
+#define INFO_DATA_PIN 12               // Data pin for info LED strip
+
+// ============================================
 // WiFi Configuration
 // ============================================
 #define WIFI_CHECK_INTERVAL 30000  // Check WiFi every 30 seconds (millis)
