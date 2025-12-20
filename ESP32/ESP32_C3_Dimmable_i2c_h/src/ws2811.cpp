@@ -32,7 +32,7 @@ uint8_t lightsCount = 9;
 uint16_t pixelCount = 9;
 uint8_t transitionLeds = 0; // pixelCount must be divisible by this value
 
-WebServer server_ws(light_port_ws);
+WebServer server_ws(LIGHT_PORT_WS);
 WiFiUDP Udp;
 
 NeoPixelBus<NeoRgbFeature, NeoEsp32Rmt1Ws2812xMethod>* strip = NULL;
@@ -625,9 +625,9 @@ void ws_setup() {
     DynamicJsonDocument root(1024);
     root["name"] = lightName;
     root["lights"] = lightsCount;
-    root["protocol"] = light_protocol_ws;
-    root["modelid"] = light_model_ws;
-    root["type"] = light_type_ws;
+    root["protocol"] = LIGHT_PROTOCOL_WS;
+    root["modelid"] = LIGHT_MODEL_WS;
+    root["type"] = LIGHT_TYPE_WS;
     root["mac"] = String(macString);
     root["version"] = LIGHT_VERSION;
     String output;

@@ -8,15 +8,15 @@ extern byte mac[];
 //                              kamer    woonkamer      keuken    slaapkamer      gang    badkamer
 //                              nummer   1    2   3     4         5               6       7
 //                              array    0    1   2     3         4               5       6
-int lightadress_i2c[LIGHTS_COUNT_i2c] = {9,   10, 11,   12,       13,             14,     15};
+int lightadress_i2c[LIGHT_COUNT_I2C] = {9,   10, 11,   12,       13,             14,     15};
 
 unsigned long previousMillis = 0;
 
-bool light_state_i2c[LIGHTS_COUNT_i2c], in_transition_i2c, alert = false;
-int transitiontime_i2c, bri_i2c[LIGHTS_COUNT_i2c], error_code, light_rec;
-float step_level_i2c[LIGHTS_COUNT_i2c], current_bri_i2c[LIGHTS_COUNT_i2c];
+bool light_state_i2c[LIGHT_COUNT_I2C], in_transition_i2c, alert = false;
+int transitiontime_i2c, bri_i2c[LIGHT_COUNT_I2C], error_code, light_rec;
+float step_level_i2c[LIGHT_COUNT_I2C], current_bri_i2c[LIGHT_COUNT_I2C];
 
-WebServer server_i2c(light_port_i2c);
+WebServer server_i2c(LIGHT_PORT_I2C);
 
 void handleNotFound_i2c() {
 	String message;
@@ -114,7 +114,7 @@ void process_lightdata_i2c(uint8_t light) {
 }
 
 void lightEngine_i2c() {
-	for (int i = 0; i < LIGHTS_COUNT_i2c; i++) {
+	for (int i = 0; i < LIGHT_COUNT_I2C; i++) {
 		if (light_state_i2c[i]) {
 			if (bri_i2c[i] != current_bri_i2c[i]) {
 				process_lightdata_i2c(i);
@@ -151,7 +151,7 @@ void i2c_setup() {
 	Wire.begin();
 	LOG_DEBUG("Setup I2C");
 
-	for (int i = 0; i < LIGHTS_COUNT_i2c; i++) {
+	for (int i = 0; i < LIGHT_COUNT_I2C; i++) {
 		request_lightdata(i);
 	}
 
@@ -219,13 +219,13 @@ void i2c_setup() {
 		char macString[32] = {0};
 		sprintf(macString, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 		DynamicJsonDocument root(256); // Reduced from 1024 - optimized for actual content
-		root["name"] = light_name_i2c;
-		root["lights"] = LIGHTS_COUNT_i2c;
-		root["protocol"] = light_protocol_i2c;
-		root["modelid"] = light_model_i2c;
-		root["type"] = light_type_i2c;
+		root["name"] = LIGHT_NAME_I2C;
+		root["lights"] = LIGHT_COUNT_I2C;
+		root["protocol"] = LIGHT_PROTOCOL_I2C;
+		root["modelid"] = LIGHT_MODEL_I2C;
+		root["type"] = LIGHT_TYPE_I2C;
 		root["mac"] = String(macString);
-		root["version"] = LIGHT_VERSION_i2c;
+		root["version"] = LIGHT_VERSION_I2C;
 		String output;
 		output.reserve(200); // Pre-allocate to reduce memory fragmentation
 		serializeJson(root, output);
@@ -234,7 +234,7 @@ void i2c_setup() {
 
 	server_i2c.on("/", []() {
 		transitiontime_i2c = 4;
-		for (int light = 0; light < LIGHTS_COUNT_i2c; light++) {
+		for (int light = 0; light < LIGHT_COUNT_I2C; light++) {
 			if (server_i2c.hasArg("scene")) {
 				if (server_i2c.arg("bri") == "" && server_i2c.arg("hue") == "" && server_i2c.arg("ct") == "" && server_i2c.arg("sat") == "") {
 					apply_scene_i2c(server_i2c.arg("scene").toInt(), light);
@@ -286,9 +286,9 @@ void i2c_loop() {
 
 	unsigned long currentMillis = millis();
 
-	if (currentMillis - previousMillis >= LIGHT_interval) {
+	if (currentMillis - previousMillis >= LIGHT_INTERVAL) {
 		previousMillis = currentMillis;
-		for (int i = 0; i < LIGHTS_COUNT_i2c; i++) {
+		for (int i = 0; i < LIGHT_COUNT_I2C; i++) {
 			request_lightdata(i);
 		}
 	}
