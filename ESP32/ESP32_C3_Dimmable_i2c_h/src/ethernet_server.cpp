@@ -17,5 +17,12 @@ void ESP_Server_setup(){
 	}
 	// Show that we are connected
 	LOG_DEBUG("W5500_isConnected: ", ESP32_W5500_isConnected(), " IP Address: ", ETH.localIP());
+	
+	// Setup mDNS
+	if (MDNS.begin(DEVICE_NAME)) {
+		LOG_DEBUG("mDNS responder started: ", DEVICE_NAME, ".local");
+		MDNS.addService("http", "tcp", LIGHT_PORT_WS);
+	}
+	
 	infoLight(green); // connected, play green animation
 }

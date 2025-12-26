@@ -6,6 +6,7 @@
 // ============================================
 // General Configuration
 // ============================================
+#define DEVICE_NAME "ESP32_Light"
 #ifndef INFO_DATA_PIN
 #define INFO_DATA_PIN 12               // Data pin for info LED strip
 #endif
