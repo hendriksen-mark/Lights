@@ -16,3 +16,4 @@ void ChangeNeoPixels_info();
 void infoLight(RgbColor color);
 void blinkLed(uint8_t count, uint16_t interval = 200);
 void factoryReset();
+void resetESP();

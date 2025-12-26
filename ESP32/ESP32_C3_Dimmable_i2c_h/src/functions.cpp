@@ -52,3 +52,9 @@ void factoryReset() {
 	blinkLed(8, 100);
 	ESP.restart();
 }
+
+void resetESP() {
+	blinkLed(3, 200);
+	delay(1000);
+    ESP.restart();
+}
