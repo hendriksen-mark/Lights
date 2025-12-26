@@ -11,7 +11,6 @@ NeoPixelBus<NeoRgbFeature, NeoEsp32Rmt0Ws2812xMethod>* strip_info = NULL;
 
 void functions_setup()
 {
-	LOG_SET_LEVEL(DebugLevel);
 	if (!LittleFS.begin()) {
 		LOG_ERROR("Failed to mount file system");
 		//Serial.println("Failed to mount file system");

@@ -147,7 +147,6 @@ void request_lightdata(uint8_t light) {
 }
 
 void i2c_setup() {
-	LOG_SET_LEVEL(DebugLevel);
 	Wire.begin();
 	LOG_DEBUG("Setup I2C");
 

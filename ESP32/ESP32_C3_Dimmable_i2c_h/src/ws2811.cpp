@@ -453,7 +453,6 @@ void ChangeNeoPixels(uint16_t newCount) // this set the number of leds of the st
 }
 
 void ws_setup() {
-  LOG_SET_LEVEL(DebugLevel);
   LOG_DEBUG("Setup WS2811");
   //pinMode(POWER_MOSFET_PIN, OUTPUT);
   blinkLed(2);

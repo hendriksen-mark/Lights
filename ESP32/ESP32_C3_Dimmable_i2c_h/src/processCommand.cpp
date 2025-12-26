@@ -5,7 +5,6 @@
 WiFiClient client;
 
 String sendHttpRequest(int button, String mac, IPAddress bridgeIp) {
-  LOG_SET_LEVEL(DebugLevel);
   String msg;
   msg.reserve(50); // Pre-allocate to reduce memory fragmentation
   msg = "";

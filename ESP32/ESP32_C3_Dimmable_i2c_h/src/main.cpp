@@ -14,7 +14,6 @@ unsigned long lastWiFiCheck = 0;
 
 void setup() {
   Serial.begin(115200);
-  LOG_SET_LEVEL(DebugLevel);
   LOG_DEBUG("Start ESP32");
   functions_setup();
   ChangeNeoPixels_info();

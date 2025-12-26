@@ -8,7 +8,6 @@
 extern byte mac[];
 
 void ESP_Server_setup(){
-	LOG_SET_LEVEL(DebugLevel);
 	LOG_DEBUG("start W5500");
 	ESP32_W5500_onEvent();
 
