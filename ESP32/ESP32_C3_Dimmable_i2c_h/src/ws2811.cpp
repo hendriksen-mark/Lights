@@ -683,16 +683,14 @@ void ws_setup() {
 
     server_ws.send_P(200, "text/html", htmlContent);
     if (server_ws.args()) {
-      delay(1000); // needs to wait until response is received by browser. If ESP restarts too soon, browser will think there was an error.
-      ESP.restart();
+      resetESP();
     }
 
   });
 
   server_ws.on("/reset", []() { // trigger manual reset
     server_ws.send(200, "text/html", "reset");
-    delay(1000);
-    ESP.restart();
+    resetESP();
   });
 
   server_ws.onNotFound(handleNotFound_ws);
