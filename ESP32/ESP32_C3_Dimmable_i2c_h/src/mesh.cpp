@@ -20,24 +20,6 @@ bool fout = false;
 
 int state_ont;//0 1 2
 
-int ishome;
-#define R_SENSE "0.11f"
-#define SW_RX            6
-#define SW_TX            5
-
-#define MOTOR_STEPS 200
-#define MICROSTEPS 16// fixed
-#define motorSpeed 625//*16=10000 // speed voor full step
-#define motorAcc 400//*16=3200 // Acceleration voor full step
-
-#define UART_STEALTH_MODE 1
-#define GUIDE_MICROSTEPPING       MICROSTEPS
-#define R_current "1500mA"
-
-#define home_switch 2
-
-unsigned long lastreq = 0;
-
 WebServer server_gordijn(PORDIJN_SERVER_PORT);
 WebServer server_mesh(MESH_SERVER_PORT);
 
@@ -161,9 +143,6 @@ void handleRoot() {
   message += "<br>";
   message += "rep State  = ";
   message += state_ont;
-  message += "<br>";
-  message += "rep Home  = ";
-  message += ishome;
   message += "<br>";
   message += "error  = ";
   message += fout;
@@ -335,27 +314,12 @@ void get_state() {
 
 void handleinfo() {
 
-
-  float totaal_step = totalrond * MOTOR_STEPS * MICROSTEPS;
-  float microspeed = motorSpeed * MICROSTEPS;
-  float microacc = motorAcc * MICROSTEPS;
-  float acc_tijd = microspeed / microacc;
-  float acc_step = 0.5 * microacc * pow(acc_tijd, 2);
-  float deccel_tijd = microspeed / microacc;
-  float deccel_step = 0.5 * microacc * pow(deccel_tijd, 2);
-  float cruise_step = totaal_step - acc_step - deccel_step;
-  float cruise_tijd = cruise_step / microspeed;
-  float totaal_tijd = cruise_tijd + deccel_tijd + acc_tijd;
-
   String message = "<!DOCTYPE HTML>";
   message += "<html>";
   message += "info<br><br>";
   message += "IP: ";
   message += WiFi.localIP().toString();
 
-  message += "<br>totaal tijd : ";
-  message += totaal_tijd;
-  message += "<br><br>";
   message += "<a href=\"/\"\"><button>HOME PAGE</button></a><br/>";
   server_gordijn.send(200, "text/html", message);
 }
