@@ -1,8 +1,4 @@
 #include "ws2811.h"
-#include "config.h"
-#include <WiFi.h>
-#include <WebServer.h>
-#include <HTTPUpdateServer.h>
 
 HTTPUpdateServer httpUpdateServer;
 
