@@ -96,7 +96,7 @@ void processLightdata(uint8_t light, float transitiontime) { // calculate the st
   }
 }
 
-RgbColor blending(float left[3], float right[3], uint8_t pixel) { // return RgbColor based on neighbour leds
+RgbColor blending(const float left[3], const float right[3], uint8_t pixel) { // return RgbColor based on neighbour leds
   uint8_t result[3];
   for (uint8_t i = 0; i < 3; i++) {
     float percent = (float) pixel / (float) (transitionLeds + 1);
@@ -170,7 +170,7 @@ void lightEngine() {  // core function executed in loop()
           else { // is not the first virtual light
             for (int pixel = 0; pixel < dividedLightsArray[light]; pixel++) // loop with all leds of the light
             {
-              long pixelSum;
+              long pixelSum = 0;
               for (int value = 0; value < light; value++)
               {
                 if (value + 1 == light) {
@@ -191,7 +191,6 @@ void lightEngine() {  // core function executed in loop()
               else  { // outside transition leds (apply raw color)
                 strip->SetPixelColor(pixel + pixelSum + transitionLeds, convFloat(lights[light].currentColors));
               }
-              pixelSum = 0;
             }
           }
         } else { // strip has only one virtual light so apply raw color to entire strip
@@ -220,7 +219,7 @@ void lightEngine() {  // core function executed in loop()
           else { // is not the first light
             for (int pixel = 0; pixel < dividedLightsArray[light]; pixel++) // loop with every led
             {
-              long pixelSum;
+              long pixelSum = 0;
               for (int value = 0; value < light; value++)
               {
                 if (value + 1 == light) {
@@ -241,7 +240,6 @@ void lightEngine() {  // core function executed in loop()
               else  { // leds outside transition zone apply raw color
                 strip->SetPixelColor(pixel + pixelSum + transitionLeds, convFloat(lights[light].currentColors));
               }
-              pixelSum = 0;
             }
           }
         } else { // is just one virtual light declared, apply raw color to all leds
@@ -498,13 +496,13 @@ void ws_setup() {
   Udp.begin(2100); // start entertainment UDP server
 
   server_ws.on("/state", HTTP_PUT, []() { // HTTP PUT request used to set a new light state
-    bool stateSave = false;
     DynamicJsonDocument root(1024);
     DeserializationError error = deserializeJson(root, server_ws.arg("plain"));
 
     if (error) {
       server_ws.send(404, "text/plain", "FAIL. " + server_ws.arg("plain"));
     } else {
+      bool stateSave = false;
       for (JsonPair state : root.as<JsonObject>()) {
         const char* key = state.key().c_str();
         int light = atoi(key) - 1;
@@ -701,7 +699,7 @@ void ws_setup() {
 
 }
 
-RgbColor blendingEntert(float left[3], float right[3], float pixel) {
+RgbColor blendingEntert(const float left[3], const float right[3], float pixel) {
   uint8_t result[3];
   for (uint8_t i = 0; i < 3; i++) {
     float percent = (float) pixel / (float) (transitionLeds + 1);
@@ -713,9 +711,7 @@ RgbColor blendingEntert(float left[3], float right[3], float pixel) {
 void entertainment() { // entertainment function
   uint8_t packetSize = Udp.parsePacket(); // check if UDP received some bytes
   if (packetSize) { // if nr of bytes is more than zero
-    if (!entertainmentRun) { // announce entertainment is running
-      entertainmentRun = true;
-    }
+    entertainmentRun = true; // announce entertainment is running
     lastEPMillis = millis(); // update variable with last received package timestamp
     Udp.read(packetBuffer, packetSize);
     for (uint8_t i = 0; i < packetSize / 4; i++) { // loop with every light. There are 4 bytes for every light (light number, red, green, blue)
@@ -738,7 +734,7 @@ void entertainment() { // entertainment function
         else {
           for (int pixel = 0; pixel < dividedLightsArray[light]; pixel++)
           {
-            long pixelSum;
+            long pixelSum = 0;
             for (int value = 0; value < light; value++)
             {
               if (value + 1 == light) {
@@ -758,7 +754,6 @@ void entertainment() { // entertainment function
             else  {
               strip->SetPixelColor(pixel + pixelSum + transitionLeds, convFloat(lights[light].currentColors));
             }
-            pixelSum = 0;
           }
         }
       } else {

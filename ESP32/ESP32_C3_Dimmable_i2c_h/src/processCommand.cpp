@@ -6,9 +6,8 @@ String sendHttpRequest(int button, String mac, IPAddress bridgeIp) {
   String msg;
   msg.reserve(50); // Pre-allocate to reduce memory fragmentation
   msg = "";
-  int val = true;
 
-  while (val) {
+  while (true) {
     if (!client.connect(bridgeIp, BRIDGE_PORT)) {
       //LOG_ERROR("Connection failed");
       return "Connection failed";
@@ -33,11 +32,9 @@ String sendHttpRequest(int button, String mac, IPAddress bridgeIp) {
       url += mac;
     } else if (msg == "command applied") {
       client.stop();
-      val = false;
       return msg;
     } else if (msg == "unknown device" || msg == "missing mac address") {
       client.stop();
-      val = false;
       return msg;
     } else {
       int batteryPercent = 100;

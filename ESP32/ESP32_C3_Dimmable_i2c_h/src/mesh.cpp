@@ -110,7 +110,7 @@ void receivedCallback( uint32_t from, String &msg ) {
   LOG_DEBUG("msg:", msg);
   if (bool(root["got_master"]) == true) {
     if (root["device"] == "switch") {
-      room_mac = (const char*)root["room_mac"];
+      room_mac = static_cast<const char*>(root["room_mac"]);
       value = (int)root["value"];
       change = true;
     }

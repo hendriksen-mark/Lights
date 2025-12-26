@@ -27,7 +27,7 @@ void convertHue(uint8_t light) // convert hue / sat values from HUE API to RGB
   }
   hh = lights[light].hue;
   if (hh >= 65535.0) hh = 0.0;
-  hh /= 11850, 0;
+  hh /= 11850.0;
   i = (long)hh;
   ff = hh - i;
   p = v * (1.0 - s);

@@ -15,7 +15,7 @@
 void handleNotFound_ws();
 void apply_scene_ws(uint8_t new_scene);
 void processLightdata(uint8_t light, float transitiontime = 4);
-RgbColor blending(float left[3], float right[3], uint8_t pixel);
+RgbColor blending(const float left[3], const float right[3], uint8_t pixel);
 void candleEffect();
 void firePlaceEffect();
 RgbColor convFloat(float color[3]);
@@ -27,6 +27,6 @@ bool saveConfig();
 bool loadConfig();
 void ChangeNeoPixels(uint16_t newCount);
 void ws_setup();
-RgbColor blendingEntert(float left[3], float right[3], float pixel);
+RgbColor blendingEntert(const float left[3], const float right[3], float pixel);
 void entertainment();
 void ws_loop();
