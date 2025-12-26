@@ -10,6 +10,8 @@ String sendHttpRequest(int button, String mac, IPAddress bridgeIp) {
   while (true) {
     if (!client.connect(bridgeIp, BRIDGE_PORT)) {
       //LOG_ERROR("Connection failed");
+      infoLedError(); // Show connection error
+      delay(100);
       return "Connection failed";
     }
     LOG_INFO("Connected!");
@@ -32,9 +34,12 @@ String sendHttpRequest(int button, String mac, IPAddress bridgeIp) {
       url += mac;
     } else if (msg == "command applied") {
       client.stop();
+      blinkLed(1, 50); // Quick success blink
       return msg;
     } else if (msg == "unknown device" || msg == "missing mac address") {
       client.stop();
+      infoLedError(); // Show error for unknown device
+      delay(100);
       return msg;
     } else {
       int batteryPercent = 100;

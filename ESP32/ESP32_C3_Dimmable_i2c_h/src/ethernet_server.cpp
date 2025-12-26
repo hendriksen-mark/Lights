@@ -9,11 +9,10 @@ void ESP_Server_setup(){
 
 	ETH.begin( MISO, MOSI, SCK, SS, W5500_INT_GPIO, SPI_CLOCK_MHZ, ETH_SPI_HOST, mac);
 
-	infoLight(white); // play white anymation
-	while (!ESP32_W5500_isConnected()) { // connection to wifi still not ready
+	infoLight(white); // Initializing
+	while (!ESP32_W5500_isConnected()) { // connection to ethernet still not ready
 		LOG_DEBUG("W5500_isConnected: ", ESP32_W5500_isConnected());
-		infoLight(red); // play red animation
-		delay(500);
+		infoLedPulse(red, 1, 500); // Pulse red while connecting
 	}
 	// Show that we are connected
 	LOG_DEBUG("W5500_isConnected: ", ESP32_W5500_isConnected(), " IP Address: ", ETH.localIP());
@@ -24,5 +23,5 @@ void ESP_Server_setup(){
 		MDNS.addService("http", "tcp", LIGHT_PORT_WS);
 	}
 	
-	infoLight(green); // connected, play green animation
+	infoLedSuccess(); // Show success with green pulses
 }

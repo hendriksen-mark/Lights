@@ -496,6 +496,7 @@ void ws_setup() {
   Udp.begin(2100); // start entertainment UDP server
 
   server_ws.on("/state", HTTP_PUT, []() { // HTTP PUT request used to set a new light state
+    infoLight(RgbColor(0, 255, 255)); // Cyan for WS2811 requests
     JsonDocument root;
     DeserializationError error = deserializeJson(root, server_ws.arg("plain"));
 
@@ -713,6 +714,12 @@ void entertainment() { // entertainment function
   if (packetSize) { // if nr of bytes is more than zero
     entertainmentRun = true; // announce entertainment is running
     lastEPMillis = millis(); // update variable with last received package timestamp
+    // Visual indicator for entertainment mode - brief pulse every few packets
+    static unsigned long lastEntertainmentBlink = 0;
+    if (millis() - lastEntertainmentBlink > 500) { // Pulse every 500ms during entertainment
+      infoLight(RgbColor(128, 0, 128)); // Purple for entertainment mode
+      lastEntertainmentBlink = millis();
+    }
     Udp.read(packetBuffer, packetSize);
     for (uint8_t i = 0; i < packetSize / 4; i++) { // loop with every light. There are 4 bytes for every light (light number, red, green, blue)
       lights[packetBuffer[i * 4]].currentColors[0] = packetBuffer[i * 4 + 1] * rgb_multiplier[0] / 100;
@@ -771,6 +778,7 @@ void ws_loop() {
   } else {
     if ((millis() - lastEPMillis) >= ENTERTAINMENT_TIMEOUT) { // entertainment stream stop (timeout)
       entertainmentRun = false;
+      infoLedIdle(); // Return to idle when entertainment stops
       for (uint8_t i = 0; i < lightsCount; i++) {
         processLightdata(i); //return to original colors with 0.4 sec transition
       }

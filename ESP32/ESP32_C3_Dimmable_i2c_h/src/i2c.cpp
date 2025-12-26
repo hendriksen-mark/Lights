@@ -92,12 +92,18 @@ void process_lightdata_i2c(uint8_t light) {
 			break;
 		case 1:
 			LOG_DEBUG("wire code:", "data too long to fit in transmit buffer");
+			infoLedError(); // Quick error indication
+			delay(100);
 			break;
 		case 2:
 			LOG_DEBUG("wire code:", "received NO ACK on transmit of address");
+			infoLedError(); // Quick error indication
+			delay(100);
 			break;
 		case 3:
 			LOG_DEBUG("wire code:", "received NO ACK on transmit of data");
+			infoLedError(); // Quick error indication
+			delay(100);
 			break;
 		case 4:
 			LOG_DEBUG("wire code:", "other error");
@@ -153,6 +159,7 @@ void i2c_setup() {
 	}
 
 	server_i2c.on("/state", HTTP_PUT, []() { // HTTP PUT request used to set a new light state
+		infoLight(RgbColor(255, 255, 0)); // Yellow for I2C requests
 		JsonDocument root; // Reduced from 1024 - more efficient for actual usage
 		DeserializationError error = deserializeJson(root, server_i2c.arg("plain"));
 

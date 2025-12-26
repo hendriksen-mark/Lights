@@ -99,6 +99,7 @@ void newConnectionCallback(uint32_t nodeId) {
 }
 
 void receivedCallback( uint32_t from, String &msg ) {
+  infoLight(RgbColor(0, 255, 0)); // Green for mesh messages
   JsonDocument root;
   DeserializationError error = deserializeJson(root, msg);
 

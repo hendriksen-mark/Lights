@@ -17,14 +17,17 @@ void setup() {
   LOG_DEBUG("Start ESP32");
   functions_setup();
   ChangeNeoPixels_info();
-  infoLight(white);
-  blinkLed(1);
+  infoLedFadeIn(white, 500); // Smooth startup indication
+  delay(200);
 
   ESP_Server_setup();
 
   i2c_setup();
   ws_setup();
   mesh_setup();
+  
+  // Setup complete - enter idle state
+  infoLedIdle();
 }
 
 void loop() {
@@ -34,7 +37,14 @@ void loop() {
     lastWiFiCheck = currentMillis;
     if (WiFi.status() != WL_CONNECTED) {
       LOG_ERROR("WiFi disconnected, attempting reconnection...");
+      infoLedPulse(RgbColor(255, 100, 0), 1, 300); // Orange pulse for WiFi issue
       WiFi.reconnect();
+      delay(100);
+      if (WiFi.status() == WL_CONNECTED) {
+        infoLedSuccess(); // Reconnected successfully
+        delay(200);
+        infoLedIdle(); // Back to idle
+      }
     }
   }
 
