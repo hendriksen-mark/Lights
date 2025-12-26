@@ -18,15 +18,15 @@ unsigned long lastEPMillis;
 
 //settings
 char lightName[LIGHT_NAME_MAX_LENGTH] = LIGHT_NAME_WS2811;
-uint8_t effect, scene, startup, onPin = 8, offPin = 9 ;
+uint8_t effect, scene, startup, onPin = LIGHT_ONPIN_WS, offPin = LIGHT_OFFPIN_WS;
 bool hwSwitch = false;
 uint8_t rgb_multiplier[] = {100, 100, 100}; // light multiplier in percentage /R, G, B/
 
 uint16_t dividedLightsArray[30];
 
-uint8_t lightsCount = 9;
-uint16_t pixelCount = 9;
-uint8_t transitionLeds = 0; // pixelCount must be divisible by this value
+uint8_t lightsCount = LIGHT_COUNT_WS;
+uint16_t pixelCount = PIXEL_COUNT_WS;
+uint8_t transitionLeds = TRANSITION_LEDS_WS; // pixelCount must be divisible by this value
 
 WebServer server_ws(LIGHT_PORT_WS);
 WiFiUDP Udp;

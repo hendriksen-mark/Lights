@@ -34,6 +34,11 @@
 #define LIGHT_NAME_MAX_LENGTH 32        // Longer name will get stripped
 #define LIGHT_PORT_WS 81                // Web server port for WS2811 lights
 #define ENTERTAINMENT_TIMEOUT 1500      // Entertainment stream timeout (millis)
+#define LIGHT_COUNT_WS 9              // Number of WS2811 lights
+#define PIXEL_COUNT_WS 9             // Number of pixels per WS2811 light
+#define TRANSITION_LEDS_WS 0           // Number of transition leds between virtual lights
+#define LIGHT_ONPIN_WS 8              // Hardware on switch pin
+#define LIGHT_OFFPIN_WS 9             // Hardware off switch pin
 #ifndef DATA_PIN
 #define DATA_PIN 4                      // WS2811 data pin
 #endif

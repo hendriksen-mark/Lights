@@ -3,9 +3,9 @@
 extern byte mac[];
 
 //define pins
-//                              kamer    woonkamer      keuken    slaapkamer      gang    badkamer
-//                              nummer   1    2   3     4         5               6       7
-//                              array    0    1   2     3         4               5       6
+//                              kamer   woonkamer      keuken    slaapkamer      gang    badkamer
+//                              nummer  1    2   3     4         5               6       7
+//                              array   0    1   2     3         4               5       6
 int lightadress_i2c[LIGHT_COUNT_I2C] = {9,   10, 11,   12,       13,             14,     15};
 
 unsigned long previousMillis = 0;
