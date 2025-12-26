@@ -2,11 +2,11 @@
 
 extern byte mac[];
 
-//define pins
-//                              kamer   woonkamer      keuken    slaapkamer      gang    badkamer
-//                              nummer  1    2   3     4         5               6       7
-//                              array   0    1   2     3         4               5       6
-int lightadress_i2c[LIGHT_COUNT_I2C] = {9,   10, 11,   12,       13,             14,     15};
+// define adresses of i2c dimmable lights
+//                               kamer	woonkamer	keuken	slaapkamer	gang    badkamer
+//                               nummer 1   2   3	4		5			6		7
+//                               array  0   1   2	3		4			5		6
+int lightadress_i2c[LIGHT_COUNT_I2C] = {9,  10, 11,	12,		13,			14,		15};
 
 unsigned long previousMillis = 0;
 
@@ -16,7 +16,8 @@ float step_level_i2c[LIGHT_COUNT_I2C], current_bri_i2c[LIGHT_COUNT_I2C];
 
 WebServer server_i2c(LIGHT_PORT_I2C);
 
-void handleNotFound_i2c() {
+void handleNotFound_i2c()
+{
 	String message;
 	message.reserve(200); // Pre-allocate to reduce memory fragmentation
 	message = "File Not Found\n\n";
@@ -27,23 +28,31 @@ void handleNotFound_i2c() {
 	message += "\nArguments: ";
 	message += server_i2c.args();
 	message += "\n";
-	for (uint8_t i = 0; i < server_i2c.args(); i++) {
+	for (uint8_t i = 0; i < server_i2c.args(); i++)
+	{
 		message += " " + server_i2c.argName(i) + ": " + server_i2c.arg(i) + "\n";
 	}
 	server_i2c.send(404, "text/plain", message);
 }
 
-void apply_scene_i2c(uint8_t new_scene, uint8_t light) {
-	if ( new_scene == 0) {
+void apply_scene_i2c(uint8_t new_scene, uint8_t light)
+{
+	if (new_scene == 0)
+	{
 		bri_i2c[light] = 144;
-	} else if ( new_scene == 1) {
+	}
+	else if (new_scene == 1)
+	{
 		bri_i2c[light] = 254;
-	} else if ( new_scene == 2) {
+	}
+	else if (new_scene == 2)
+	{
 		bri_i2c[light] = 1;
 	}
 }
 
-void send_alert(uint8_t light) {
+void send_alert(uint8_t light)
+{
 	bool prev_light_state_i2c = light_state_i2c[light];
 	int prev_bri_i2c = bri_i2c[light];
 	int prev_transitiontime_i2c = transitiontime_i2c;
@@ -71,10 +80,10 @@ void send_alert(uint8_t light) {
 	transitiontime_i2c = prev_transitiontime_i2c;
 
 	process_lightdata_i2c(light);
-
 }
 
-void process_lightdata_i2c(uint8_t light) {
+void process_lightdata_i2c(uint8_t light)
+{
 	Wire.beginTransmission(lightadress_i2c[light]);
 	Wire.write(bri_i2c[light]);
 	Wire.write(light_state_i2c[light]);
@@ -86,46 +95,54 @@ void process_lightdata_i2c(uint8_t light) {
 	LOG_DEBUG("bri:", bri_i2c[light]);
 	LOG_DEBUG("state:", light_state_i2c[light]);
 	LOG_DEBUG("transitiontime:", transitiontime_i2c);
-	switch (error_code) {
-		case 0:
-			LOG_DEBUG("wire code:", "success");
-			break;
-		case 1:
-			LOG_DEBUG("wire code:", "data too long to fit in transmit buffer");
-			infoLedError(); // Quick error indication
-			delay(100);
-			break;
-		case 2:
-			LOG_DEBUG("wire code:", "received NO ACK on transmit of address");
-			infoLedError(); // Quick error indication
-			delay(100);
-			break;
-		case 3:
-			LOG_DEBUG("wire code:", "received NO ACK on transmit of data");
-			infoLedError(); // Quick error indication
-			delay(100);
-			break;
-		case 4:
-			LOG_DEBUG("wire code:", "other error");
-			break;
-		case 5:
-			LOG_DEBUG("wire code:", "timeout");
-			break;
-		default:
-			LOG_DEBUG("wire code:", "unknown error");
-			break;
+	switch (error_code)
+	{
+	case 0:
+		LOG_DEBUG("wire code:", "success");
+		break;
+	case 1:
+		LOG_DEBUG("wire code:", "data too long to fit in transmit buffer");
+		infoLedError(); // Quick error indication
+		delay(100);
+		break;
+	case 2:
+		LOG_DEBUG("wire code:", "received NO ACK on transmit of address");
+		infoLedError(); // Quick error indication
+		delay(100);
+		break;
+	case 3:
+		LOG_DEBUG("wire code:", "received NO ACK on transmit of data");
+		infoLedError(); // Quick error indication
+		delay(100);
+		break;
+	case 4:
+		LOG_DEBUG("wire code:", "other error");
+		break;
+	case 5:
+		LOG_DEBUG("wire code:", "timeout");
+		break;
+	default:
+		LOG_DEBUG("wire code:", "unknown error");
+		break;
 	}
 }
 
-void lightEngine_i2c() {
-	for (int i = 0; i < LIGHT_COUNT_I2C; i++) {
-		if (light_state_i2c[i]) {
-			if (bri_i2c[i] != current_bri_i2c[i]) {
+void lightEngine_i2c()
+{
+	for (int i = 0; i < LIGHT_COUNT_I2C; i++)
+	{
+		if (light_state_i2c[i])
+		{
+			if (bri_i2c[i] != current_bri_i2c[i])
+			{
 				process_lightdata_i2c(i);
 				current_bri_i2c[i] = bri_i2c[i];
 			}
-		} else {
-			if (current_bri_i2c[i] != 0) {
+		}
+		else
+		{
+			if (current_bri_i2c[i] != 0)
+			{
 				process_lightdata_i2c(i);
 				current_bri_i2c[i] = 0;
 			}
@@ -133,71 +150,91 @@ void lightEngine_i2c() {
 	}
 }
 
-void request_lightdata(uint8_t light) {
+void request_lightdata(uint8_t light)
+{
 	light_rec = Wire.requestFrom(lightadress_i2c[light], 2, 1);
 	byte buff[2];
 	Wire.readBytes(buff, 2);
-	if (light_rec > 0) {
+	if (light_rec > 0)
+	{
 		bri_i2c[light] = buff[0];
 		light_state_i2c[light] = buff[1];
-		//current_bri_i2c[light] = bri_i2c[light];
+		// current_bri_i2c[light] = bri_i2c[light];
 
 		LOG_DEBUG("Light:", light);
 		LOG_DEBUG("bri:", bri_i2c[light]);
 		LOG_DEBUG("state:", light_state_i2c[light]);
-	} else {
+	}
+	else
+	{
 		LOG_ERROR("Light:", light, "no response");
 	}
 }
 
-void i2c_setup() {
+void i2c_setup()
+{
 	Wire.begin();
 	LOG_DEBUG("Setup I2C");
 
-	for (int i = 0; i < LIGHT_COUNT_I2C; i++) {
+	for (int i = 0; i < LIGHT_COUNT_I2C; i++)
+	{
 		request_lightdata(i);
 	}
 
 	server_i2c.on("/state", HTTP_PUT, []() { // HTTP PUT request used to set a new light state
-		infoLight(RgbColor(255, 255, 0)); // Yellow for I2C requests
-		JsonDocument root; // Reduced from 1024 - more efficient for actual usage
+		infoLight(RgbColor(255, 255, 0));	 // Yellow for I2C requests
+		JsonDocument root;					 // Reduced from 1024 - more efficient for actual usage
 		DeserializationError error = deserializeJson(root, server_i2c.arg("plain"));
 
-		if (error) {
+		if (error)
+		{
 			server_i2c.send(404, "text/plain", "FAIL. " + server_i2c.arg("plain"));
-		} else {
-			for (JsonPair state : root.as<JsonObject>()) {
-				const char* key = state.key().c_str();
+		}
+		else
+		{
+			for (JsonPair state : root.as<JsonObject>())
+			{
+				const char *key = state.key().c_str();
 				int light = atoi(key) - 1;
 				JsonObject values = state.value();
 				transitiontime_i2c = 4;
 
-				if (!values["on"].isNull()) {
-					if (values["on"]) {
+				if (!values["on"].isNull())
+				{
+					if (values["on"])
+					{
 						light_state_i2c[light] = true;
-					} else {
+					}
+					else
+					{
 						light_state_i2c[light] = false;
 					}
 				}
 
-				if (!values["bri"].isNull()) {
+				if (!values["bri"].isNull())
+				{
 					bri_i2c[light] = values["bri"];
 				}
 
-				if (!values["bri_inc"].isNull()) {
-					bri_i2c[light] += (int) values["bri_inc"];
-					if (bri_i2c[light] > 255) bri_i2c[light] = 255;
-					else if (bri_i2c[light] < 1) bri_i2c[light] = 1;
+				if (!values["bri_inc"].isNull())
+				{
+					bri_i2c[light] += (int)values["bri_inc"];
+					if (bri_i2c[light] > 255)
+						bri_i2c[light] = 255;
+					else if (bri_i2c[light] < 1)
+						bri_i2c[light] = 1;
 				}
 
-				if (values["alert"].isNull() && values["alert"] == "select") {
+				if (values["alert"].isNull() && values["alert"] == "select")
+				{
 					send_alert(light);
 				}
 
-				if (!values["transitiontime"].isNull()) {
+				if (!values["transitiontime"].isNull())
+				{
 					transitiontime_i2c = values["transitiontime"];
 				}
-				//process_lightdata_i2c(light, transitiontime);
+				// process_lightdata_i2c(light, transitiontime);
 			}
 			String output;
 			serializeJson(root, output);
@@ -236,41 +273,58 @@ void i2c_setup() {
 		server_i2c.send(200, "text/plain", output);
 	});
 
-	server_i2c.on("/", []() {
-		transitiontime_i2c = 4;
-		for (int light = 0; light < LIGHT_COUNT_I2C; light++) {
-			if (server_i2c.hasArg("scene")) {
-				if (server_i2c.arg("bri") == "" && server_i2c.arg("hue") == "" && server_i2c.arg("ct") == "" && server_i2c.arg("sat") == "") {
-					apply_scene_i2c(server_i2c.arg("scene").toInt(), light);
-				} else {
-					if (server_i2c.arg("bri") != "") {
-						bri_i2c[light] = server_i2c.arg("bri").toInt();
-					}
-				}
-			} else if (server_i2c.hasArg("on")) {
-				if (server_i2c.arg("on") == "true") {
-					light_state_i2c[light] = true;
-				} else {
-					light_state_i2c[light] = false;
-				}
-			} else if (server_i2c.hasArg("alert")) {
-				send_alert(light);
-			}
-			if (light_state_i2c[light]) {
-				step_level_i2c[light] = ((float)bri_i2c[light] - current_bri_i2c[light]) / transitiontime_i2c;
-			} else {
-				step_level_i2c[light] = current_bri_i2c[light] / transitiontime_i2c;
-			}
-		}
-		if (server_i2c.hasArg("reset")) {
-			resetESP();
-		}
+	server_i2c.on("/", []()
+				  {
+					  transitiontime_i2c = 4;
+					  for (int light = 0; light < LIGHT_COUNT_I2C; light++)
+					  {
+						  if (server_i2c.hasArg("scene"))
+						  {
+							  if (server_i2c.arg("bri") == "" && server_i2c.arg("hue") == "" && server_i2c.arg("ct") == "" && server_i2c.arg("sat") == "")
+							  {
+								  apply_scene_i2c(server_i2c.arg("scene").toInt(), light);
+							  }
+							  else
+							  {
+								  if (server_i2c.arg("bri") != "")
+								  {
+									  bri_i2c[light] = server_i2c.arg("bri").toInt();
+								  }
+							  }
+						  }
+						  else if (server_i2c.hasArg("on"))
+						  {
+							  if (server_i2c.arg("on") == "true")
+							  {
+								  light_state_i2c[light] = true;
+							  }
+							  else
+							  {
+								  light_state_i2c[light] = false;
+							  }
+						  }
+						  else if (server_i2c.hasArg("alert"))
+						  {
+							  send_alert(light);
+						  }
+						  if (light_state_i2c[light])
+						  {
+							  step_level_i2c[light] = ((float)bri_i2c[light] - current_bri_i2c[light]) / transitiontime_i2c;
+						  }
+						  else
+						  {
+							  step_level_i2c[light] = current_bri_i2c[light] / transitiontime_i2c;
+						  }
+					  }
+					  if (server_i2c.hasArg("reset"))
+					  {
+						  resetESP();
+					  }
 
-		const char http_content[] PROGMEM = R"=====(<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Light Setup</title><style>body{font-family:Arial,sans-serif;max-width:600px;margin:20px auto;padding:20px}label{display:inline-block;width:100px}input,select{margin:5px 0;padding:5px}.btn{background:#4CAF50;color:white;padding:10px 20px;border:none;cursor:pointer;margin:5px}.btn:hover{background:#45a049}.off{background:#f44336}.off:hover{background:#da190b}</style></head><body><h2>Light Setup</h2><form method="post"><div><label>Power:</label><a class="btn" href="/?on=true">ON</a><a class="btn off" href="/?on=false">OFF</a></div><div><label>Startup:</label><select name="startup" onchange="this.form.submit()"><option value="0">Last state</option><option value="1">On</option><option value="2">Off</option></select></div><div><label>Scene:</label><select name="scene" onchange="this.form.submit()"><option value="0">Relax</option><option value="1">Bright</option><option value="2">Nightly</option></select></div><div><label>Brightness:</label><input name="bri" type="number" min="1" max="254"></div><div><button type="submit" class="btn">Save</button></div><div><a href="/?alert=1">Alert</a> | <a href="/?reset=1">Reset</a></div></form></body></html>)=====";
+					  const char http_content[] PROGMEM = R"=====(<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Light Setup</title><style>body{font-family:Arial,sans-serif;max-width:600px;margin:20px auto;padding:20px}label{display:inline-block;width:100px}input,select{margin:5px 0;padding:5px}.btn{background:#4CAF50;color:white;padding:10px 20px;border:none;cursor:pointer;margin:5px}.btn:hover{background:#45a049}.off{background:#f44336}.off:hover{background:#da190b}</style></head><body><h2>Light Setup</h2><form method="post"><div><label>Power:</label><a class="btn" href="/?on=true">ON</a><a class="btn off" href="/?on=false">OFF</a></div><div><label>Startup:</label><select name="startup" onchange="this.form.submit()"><option value="0">Last state</option><option value="1">On</option><option value="2">Off</option></select></div><div><label>Scene:</label><select name="scene" onchange="this.form.submit()"><option value="0">Relax</option><option value="1">Bright</option><option value="2">Nightly</option></select></div><div><label>Brightness:</label><input name="bri" type="number" min="1" max="254"></div><div><button type="submit" class="btn">Save</button></div><div><a href="/?alert=1">Alert</a> | <a href="/?reset=1">Reset</a></div></form></body></html>)=====";
 
-		server_i2c.send_P(200, "text/html", http_content);
-
-	});
+					  server_i2c.send_P(200, "text/html", http_content);
+				  });
 
 	server_i2c.on("/reset", []() { // trigger manual reset
 		server_i2c.send(200, "text/html", "reset");
@@ -282,15 +336,18 @@ void i2c_setup() {
 	server_i2c.begin();
 }
 
-void i2c_loop() {
+void i2c_loop()
+{
 	server_i2c.handleClient();
 	lightEngine_i2c();
 
 	unsigned long currentMillis = millis();
 
-	if (currentMillis - previousMillis >= LIGHT_INTERVAL) {
+	if (currentMillis - previousMillis >= LIGHT_INTERVAL)
+	{
 		previousMillis = currentMillis;
-		for (int i = 0; i < LIGHT_COUNT_I2C; i++) {
+		for (int i = 0; i < LIGHT_COUNT_I2C; i++)
+		{
 			request_lightdata(i);
 		}
 	}

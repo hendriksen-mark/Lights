@@ -6,13 +6,14 @@
 #include "config.h"
 #include <WiFi.h>
 
-byte mac[] = { MAC_ADDR_0, MAC_ADDR_1, MAC_ADDR_2, MAC_ADDR_3, MAC_ADDR_4, MAC_ADDR_5 };
+byte mac[] = {MAC_ADDR_0, MAC_ADDR_1, MAC_ADDR_2, MAC_ADDR_3, MAC_ADDR_4, MAC_ADDR_5};
 
 void ESP_Server_setup(); // Forward declaration
 
 unsigned long lastWiFiCheck = 0;
 
-void setup() {
+void setup()
+{
   Serial.begin(115200);
   LOG_DEBUG("Start ESP32");
   functions_setup();
@@ -25,22 +26,26 @@ void setup() {
   i2c_setup();
   ws_setup();
   mesh_setup();
-  
+
   // Setup complete - enter idle state
   infoLedIdle();
 }
 
-void loop() {
+void loop()
+{
   // WiFi reconnection logic
   unsigned long currentMillis = millis();
-  if (currentMillis - lastWiFiCheck >= WIFI_CHECK_INTERVAL) {
+  if (currentMillis - lastWiFiCheck >= WIFI_CHECK_INTERVAL)
+  {
     lastWiFiCheck = currentMillis;
-    if (WiFi.status() != WL_CONNECTED) {
+    if (WiFi.status() != WL_CONNECTED)
+    {
       LOG_ERROR("WiFi disconnected, attempting reconnection...");
       infoLedPulse(RgbColor(255, 100, 0), 1, 300); // Orange pulse for WiFi issue
       WiFi.reconnect();
       delay(100);
-      if (WiFi.status() == WL_CONNECTED) {
+      if (WiFi.status() == WL_CONNECTED)
+      {
         infoLedSuccess(); // Reconnected successfully
         delay(200);
         infoLedIdle(); // Back to idle

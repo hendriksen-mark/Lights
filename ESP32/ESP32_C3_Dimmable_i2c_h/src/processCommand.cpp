@@ -2,14 +2,17 @@
 
 WiFiClient client;
 
-String sendHttpRequest(int button, String mac, IPAddress bridgeIp) {
+String sendHttpRequest(int button, String mac, IPAddress bridgeIp)
+{
   String msg;
   msg.reserve(50); // Pre-allocate to reduce memory fragmentation
   msg = "";
 
-  while (true) {
-    if (!client.connect(bridgeIp, BRIDGE_PORT)) {
-      //LOG_ERROR("Connection failed");
+  while (true)
+  {
+    if (!client.connect(bridgeIp, BRIDGE_PORT))
+    {
+      // LOG_ERROR("Connection failed");
       infoLedError(); // Show connection error
       delay(100);
       return "Connection failed";
@@ -19,31 +22,41 @@ String sendHttpRequest(int button, String mac, IPAddress bridgeIp) {
     String url;
     url.reserve(100); // Pre-allocate to reduce memory fragmentation
     url = "/switch";
-    //url += "?mac=";
-    //url += mac;
+    // url += "?mac=";
+    // url += mac;
 
-    if (msg == "device not found" || msg == "no mac in list") {
-      //url = "/switch";
+    if (msg == "device not found" || msg == "no mac in list")
+    {
+      // url = "/switch";
       url += "?devicetype=";
-      if (button >= 1000) {
+      if (button >= 1000)
+      {
         url += (String)switchType;
-      } else {
+      }
+      else
+      {
         url += (String)motionType;
       }
       url += "&mac=";
       url += mac;
-    } else if (msg == "command applied") {
+    }
+    else if (msg == "command applied")
+    {
       client.stop();
       blinkLed(1, 50); // Quick success blink
       return msg;
-    } else if (msg == "unknown device" || msg == "missing mac address") {
+    }
+    else if (msg == "unknown device" || msg == "missing mac address")
+    {
       client.stop();
       infoLedError(); // Show error for unknown device
       delay(100);
       return msg;
-    } else {
+    }
+    else
+    {
       int batteryPercent = 100;
-      //url = "/switch?mac=";
+      // url = "/switch?mac=";
       url += "?mac=";
       url += mac;
       url += "&button=";
@@ -66,9 +79,9 @@ String sendHttpRequest(int button, String mac, IPAddress bridgeIp) {
 
     client.println(message);
 
-
-    if (client.println() == 0) {
-      //LOG_ERROR("Failed to send request");
+    if (client.println() == 0)
+    {
+      // LOG_ERROR("Failed to send request");
       client.stop();
       return "Failed to send request";
     }
@@ -76,16 +89,18 @@ String sendHttpRequest(int button, String mac, IPAddress bridgeIp) {
     // Check HTTP status
     char status[32] = {0};
     client.readBytesUntil('\r', status, sizeof(status));
-    if (strcmp(status, "HTTP/1.1 200 OK") != 0) {
-      //LOG_ERROR("Unexpected response:", status);
+    if (strcmp(status, "HTTP/1.1 200 OK") != 0)
+    {
+      // LOG_ERROR("Unexpected response:", status);
       client.stop();
       return "Unexpected response: ";
     }
 
     // Skip HTTP headers
     char endOfHeaders[] = "\r\n\r\n";
-    if (!client.find(endOfHeaders)) {
-      //LOG_ERROR("Invalid response");
+    if (!client.find(endOfHeaders))
+    {
+      // LOG_ERROR("Invalid response");
       client.stop();
       return "Invalid response";
     }
@@ -95,16 +110,19 @@ String sendHttpRequest(int button, String mac, IPAddress bridgeIp) {
 
     // Parse JSON object
     DeserializationError error = deserializeJson(doc, client);
-    if (error) {
-      //LOG_ERROR("deserializeJson() failed:", error.c_str());
+    if (error)
+    {
+      // LOG_ERROR("deserializeJson() failed:", error.c_str());
       client.stop();
       return "deserializeJson() failed: ";
     }
     JsonObject obj = doc.as<JsonObject>();
-    if (!!obj["success"].isNull()) {
+    if (!!obj["success"].isNull())
+    {
       msg = doc["success"].as<String>();
     }
-    if (!!obj["fail"].isNull()) {
+    if (!!obj["fail"].isNull())
+    {
       msg = doc["fail"].as<String>();
     }
   }

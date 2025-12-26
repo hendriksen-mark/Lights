@@ -3,38 +3,38 @@
 int subip = BRIDGE_IP_OCTET_4;
 IPAddress bridgeIp(BRIDGE_IP_OCTET_1, BRIDGE_IP_OCTET_2, BRIDGE_IP_OCTET_3, subip);
 
-painlessMesh  mesh;
+painlessMesh mesh;
 
 int value;
 String room_mac;
 bool change = false;
 uint32_t curtain_id = 0;
 
-byte target;//0-100%
-byte current;//0-100%
+byte target;  // 0-100%
+byte current; // 0-100%
 
-byte target_ont;//0-100%
-byte current_ont;//0-100%
+byte target_ont;  // 0-100%
+byte current_ont; // 0-100%
 
 bool fout = false;
 
-int state_ont;//0 1 2
+int state_ont; // 0 1 2
 
 WebServer server_gordijn(PORDIJN_SERVER_PORT);
 WebServer server_mesh(MESH_SERVER_PORT);
 
-
-void mesh_setup() {
-  //mesh.setDebugMsgTypes( ERROR | MESH_STATUS | CONNECTION | SYNC | COMMUNICATION | GENERAL | MSG_TYPES | REMOTE | DEBUG ); // all types on
-  //mesh.setDebugMsgTypes( ERROR | CONNECTION | SYNC | S_TIME );  // set before init() so that you can see startup messages
-  //mesh.setDebugMsgTypes( ERROR | CONNECTION | S_TIME );  // set before init() so that you can see startup messages
-  mesh.setDebugMsgTypes( ERROR | MESH_STATUS | CONNECTION | COMMUNICATION );
-  //mesh.init(MESH_PREFIX, MESH_PASSWORD, MESH_PORT);
-  mesh.init (MESH_PREFIX, MESH_PASSWORD, MESH_PORT, MESH_CONNECT_MODE, MESH_HIDDEN);
+void mesh_setup()
+{
+  // mesh.setDebugMsgTypes( ERROR | MESH_STATUS | CONNECTION | SYNC | COMMUNICATION | GENERAL | MSG_TYPES | REMOTE | DEBUG ); // all types on
+  // mesh.setDebugMsgTypes( ERROR | CONNECTION | SYNC | S_TIME );  // set before init() so that you can see startup messages
+  // mesh.setDebugMsgTypes( ERROR | CONNECTION | S_TIME );  // set before init() so that you can see startup messages
+  mesh.setDebugMsgTypes(ERROR | MESH_STATUS | CONNECTION | COMMUNICATION);
+  // mesh.init(MESH_PREFIX, MESH_PASSWORD, MESH_PORT);
+  mesh.init(MESH_PREFIX, MESH_PASSWORD, MESH_PORT, MESH_CONNECT_MODE, MESH_HIDDEN);
   mesh.onReceive(&receivedCallback);
   mesh.onNewConnection(&newConnectionCallback);
   newConnectionCallback(0);
-  
+
   server_gordijn.on(F("/"), handleRoot);
   server_gordijn.on("/setTargetPosTest/", set_Target_Pos_test);
   server_gordijn.on("/CurrentPosTest", get_current_pos_test);
@@ -47,12 +47,12 @@ void mesh_setup() {
   server_gordijn.on("/State", get_state);
 
   server_gordijn.on("/info", handleinfo);
-  
-  server_gordijn.on("/reset", []() {
+
+  server_gordijn.on("/reset", []()
+                    {
     server_gordijn.send(200, "text/html", "reset");
     delay(1000);
-    ESP.restart();
-  });
+    ESP.restart(); });
 
   server_gordijn.onNotFound(handleNotFound);
 
@@ -62,18 +62,20 @@ void mesh_setup() {
   server_mesh.on("/setIP/", set_IP);
   server_mesh.onNotFound(mesh_handleNotFound);
   server_mesh.begin();
-
 }
 
-void mesh_loop() {
+void mesh_loop()
+{
   server_gordijn.handleClient();
   server_mesh.handleClient();
   mesh.update();
   send_change();
 }
 
-void send_change() {
-  if (change == true) {
+void send_change()
+{
+  if (change == true)
+  {
     LOG_DEBUG("value:", value);
     LOG_DEBUG("room_mac:", room_mac);
     LOG_ERROR(sendHttpRequest(value, room_mac, bridgeIp));
@@ -81,7 +83,8 @@ void send_change() {
   }
 }
 
-void newConnectionCallback(uint32_t nodeId) {
+void newConnectionCallback(uint32_t nodeId)
+{
 
   JsonDocument doc;
   doc["master"] = uint32_t(mesh.getNodeId());
@@ -91,45 +94,57 @@ void newConnectionCallback(uint32_t nodeId) {
   LOG_DEBUG("newConnection nodeId:", nodeId);
   LOG_DEBUG("newConnection msg:", msg);
 
-  if (nodeId > 0) {
+  if (nodeId > 0)
+  {
     mesh.sendSingle(nodeId, msg);
-  } else {
+  }
+  else
+  {
     mesh.sendBroadcast(msg);
   }
 }
 
-void receivedCallback( uint32_t from, String &msg ) {
+void receivedCallback(uint32_t from, String &msg)
+{
   infoLight(RgbColor(0, 255, 0)); // Green for mesh messages
   JsonDocument root;
   DeserializationError error = deserializeJson(root, msg);
 
-  if (error) {
+  if (error)
+  {
     LOG_ERROR("deserializeJson() failed:", error.c_str());
     return;
   }
   LOG_DEBUG("nodeId:", from);
   LOG_DEBUG("msg:", msg);
-  if (bool(root["got_master"]) == true) {
-    if (root["device"] == "switch") {
-      room_mac = static_cast<const char*>(root["room_mac"]);
+  if (bool(root["got_master"]) == true)
+  {
+    if (root["device"] == "switch")
+    {
+      room_mac = static_cast<const char *>(root["room_mac"]);
       value = (int)root["value"];
       change = true;
     }
-    if(root["device"] == "curtain"){
+    if (root["device"] == "curtain")
+    {
       curtain_id = uint32_t(root["curtain_id"]);
       target_ont = (int)root["target"];
       current_ont = (int)root["current"];
       state_ont = (int)root["state"];
     }
-  } else {
-    if(root["device"] == "curtain"){
+  }
+  else
+  {
+    if (root["device"] == "curtain")
+    {
       curtain_id = uint32_t(root["curtain_id"]);
     }
     newConnectionCallback(from);
   }
 }
 
-void handleRoot() {
+void handleRoot()
+{
   String message = "<!DOCTYPE HTML>";
   message += "<html>";
   message += "<h1 align=center>Curtain control over ethernet+mesh</h1><br><br>";
@@ -149,20 +164,18 @@ void handleRoot() {
   message += fout;
   message += "<br><br>";
 
-
   message += "<form action=\"/setTargetPosTest/\">";
   message += "SET Target";
   message += "<input type=\"range\" name=\"Pos\" min=\"0\" max=\"100\" value=\"" + (String)target + "\" step=\"1\" class=\"slider\">";
-  //message += "<input type=\"text\"  name=\"Pos\" value=\"" + (String)target + "\">";
+  // message += "<input type=\"text\"  name=\"Pos\" value=\"" + (String)target + "\">";
   message += "<input type=\"submit\" value=\"Submit\">";
   message += "</form>";
   message += "Current Target  = ";
   message += target;
 
-  //message += "<a href=\"//setTargetPosTEST\"\"><button>SET Target Pos TEST</button></a>"; //aanpassen voor invullen
+  // message += "<a href=\"//setTargetPosTEST\"\"><button>SET Target Pos TEST</button></a>"; //aanpassen voor invullen
 
   message += "<br><br>";
-
 
   message += "<a href=\"/CurrentPosTest\"\"><button>GET Current Pos TEST</button></a>";
   message += "<a href=\"/getTargetPosTest\"\"><button>GET Target Pos TEST</button></a>";
@@ -189,17 +202,24 @@ void handleRoot() {
   server_gordijn.send(200, "text/html", message);
 }
 
-void sendData(String msg){
-  if(curtain_id > 0){
+void sendData(String msg)
+{
+  if (curtain_id > 0)
+  {
     mesh.sendSingle(curtain_id, msg);
-  }else{
+  }
+  else
+  {
     mesh.sendBroadcast(msg);
   }
 }
 
-void set_Target_Pos_test() {
-  for (uint8_t i = 0; i < server_gordijn.args(); i++) {
-    if (server_gordijn.argName(i) == F("Pos")) {
+void set_Target_Pos_test()
+{
+  for (uint8_t i = 0; i < server_gordijn.args(); i++)
+  {
+    if (server_gordijn.argName(i) == F("Pos"))
+    {
       target = server_gordijn.arg(i).toInt();
     }
   }
@@ -211,13 +231,16 @@ void set_Target_Pos_test() {
   String msg;
   serializeJson(doc, msg);
   sendData(msg);
-  server_gordijn.sendHeader("Location", "/", true); //Redirect to our html web page
+  server_gordijn.sendHeader("Location", "/", true); // Redirect to our html web page
   server_gordijn.send(302, "text/plane", "");
 }
 
-void set_Target_Pos() {
-  for (uint8_t i = 0; i < server_gordijn.args(); i++) {
-    if (server_gordijn.argName(i) == F("Pos")) {
+void set_Target_Pos()
+{
+  for (uint8_t i = 0; i < server_gordijn.args(); i++)
+  {
+    if (server_gordijn.argName(i) == F("Pos"))
+    {
       target = server_gordijn.arg(i).toInt();
     }
   }
@@ -229,10 +252,11 @@ void set_Target_Pos() {
   String msg;
   serializeJson(doc, msg);
   sendData(msg);
-  server_gordijn.send(200, F("text/plain"),   F("OK"));
+  server_gordijn.send(200, F("text/plain"), F("OK"));
 }
 
-void homeing() {
+void homeing()
+{
   JsonDocument doc;
   doc["device"] = "curtain";
   doc["homing"] = true;
@@ -240,11 +264,12 @@ void homeing() {
   String msg;
   serializeJson(doc, msg);
   sendData(msg);
-  server_gordijn.sendHeader("Location", "/", true); //Redirect to our html web page
+  server_gordijn.sendHeader("Location", "/", true); // Redirect to our html web page
   server_gordijn.send(302, "text/plane", "");
 }
 
-void get_current_pos_test() {
+void get_current_pos_test()
+{
   JsonDocument doc;
   doc["device"] = "curtain";
   doc["homing"] = false;
@@ -252,11 +277,12 @@ void get_current_pos_test() {
   String msg;
   serializeJson(doc, msg);
   sendData(msg);
-  server_gordijn.sendHeader("Location", "/", true); //Redirect to our html web page
+  server_gordijn.sendHeader("Location", "/", true); // Redirect to our html web page
   server_gordijn.send(302, "text/plane", "");
 }
 
-void get_current_pos() {
+void get_current_pos()
+{
   JsonDocument doc;
   doc["device"] = "curtain";
   doc["homing"] = false;
@@ -264,10 +290,11 @@ void get_current_pos() {
   String msg;
   serializeJson(doc, msg);
   sendData(msg);
-  server_gordijn.send(200, F("text/plain"),   (String)current_ont  );
+  server_gordijn.send(200, F("text/plain"), (String)current_ont);
 }
 
-void get_target_pos_test() {
+void get_target_pos_test()
+{
   JsonDocument doc;
   doc["device"] = "curtain";
   doc["homing"] = false;
@@ -275,11 +302,12 @@ void get_target_pos_test() {
   String msg;
   serializeJson(doc, msg);
   sendData(msg);
-  server_gordijn.sendHeader("Location", "/", true); //Redirect to our html web page
+  server_gordijn.sendHeader("Location", "/", true); // Redirect to our html web page
   server_gordijn.send(302, "text/plane", "");
 }
 
-void get_target_pos() {
+void get_target_pos()
+{
   JsonDocument doc;
   doc["device"] = "curtain";
   doc["homing"] = false;
@@ -287,10 +315,11 @@ void get_target_pos() {
   String msg;
   serializeJson(doc, msg);
   sendData(msg);
-  server_gordijn.send(200, F("text/plain"),   (String)target_ont  );
+  server_gordijn.send(200, F("text/plain"), (String)target_ont);
 }
 
-void get_state_test() {
+void get_state_test()
+{
   JsonDocument doc;
   doc["device"] = "curtain";
   doc["homing"] = false;
@@ -298,11 +327,12 @@ void get_state_test() {
   String msg;
   serializeJson(doc, msg);
   sendData(msg);
-  server_gordijn.sendHeader("Location", "/", true); //Redirect to our html web page
+  server_gordijn.sendHeader("Location", "/", true); // Redirect to our html web page
   server_gordijn.send(302, "text/plane", "");
 }
 
-void get_state() {
+void get_state()
+{
   JsonDocument doc;
   doc["device"] = "curtain";
   doc["homing"] = false;
@@ -310,10 +340,11 @@ void get_state() {
   String msg;
   serializeJson(doc, msg);
   sendData(msg);
-  server_gordijn.send(200, F("text/plain"),   (String)state_ont  );
+  server_gordijn.send(200, F("text/plain"), (String)state_ont);
 }
 
-void handleinfo() {
+void handleinfo()
+{
 
   String message = "<!DOCTYPE HTML>";
   message += "<html>";
@@ -325,7 +356,8 @@ void handleinfo() {
   server_gordijn.send(200, "text/html", message);
 }
 
-void handleNotFound() {
+void handleNotFound()
+{
   String message = "<!DOCTYPE HTML>";
   message = "File Not Found<br><br>";
   message += "URI: ";
@@ -335,7 +367,8 @@ void handleNotFound() {
   message += "<br>Arguments: ";
   message += server_gordijn.args();
   message += "<br>";
-  for (uint8_t i = 0; i < server_gordijn.args(); i++) {
+  for (uint8_t i = 0; i < server_gordijn.args(); i++)
+  {
     message += " " + server_gordijn.argName(i) + ": " + server_gordijn.arg(i) + "\n";
   }
   message += "<br><br>";
@@ -343,7 +376,8 @@ void handleNotFound() {
   server_gordijn.send(404, "text/html", message);
 }
 
-void mesh_handleNotFound() {
+void mesh_handleNotFound()
+{
   String message = "<!DOCTYPE HTML>";
   message = "File Not Found<br><br>";
   message += "URI: ";
@@ -353,7 +387,8 @@ void mesh_handleNotFound() {
   message += "<br>Arguments: ";
   message += server_mesh.args();
   message += "<br>";
-  for (uint8_t i = 0; i < server_mesh.args(); i++) {
+  for (uint8_t i = 0; i < server_mesh.args(); i++)
+  {
     message += " " + server_mesh.argName(i) + ": " + server_mesh.arg(i) + "\n";
   }
   message += "<br><br>";
@@ -361,11 +396,11 @@ void mesh_handleNotFound() {
   server_mesh.send(404, "text/html", message);
 }
 
-void mesh_handleRoot() {
+void mesh_handleRoot()
+{
   String message = "<!DOCTYPE HTML>";
   message += "<html>";
   message += "<h1 align=center>Set IP for mesh command</h1><br><br>";
-
 
   message += "<form action=\"/setIP/\">";
   message += "SET IP";
@@ -382,13 +417,16 @@ void mesh_handleRoot() {
   server_mesh.send(200, "text/html", message);
 }
 
-void set_IP() {
-  for (uint8_t i = 0; i < server_mesh.args(); i++) {
-    if (server_mesh.argName(i) == F("subip")) {
+void set_IP()
+{
+  for (uint8_t i = 0; i < server_mesh.args(); i++)
+  {
+    if (server_mesh.argName(i) == F("subip"))
+    {
       subip = server_mesh.arg(i).toInt();
     }
   }
   bridgeIp = IPAddress(BRIDGE_IP_OCTET_1, BRIDGE_IP_OCTET_2, BRIDGE_IP_OCTET_3, subip);
-  server_mesh.sendHeader("Location", "/", true); //Redirect to our html web page
+  server_mesh.sendHeader("Location", "/", true); // Redirect to our html web page
   server_mesh.send(302, "text/plane", "");
 }
