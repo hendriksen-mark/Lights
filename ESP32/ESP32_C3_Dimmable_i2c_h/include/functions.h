@@ -3,6 +3,7 @@
 #include <NeoPixelBus.h>
 #include <LittleFS.h>
 
+#include "config.h"
 #include "debug.h"
 
 extern RgbColor red;

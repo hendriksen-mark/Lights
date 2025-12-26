@@ -1,6 +1,4 @@
 #include "i2c.h"
-#include "config.h"
-#include <WebServer.h>
 
 extern byte mac[];
 

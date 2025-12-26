@@ -1,4 +1,3 @@
-#include "config.h"
 #include "functions.h"
 
 // Define the color constants

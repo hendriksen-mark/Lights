@@ -1,6 +1,4 @@
 #include "mesh.h"
-#include "config.h"
-#include <WebServer.h>
 
 int subip = BRIDGE_IP_OCTET_4;
 IPAddress bridgeIp(BRIDGE_IP_OCTET_1, BRIDGE_IP_OCTET_2, BRIDGE_IP_OCTET_3, subip);
@@ -70,7 +68,6 @@ void mesh_setup() {
   
   server_gordijn.on("/reset", []() {
     server_gordijn.send(200, "text/html", "reset");
-    digitalWrite(RES, HIGH);
     delay(1000);
     ESP.restart();
   });
@@ -355,43 +352,6 @@ void handleinfo() {
   message += "info<br><br>";
   message += "IP: ";
   message += WiFi.localIP().toString();
-  message += "<br>motor steps per omwenteling: ";
-  message += MOTOR_STEPS;
-  message += "<br>motor snelheid: ";
-  message += motorSpeed;
-  message += "<br>motor acceleratie: ";
-  message += motorAcc;
-  message += "<br>microstep: ";
-  message += MICROSTEPS;
-  message += "<br>aantal rondjes: ";
-  message += totalrond;
-  message += "<br>DIR pin: ";
-  message += DIR;
-  message += "<br>STEP pin: ";
-  message += STEP;
-  message += "<br>ENABLE pin: ";
-  message += ENABLE;
-  message += "<br>Driver Adress: ";
-  message += DRIVER_ADDRESS;
-  message += "<br>R_SENSE: ";
-  message += R_SENSE;
-  message += "<br>SW_RX pin: ";
-  message += SW_RX;
-  message += "<br>SW_TX pin: ";
-  message += SW_TX;
-  message += "<br>home_switch pin: ";
-  message += home_switch;
-  message += "<br>";
-
-  message += "<br>ESP_SW_RX pin: ";
-  message += ESP_SW_RX;
-  message += "<br>ESP_SW_TX pin: ";
-  message += ESP_SW_TX;
-  message += "<br>";
-
-  message += "<br>DEBUG: ";
-  message += DEBUG;
-  message += "<br>";
 
   message += "<br>totaal tijd : ";
   message += totaal_tijd;

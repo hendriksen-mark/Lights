@@ -1,6 +1,8 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#pragma once
+
 // ============================================
 // General Configuration
 // ============================================
@@ -71,19 +73,8 @@
 // ============================================
 // Stepper Motor Configuration
 // ============================================
-#define RES 2                           // Stepper resolution
-#define DIR 8                           // Direction pin
-#define STEP 7                          // Step pin
-#define ENABLE 4                        // Enable pin
-#define DRIVER_ADDRESS "0b00"           // Set by MS1/MS2. LOW/LOW in this case
 #define totalrond 123                   // Total rounds
 
-// ============================================
-// Serial Communication Configuration
-// ============================================
-#define ESP_SW_RX "A0"
-#define ESP_SW_TX "A1"
-#define DEBUG "false"
 
 // ============================================
 // Sensor Types Configuration

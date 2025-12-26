@@ -2,6 +2,10 @@
 
 #include <Wire.h>
 #include <ArduinoJson.h>
+#include <WebServer.h>
+
+
+#include "config.h"
 #include "debug.h"
 #include "ethernet_server.h"
 

@@ -1,5 +1,4 @@
 #include "color.h"
-#include <Arduino.h>
 
 // External references to variables defined in ws2811.cpp
 struct state {

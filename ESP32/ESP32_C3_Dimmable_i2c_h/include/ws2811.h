@@ -3,7 +3,11 @@
 #include <NeoPixelBus.h>
 #include <LittleFS.h>
 #include <ArduinoJson.h>
+#include <WiFi.h>
+#include <WebServer.h>
+#include <HTTPUpdateServer.h>
 
+#include "config.h"
 #include "debug.h"
 #include "functions.h"
 #include "color.h"

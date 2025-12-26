@@ -1,8 +1,10 @@
 #pragma once
 
-#include "painlessMesh.h"
+#include <painlessMesh.h>
 #include <ArduinoJson.h>
+#include <WebServer.h>
 
+#include "config.h"
 #include "debug.h"
 #include "processCommand.h"
 

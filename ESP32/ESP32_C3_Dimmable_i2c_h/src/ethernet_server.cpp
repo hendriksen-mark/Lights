@@ -1,9 +1,5 @@
 #include "ethernet_server.h"
 #include <WebServer_ESP32_W5500.h>
-#include <DNSServer.h>
-#include <ESPmDNS.h>
-#include "debug.h"
-#include "functions.h"
 
 extern byte mac[];
 
