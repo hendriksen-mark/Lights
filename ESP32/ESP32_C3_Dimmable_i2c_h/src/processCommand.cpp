@@ -86,22 +86,20 @@ String sendHttpRequest(int button, String mac, IPAddress bridgeIp) {
     }
 
     // Allocate the JSON document
-    // Use arduinojson.org/v6/assistant to compute the capacity.
-    const size_t capacity = JSON_OBJECT_SIZE(3) + JSON_ARRAY_SIZE(2) + 60;
-    DynamicJsonDocument doc(capacity);
+    JsonDocument doc;
 
     // Parse JSON object
     DeserializationError error = deserializeJson(doc, client);
     if (error) {
-      //LOG_ERROR("deserializeJson() failed:", error.f_str());
+      //LOG_ERROR("deserializeJson() failed:", error.c_str());
       client.stop();
       return "deserializeJson() failed: ";
     }
     JsonObject obj = doc.as<JsonObject>();
-    if (obj.containsKey("success")) {
+    if (!!obj["success"].isNull()) {
       msg = doc["success"].as<String>();
     }
-    if (obj.containsKey("fail")) {
+    if (!!obj["fail"].isNull()) {
       msg = doc["fail"].as<String>();
     }
   }

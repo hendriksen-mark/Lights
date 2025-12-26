@@ -153,7 +153,7 @@ void i2c_setup() {
 	}
 
 	server_i2c.on("/state", HTTP_PUT, []() { // HTTP PUT request used to set a new light state
-		DynamicJsonDocument root(512); // Reduced from 1024 - more efficient for actual usage
+		JsonDocument root; // Reduced from 1024 - more efficient for actual usage
 		DeserializationError error = deserializeJson(root, server_i2c.arg("plain"));
 
 		if (error) {
@@ -165,7 +165,7 @@ void i2c_setup() {
 				JsonObject values = state.value();
 				transitiontime_i2c = 4;
 
-				if (values.containsKey("on")) {
+				if (!values["on"].isNull()) {
 					if (values["on"]) {
 						light_state_i2c[light] = true;
 					} else {
@@ -173,21 +173,21 @@ void i2c_setup() {
 					}
 				}
 
-				if (values.containsKey("bri")) {
+				if (!values["bri"].isNull()) {
 					bri_i2c[light] = values["bri"];
 				}
 
-				if (values.containsKey("bri_inc")) {
+				if (!values["bri_inc"].isNull()) {
 					bri_i2c[light] += (int) values["bri_inc"];
 					if (bri_i2c[light] > 255) bri_i2c[light] = 255;
 					else if (bri_i2c[light] < 1) bri_i2c[light] = 1;
 				}
 
-				if (values.containsKey("alert") && values["alert"] == "select") {
+				if (values["alert"].isNull() && values["alert"] == "select") {
 					send_alert(light);
 				}
 
-				if (values.containsKey("transitiontime")) {
+				if (!values["transitiontime"].isNull()) {
 					transitiontime_i2c = values["transitiontime"];
 				}
 				//process_lightdata_i2c(light, transitiontime);
@@ -201,7 +201,7 @@ void i2c_setup() {
 
 	server_i2c.on("/state", HTTP_GET, []() { // HTTP GET request used to fetch current light state
 		uint8_t light = server_i2c.arg("light").toInt() - 1;
-		DynamicJsonDocument root(128); // Reduced from 1024 - only needs 2 values
+		JsonDocument root; // Reduced from 1024 - only needs 2 values
 		root["on"] = light_state_i2c[light];
 		root["bri"] = bri_i2c[light];
 		String output;
@@ -215,7 +215,7 @@ void i2c_setup() {
 	server_i2c.on("/detect", []() { // HTTP GET request used to discover the light type
 		char macString[32] = {0};
 		sprintf(macString, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-		DynamicJsonDocument root(256); // Reduced from 1024 - optimized for actual content
+		JsonDocument root; // Reduced from 1024 - optimized for actual content
 		root["name"] = LIGHT_NAME_I2C;
 		root["lights"] = LIGHT_COUNT_I2C;
 		root["protocol"] = LIGHT_PROTOCOL_I2C;

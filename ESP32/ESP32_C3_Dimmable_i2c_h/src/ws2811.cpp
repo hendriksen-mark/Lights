@@ -307,9 +307,9 @@ void lightEngine() {  // core function executed in loop()
 
 void saveState() { // save the lights state on LittleFS partition in JSON format
   LOG_DEBUG("save state");
-  DynamicJsonDocument json(1024);
+  JsonDocument json;
   for (uint8_t i = 0; i < lightsCount; i++) {
-    JsonObject light = json.createNestedObject((String)i);
+    JsonObject light = json[String(i)].to<JsonObject>();
     light["on"] = lights[i].lightState;
     light["bri"] = lights[i].bri;
     if (lights[i].colorMode == 1) {
@@ -335,7 +335,7 @@ void restoreState() { // restore the lights state from LittleFS partition
     return;
   }
 
-  DynamicJsonDocument json(1024);
+  JsonDocument json;
   DeserializationError error = deserializeJson(json, stateFile.readString());
   if (error) {
     LOG_DEBUG("Failed to parse config file");
@@ -347,19 +347,19 @@ void restoreState() { // restore the lights state from LittleFS partition
     JsonObject values = state.value();
     lights[lightId].lightState = values["on"];
     lights[lightId].bri = (uint8_t)values["bri"];
-    if (values.containsKey("x")) {
+    if (!!values["x"].isNull()) {
       lights[lightId].x = values["x"];
       lights[lightId].y = values["y"];
       lights[lightId].colorMode = 1;
-    } else if (values.containsKey("ct")) {
+    } else if (!!values["ct"].isNull()) {
       lights[lightId].ct = values["ct"];
       lights[lightId].colorMode = 2;
     } else {
-      if (values.containsKey("hue")) {
+      if (!!values["hue"].isNull()) {
         lights[lightId].hue = values["hue"];
         lights[lightId].colorMode = 3;
       }
-      if (values.containsKey("sat")) {
+      if (!!values["sat"].isNull()) {
         lights[lightId].sat = (uint8_t) values["sat"];
         lights[lightId].colorMode = 3;
       }
@@ -368,7 +368,7 @@ void restoreState() { // restore the lights state from LittleFS partition
 }
 
 bool saveConfig() { // save config in LittleFS partition in JSON file
-  DynamicJsonDocument json(1024);
+  JsonDocument json;
   json["name"] = lightName;
   json["startup"] = startup;
   json["scene"] = scene;
@@ -409,7 +409,7 @@ bool loadConfig() { // load the configuration from LittleFS partition
     return false;
   }
 
-  DynamicJsonDocument json(1024);
+  JsonDocument json;
   DeserializationError error = deserializeJson(json, configFile.readString());
   if (error) {
     LOG_DEBUG("Failed to parse config file");
@@ -428,7 +428,7 @@ bool loadConfig() { // load the configuration from LittleFS partition
   }
   pixelCount = (uint16_t) json["pixelCount"];
   transitionLeds = (uint8_t) json["transLeds"];
-  if (json.containsKey("rpct")) {
+  if (!!json["rpct"].isNull()) {
     rgb_multiplier[0] = (uint8_t) json["rpct"];
     rgb_multiplier[1] = (uint8_t) json["gpct"];
     rgb_multiplier[2] = (uint8_t) json["bpct"];
@@ -496,7 +496,7 @@ void ws_setup() {
   Udp.begin(2100); // start entertainment UDP server
 
   server_ws.on("/state", HTTP_PUT, []() { // HTTP PUT request used to set a new light state
-    DynamicJsonDocument root(1024);
+    JsonDocument root;
     DeserializationError error = deserializeJson(root, server_ws.arg("plain"));
 
     if (error) {
@@ -509,7 +509,7 @@ void ws_setup() {
         JsonObject values = state.value();
         int transitiontime = 4;
 
-        if (values.containsKey("effect")) {
+        if (!!values["effect"].isNull()) {
           if (values["effect"] == "no_effect") {
             effect = 0;
           } else if (values["effect"] == "candle") {
@@ -519,25 +519,25 @@ void ws_setup() {
           }
         }
 
-        if (values.containsKey("xy")) {
+        if (!!values["xy"].isNull()) {
           lights[light].x = values["xy"][0];
           lights[light].y = values["xy"][1];
           lights[light].colorMode = 1;
-        } else if (values.containsKey("ct")) {
+        } else if (!!values["ct"].isNull()) {
           lights[light].ct = values["ct"];
           lights[light].colorMode = 2;
         } else {
-          if (values.containsKey("hue")) {
+          if (!!values["hue"].isNull()) {
             lights[light].hue = values["hue"];
             lights[light].colorMode = 3;
           }
-          if (values.containsKey("sat")) {
+          if (!!values["sat"].isNull()) {
             lights[light].sat = values["sat"];
             lights[light].colorMode = 3;
           }
         }
 
-        if (values.containsKey("on")) {
+        if (!!values["on"].isNull()) {
           if (values["on"]) {
             lights[light].lightState = true;
           } else {
@@ -548,11 +548,11 @@ void ws_setup() {
           }
         }
 
-        if (values.containsKey("bri")) {
+        if (!!values["bri"].isNull()) {
           lights[light].bri = values["bri"];
         }
 
-        if (values.containsKey("bri_inc")) {
+        if (!!values["bri_inc"].isNull()) {
           if (values["bri_inc"] > 0) {
             if (lights[light].bri + (int) values["bri_inc"] > 254) {
               lights[light].bri = 254;
@@ -568,11 +568,11 @@ void ws_setup() {
           }
         }
 
-        if (values.containsKey("transitiontime")) {
+        if (!!values["transitiontime"].isNull()) {
           transitiontime = values["transitiontime"];
         }
 
-        if (values.containsKey("alert") && values["alert"] == "select") {
+        if (!values["alert"].isNull() && values["alert"] == "select") {
           if (lights[light].lightState) {
             lights[light].currentColors[0] = 0; lights[light].currentColors[1] = 0; lights[light].currentColors[2] = 0;
           } else {
@@ -592,10 +592,10 @@ void ws_setup() {
 
   server_ws.on("/state", HTTP_GET, []() { // HTTP GET request used to fetch current light state
     uint8_t light = server_ws.arg("light").toInt() - 1;
-    DynamicJsonDocument root(1024);
+    JsonDocument root;
     root["on"] = lights[light].lightState;
     root["bri"] = lights[light].bri;
-    JsonArray xy = root.createNestedArray("xy");
+    JsonArray xy = root["xy"].to<JsonArray>();
     xy.add(lights[light].x);
     xy.add(lights[light].y);
     root["ct"] = lights[light].ct;
@@ -615,7 +615,7 @@ void ws_setup() {
   server_ws.on("/detect", []() { // HTTP GET request used to discover the light type
     char macString[32] = {0};
     sprintf(macString, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-    DynamicJsonDocument root(1024);
+    JsonDocument root;
     root["name"] = lightName;
     root["lights"] = lightsCount;
     root["protocol"] = LIGHT_PROTOCOL_WS;
@@ -629,7 +629,7 @@ void ws_setup() {
   });
 
   server_ws.on("/config", []() { // used by light web interface to get current configuration
-    DynamicJsonDocument root(1024);
+    JsonDocument root;
     root["name"] = lightName;
     root["scene"] = scene;
     root["startup"] = startup;

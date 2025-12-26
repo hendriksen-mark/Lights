@@ -83,7 +83,7 @@ void send_change() {
 
 void newConnectionCallback(uint32_t nodeId) {
 
-  DynamicJsonDocument doc(260);
+  JsonDocument doc;
   doc["master"] = uint32_t(mesh.getNodeId());
   String msg;
   serializeJson(doc, msg);
@@ -99,11 +99,11 @@ void newConnectionCallback(uint32_t nodeId) {
 }
 
 void receivedCallback( uint32_t from, String &msg ) {
-  DynamicJsonDocument root(1024);
+  JsonDocument root;
   DeserializationError error = deserializeJson(root, msg);
 
   if (error) {
-    LOG_ERROR("deserializeJson() failed:", error.f_str());
+    LOG_ERROR("deserializeJson() failed:", error.c_str());
     return;
   }
   LOG_DEBUG("nodeId:", from);
@@ -202,7 +202,7 @@ void set_Target_Pos_test() {
       target = server_gordijn.arg(i).toInt();
     }
   }
-  DynamicJsonDocument doc(260);
+  JsonDocument doc;
   doc["device"] = "curtain";
   doc["homing"] = false;
   doc["request"] = true;
@@ -220,7 +220,7 @@ void set_Target_Pos() {
       target = server_gordijn.arg(i).toInt();
     }
   }
-  DynamicJsonDocument doc(260);
+  JsonDocument doc;
   doc["device"] = "curtain";
   doc["homing"] = false;
   doc["request"] = true;
@@ -232,7 +232,7 @@ void set_Target_Pos() {
 }
 
 void homeing() {
-  DynamicJsonDocument doc(260);
+  JsonDocument doc;
   doc["device"] = "curtain";
   doc["homing"] = true;
   doc["request"] = false;
@@ -244,7 +244,7 @@ void homeing() {
 }
 
 void get_current_pos_test() {
-  DynamicJsonDocument doc(260);
+  JsonDocument doc;
   doc["device"] = "curtain";
   doc["homing"] = false;
   doc["request"] = true;
@@ -256,7 +256,7 @@ void get_current_pos_test() {
 }
 
 void get_current_pos() {
-  DynamicJsonDocument doc(260);
+  JsonDocument doc;
   doc["device"] = "curtain";
   doc["homing"] = false;
   doc["request"] = true;
@@ -267,7 +267,7 @@ void get_current_pos() {
 }
 
 void get_target_pos_test() {
-  DynamicJsonDocument doc(260);
+  JsonDocument doc;
   doc["device"] = "curtain";
   doc["homing"] = false;
   doc["request"] = true;
@@ -279,7 +279,7 @@ void get_target_pos_test() {
 }
 
 void get_target_pos() {
-  DynamicJsonDocument doc(260);
+  JsonDocument doc;
   doc["device"] = "curtain";
   doc["homing"] = false;
   doc["request"] = true;
@@ -290,7 +290,7 @@ void get_target_pos() {
 }
 
 void get_state_test() {
-  DynamicJsonDocument doc(260);
+  JsonDocument doc;
   doc["device"] = "curtain";
   doc["homing"] = false;
   doc["request"] = true;
@@ -302,7 +302,7 @@ void get_state_test() {
 }
 
 void get_state() {
-  DynamicJsonDocument doc(260);
+  JsonDocument doc;
   doc["device"] = "curtain";
   doc["homing"] = false;
   doc["request"] = true;
