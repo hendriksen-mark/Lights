@@ -15,7 +15,9 @@
 // ============================================
 #define WIFI_CHECK_INTERVAL 30000  // Check WiFi every 30 seconds (millis)
 
-// MAC Address Configuration
+// ============================================
+// Ethernet Configuration
+// ============================================
 #define MAC_ADDR_0  0xDA
 #define MAC_ADDR_1  0xAD
 #define MAC_ADDR_2  0xEB
@@ -74,12 +76,6 @@
 #define BRIDGE_IP_OCTET_3   1
 #define BRIDGE_IP_OCTET_4   25      // Default last octet (can be changed via web interface)
 #define BRIDGE_PORT         80
-
-// ============================================
-// Stepper Motor Configuration
-// ============================================
-#define totalrond 123                   // Total rounds
-
 
 // ============================================
 // Sensor Types Configuration
