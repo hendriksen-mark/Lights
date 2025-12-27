@@ -19,6 +19,8 @@ uint16_t lightsCapacity = 0; // currently allocated capacity
 bool inTransition, entertainmentRun;
 byte packetBuffer[46];
 unsigned long lastEPMillis;
+unsigned long lastTransitionMillis = 0;
+unsigned long transitionFrameMs = TRANSITION_FRAME_MS_DEFAULT;
 
 // settings
 char lightName[LIGHT_NAME_MAX_LENGTH] = LIGHT_NAME_WS2811;
@@ -248,12 +250,20 @@ RgbColor convFloat(float color[3])
 
 void lightEngine()
 { // core function executed in loop()
+  unsigned long now = millis();
+  // If a transition is active, only process stepping once per frame interval
+  if (inTransition && (now - lastTransitionMillis) < transitionFrameMs)
+  {
+    return;
+  }
   for (int light = 0; light < lightsCount; light++)
   { // loop with every virtual light
     if (lights[light].lightState)
     { // if light in on
       if (lights[light].colors[0] != lights[light].currentColors[0] || lights[light].colors[1] != lights[light].currentColors[1] || lights[light].colors[2] != lights[light].currentColors[2])
       { // if not all RGB channels of the light are at desired level
+        if (!inTransition)
+          lastTransitionMillis = millis();
         inTransition = true;
         for (uint8_t k = 0; k < 3; k++)
         { // loop with every RGB channel of the light
@@ -316,12 +326,15 @@ void lightEngine()
           strip->ClearTo(convFloat(lights[light].currentColors), 0, pixelCount - 1);
         }
         strip->Show(); // show what was calculated previously
+        lastTransitionMillis = millis();
       }
     }
     else
     { // if light in off, calculate the dimming effect only
       if (lights[light].currentColors[0] != 0 || lights[light].currentColors[1] != 0 || lights[light].currentColors[2] != 0)
       { // proceed forward only in case not all RGB channels are zero
+        if (!inTransition)
+          lastTransitionMillis = millis();
         inTransition = true;
         for (uint8_t k = 0; k < 3; k++)
         { // loop with every RGB channel
@@ -384,13 +397,16 @@ void lightEngine()
           strip->ClearTo(convFloat(lights[light].currentColors), 0, pixelCount - 1);
         }
         strip->Show();
+        lastTransitionMillis = millis();
       }
     }
   }
   if (inTransition)
-  { // wait 6ms for a nice transition effect
-    delay(6);
-    inTransition = false; // set inTransition bash to false (will be set bach to true on next level execution if desired state is not reached)
+  { // non-blocking wait for a nice transition effect
+    if (millis() - lastTransitionMillis >= transitionFrameMs)
+    {
+      inTransition = false; // clear transition flag after minimal pause
+    }
   }
   else
   {
@@ -489,6 +505,7 @@ bool saveConfig_ws()
   }
   json["pixelCount"] = pixelCount;
   json["transLeds"] = transitionLeds;
+  json["transMs"] = (int)transitionFrameMs;
   json["rpct"] = rgb_multiplier[0];
   json["gpct"] = rgb_multiplier[1];
   json["bpct"] = rgb_multiplier[2];
@@ -515,6 +532,15 @@ bool loadConfig_ws()
   }
   pixelCount = (uint16_t)json["pixelCount"];
   transitionLeds = (uint8_t)json["transLeds"];
+  if (json["transMs"].is<int>())
+  {
+    int t = (int)json["transMs"];
+    if (t < 1)
+      t = 1;
+    else if (t > 1000)
+      t = 1000;
+    transitionFrameMs = (unsigned long)t;
+  }
   if (json["rpct"].is<int>())
     rgb_multiplier[0] = (uint8_t)json["rpct"];
   if (json["gpct"].is<int>())
@@ -785,6 +811,7 @@ void ws_setup()
     }
     root["pixelcount"] = pixelCount;
     root["transitionleds"] = transitionLeds;
+    root["transms"] = transitionFrameMs;
     root["rpct"] = rgb_multiplier[0];
     root["gpct"] = rgb_multiplier[1];
     root["bpct"] = rgb_multiplier[2];
@@ -820,6 +847,15 @@ void ws_setup()
       }
       pixelCount = server_ws.arg("pixelcount").toInt();
       transitionLeds = server_ws.arg("transitionleds").toInt();
+      if (server_ws.arg("transms").length())
+      {
+        int t = server_ws.arg("transms").toInt();
+        if (t < 1)
+          t = 1;
+        else if (t > 1000)
+          t = 1000;
+        transitionFrameMs = (unsigned long)t;
+      }
       rgb_multiplier[0] = server_ws.arg("rpct").toInt();
       rgb_multiplier[1] = server_ws.arg("gpct").toInt();
       rgb_multiplier[2] = server_ws.arg("bpct").toInt();
@@ -938,6 +974,7 @@ void entertainment()
       }
     }
     strip->Show();
+    lastTransitionMillis = millis();
   }
 }
 

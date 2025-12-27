@@ -157,6 +157,12 @@ const char htmlContent_ws[] PROGMEM = R"=====(
                         </div>
                         <div class="row">
                             <div class="col s4 m3">
+                                <label for="transms">Transition frame (ms)</label>
+                                <input type="number" id="transms" name="transms" min="1" max="1000">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col s4 m3">
                                 <label for="rpct" class="form-label">Red multiplier</label>
                                 <input type="number" id="rpct" class="js-range-slider" data-skin="round" name="rpct"
                                     value="" />

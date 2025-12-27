@@ -42,6 +42,7 @@
 #define LIGHT_COUNT_WS 9           // Number of WS2811 lights
 #define PIXEL_COUNT_WS 9           // Number of pixels per WS2811 light
 #define TRANSITION_LEDS_WS 0       // Number of transition leds between virtual lights
+#define TRANSITION_FRAME_MS_DEFAULT 6 // Default ms between transition frames
 #ifndef DATA_PIN
 #define DATA_PIN 4 // WS2811 data pin
 #endif
@@ -49,7 +50,6 @@
 #ifndef MAX_RUNTIME_LIGHTS
 #define MAX_RUNTIME_LIGHTS 10
 #endif
-// #define POWER_MOSFET_PIN 35          // WS2812 consume ~1mA/led when off. By installing a MOSFET it will cut the power to the leds when lights are off.
 
 // ============================================
 // I2C Dimmable Lights Configuration
