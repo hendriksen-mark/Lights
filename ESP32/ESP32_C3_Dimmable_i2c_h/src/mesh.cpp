@@ -89,6 +89,7 @@ void newConnectionCallback(uint32_t nodeId)
   JsonDocument doc;
   doc["master"] = uint32_t(mesh.getNodeId());
   String msg;
+  msg.reserve(256);
   serializeJson(doc, msg);
 
   LOG_DEBUG("newConnection nodeId:", nodeId);
@@ -229,6 +230,7 @@ void set_Target_Pos_test()
   doc["request"] = true;
   doc["target"] = target;
   String msg;
+  msg.reserve(256);
   serializeJson(doc, msg);
   sendData(msg);
   server_gordijn.sendHeader("Location", "/", true); // Redirect to our html web page
@@ -250,6 +252,7 @@ void set_Target_Pos()
   doc["request"] = true;
   doc["target"] = target;
   String msg;
+  msg.reserve(256);
   serializeJson(doc, msg);
   sendData(msg);
   server_gordijn.send(200, F("text/plain"), F("OK"));
@@ -262,6 +265,7 @@ void homeing()
   doc["homing"] = true;
   doc["request"] = false;
   String msg;
+  msg.reserve(256);
   serializeJson(doc, msg);
   sendData(msg);
   server_gordijn.sendHeader("Location", "/", true); // Redirect to our html web page
@@ -275,6 +279,7 @@ void get_current_pos_test()
   doc["homing"] = false;
   doc["request"] = true;
   String msg;
+  msg.reserve(256);
   serializeJson(doc, msg);
   sendData(msg);
   server_gordijn.sendHeader("Location", "/", true); // Redirect to our html web page
@@ -288,6 +293,7 @@ void get_current_pos()
   doc["homing"] = false;
   doc["request"] = true;
   String msg;
+  msg.reserve(256);
   serializeJson(doc, msg);
   sendData(msg);
   server_gordijn.send(200, F("text/plain"), (String)current_ont);
@@ -300,6 +306,7 @@ void get_target_pos_test()
   doc["homing"] = false;
   doc["request"] = true;
   String msg;
+  msg.reserve(256);
   serializeJson(doc, msg);
   sendData(msg);
   server_gordijn.sendHeader("Location", "/", true); // Redirect to our html web page
@@ -313,6 +320,7 @@ void get_target_pos()
   doc["homing"] = false;
   doc["request"] = true;
   String msg;
+  msg.reserve(256);
   serializeJson(doc, msg);
   sendData(msg);
   server_gordijn.send(200, F("text/plain"), (String)target_ont);
@@ -325,6 +333,7 @@ void get_state_test()
   doc["homing"] = false;
   doc["request"] = true;
   String msg;
+  msg.reserve(256);
   serializeJson(doc, msg);
   sendData(msg);
   server_gordijn.sendHeader("Location", "/", true); // Redirect to our html web page
@@ -338,6 +347,7 @@ void get_state()
   doc["homing"] = false;
   doc["request"] = true;
   String msg;
+  msg.reserve(256);
   serializeJson(doc, msg);
   sendData(msg);
   server_gordijn.send(200, F("text/plain"), (String)state_ont);

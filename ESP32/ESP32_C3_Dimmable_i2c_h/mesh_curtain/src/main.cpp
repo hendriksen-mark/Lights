@@ -3,7 +3,6 @@
 painlessMesh mesh;
 
 uint32_t master = 0;
-unsigned long request_timeout = 2000;
 
 byte target_set;//0-100%
 byte target_ont;//0-100%
@@ -18,18 +17,18 @@ void receivedCallback(uint32_t from, String& msg) {
   if (error) return;
 
   if (root["master"].is<unsigned long>()) {
-    master = root["master"];
+    master = uint32_t(root["master"]);
   }
-  
+
   if (root["device"] == "curtain") {
     if (root["target"].is<int>()) {
       target_set = byte(root["target"]);
       set_Target_Pos(target_set);
     }
-    if (root["homing"].as<bool>()) {
+    if (root["homing"].is<bool>() && root["homing"].as<bool>()) {
       homeing();
     }
-    if (root["request"].as<bool>()) {
+    if (root["request"].is<bool>() && root["request"].as<bool>()) {
       send_change();
     }
   }

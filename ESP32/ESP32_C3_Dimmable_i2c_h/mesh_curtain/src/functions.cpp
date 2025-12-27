@@ -4,14 +4,16 @@ unsigned long lastreq = 0;
 unsigned long MasterPreviousMillis = 0;
 
 String sendData(String command, const int timeout, bool set_target) {
-  if (millis() - lastreq < 5000 && set_target != true) {
+  if (millis() - lastreq < REQUEST_TIMEOUT && set_target != true) {
     return "";
   } else {
     lastreq = millis();
     String response = "";
-    Serial.println(command); // Stuur een "lees" karakter naar de ESP.
+    Serial.print(command); // Send command to UNO/ESP (avoid automatic newline)
+    response.reserve(256);
     unsigned long start = millis();
     while ((start + (unsigned long)timeout) > millis()) {
+      delay(0);
       while (Serial.available()) { // De ESP heeft data om weer te geven, laat het zien in de serial monitor.
         char c = Serial.read(); // Lees het volgende karakter.
         response += c;
@@ -22,18 +24,13 @@ String sendData(String command, const int timeout, bool set_target) {
 }
 
 void deserial(String message) {
-  if (message != "") {
-    //DynamicJsonDocument json(1024);
-    JsonDocument json;
-    DeserializationError error = deserializeJson(json, message);
-    if (error) return; // malformed JSON -> ignore
-    target_ont = json["target"] | target_ont;
-    current_ont = json["current"] | current_ont;
-    state_ont = json["state"] | state_ont;
-    //}
-  } else {
-    return;
-  }
+  if (message == "") return;
+  JsonDocument json;
+  DeserializationError error = deserializeJson(json, message);
+  if (error) return; // malformed JSON -> ignore
+  if (json["target"].is<int>()) target_ont = uint8_t(json["target"]);
+  if (json["current"].is<int>()) current_ont = uint8_t(json["current"]);
+  if (json["state"].is<int>()) state_ont = int(json["state"]);
 }
 
 void set_Target_Pos(byte target_set) {
@@ -41,6 +38,8 @@ void set_Target_Pos(byte target_set) {
   message += target_set;
   message += "#";
   deserial(sendData(message, 500, true));
+  // Immediately report updated state to master
+  send_change();
 }
 
 
