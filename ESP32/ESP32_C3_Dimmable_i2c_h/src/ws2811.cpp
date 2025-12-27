@@ -449,25 +449,25 @@ void restoreState_ws()
     JsonObject values = state.value();
     lights[lightId].lightState = values["on"];
     lights[lightId].bri = (uint8_t)values["bri"];
-    if (!values["x"].isNull())
+    if (values["x"].is<float>())
     {
       lights[lightId].x = values["x"];
       lights[lightId].y = values["y"];
       lights[lightId].colorMode = 1;
     }
-    else if (!values["ct"].isNull())
+    else if (values["ct"].is<int>())
     {
       lights[lightId].ct = values["ct"];
       lights[lightId].colorMode = 2;
     }
     else
     {
-      if (!values["hue"].isNull())
+      if (values["hue"].is<int>())
       {
         lights[lightId].hue = values["hue"];
         lights[lightId].colorMode = 3;
       }
-      if (!values["sat"].isNull())
+      if (values["sat"].is<int>())
       {
         lights[lightId].sat = (uint8_t)values["sat"];
         lights[lightId].colorMode = 3;
@@ -515,12 +515,12 @@ bool loadConfig_ws()
   }
   pixelCount = (uint16_t)json["pixelCount"];
   transitionLeds = (uint8_t)json["transLeds"];
-  if (!json["rpct"].isNull())
-  {
+  if (json["rpct"].is<int>())
     rgb_multiplier[0] = (uint8_t)json["rpct"];
+  if (json["gpct"].is<int>())
     rgb_multiplier[1] = (uint8_t)json["gpct"];
+  if (json["bpct"].is<int>())
     rgb_multiplier[2] = (uint8_t)json["bpct"];
-  }
   return true;
 }
 
@@ -623,7 +623,7 @@ void ws_setup()
         JsonObject values = state.value();
         int transitiontime = 4;
 
-        if (!!values["effect"].isNull())
+        if (values["effect"].is<const char*>())
         {
           if (values["effect"] == "no_effect")
           {
@@ -639,32 +639,32 @@ void ws_setup()
           }
         }
 
-        if (!!values["xy"].isNull())
+        if (values["xy"].is<JsonArray>())
         {
           lights[light].x = values["xy"][0];
           lights[light].y = values["xy"][1];
           lights[light].colorMode = 1;
         }
-        else if (!!values["ct"].isNull())
+        else if (values["ct"].is<int>())
         {
           lights[light].ct = values["ct"];
           lights[light].colorMode = 2;
         }
         else
         {
-          if (!!values["hue"].isNull())
+          if (values["hue"].is<int>())
           {
             lights[light].hue = values["hue"];
             lights[light].colorMode = 3;
           }
-          if (!!values["sat"].isNull())
+          if (values["sat"].is<int>())
           {
             lights[light].sat = values["sat"];
             lights[light].colorMode = 3;
           }
         }
 
-        if (!!values["on"].isNull())
+        if (values["on"].is<bool>())
         {
           if (values["on"])
           {
@@ -676,12 +676,12 @@ void ws_setup()
           }
         }
 
-        if (!!values["bri"].isNull())
+        if (values["bri"].is<int>())
         {
           lights[light].bri = values["bri"];
         }
 
-        if (!!values["bri_inc"].isNull())
+        if (values["bri_inc"].is<int>())
         {
           if (values["bri_inc"] > 0)
           {
@@ -707,12 +707,12 @@ void ws_setup()
           }
         }
 
-        if (!!values["transitiontime"].isNull())
+        if (values["transitiontime"].is<int>())
         {
           transitiontime = values["transitiontime"];
         }
 
-        if (!values["alert"].isNull() && values["alert"] == "select")
+        if (values["alert"].is<const char*>() && values["alert"] == "select")
         {
           if (lights[light].lightState)
           {

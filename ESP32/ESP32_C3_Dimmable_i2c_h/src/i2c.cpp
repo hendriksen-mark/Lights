@@ -205,9 +205,9 @@ void restoreState_i2c()
 		const char *key = state.key().c_str();
 		int lightId = atoi(key);
 		JsonObject values = state.value();
-		if (!values["on"].isNull())
+		if (values["on"].is<bool>())
 			lights_i2c[lightId].lightState = values["on"];
-		if (!values["bri"].isNull())
+		if (values["bri"].is<int>())
 			lights_i2c[lightId].bri = (int)values["bri"];
 	}
 }
@@ -245,7 +245,7 @@ void i2c_setup()
 				JsonObject values = state.value();
 				transitiontime_i2c = 4;
 
-				if (!values["on"].isNull())
+				if (values["on"].is<bool>())
 				{
 					if (values["on"])
 					{
@@ -257,12 +257,12 @@ void i2c_setup()
 					}
 				}
 
-				if (!values["bri"].isNull())
+				if (values["bri"].is<int>())
 				{
 					lights_i2c[light].bri = values["bri"];
 				}
 
-				if (!values["bri_inc"].isNull())
+				if (values["bri_inc"].is<int>())
 				{
 					lights_i2c[light].bri += (int)values["bri_inc"];
 					if (lights_i2c[light].bri > 255)
@@ -271,12 +271,12 @@ void i2c_setup()
 						lights_i2c[light].bri = 1;
 				}
 
-				if (values["alert"].isNull() && values["alert"] == "select")
+				if (values["alert"].is<const char*>() && values["alert"] == "select")
 				{
 					send_alert(light);
 				}
 
-				if (!values["transitiontime"].isNull())
+				if (values["transitiontime"].is<int>())
 				{
 					transitiontime_i2c = values["transitiontime"];
 				}
