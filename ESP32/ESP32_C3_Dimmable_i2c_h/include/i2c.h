@@ -19,3 +19,7 @@ void lightEngine_i2c();
 void request_lightdata(uint8_t light);
 void i2c_setup();
 void i2c_loop();
+
+// Persistence for I2C lights
+void saveState_i2c();
+void restoreState_i2c();

@@ -429,14 +429,14 @@ void saveState()
       light["sat"] = lights[i].sat;
     }
   }
-  writeJsonFile("/state.json", json);
+  writeJsonFile("/ws_state.json", json);
 }
 
 void restoreState()
 { // restore the lights state using generic helper
   LOG_DEBUG("restore state");
   JsonDocument json;
-  if (!readJsonFile("/state.json", json))
+  if (!readJsonFile("/ws_state.json", json))
   {
     saveState();
     return;
@@ -492,14 +492,14 @@ bool saveConfig()
   json["rpct"] = rgb_multiplier[0];
   json["gpct"] = rgb_multiplier[1];
   json["bpct"] = rgb_multiplier[2];
-  return writeJsonFile("/config.json", json);
+  return writeJsonFile("/ws_config.json", json);
 }
 
 bool loadConfig()
 { // load the configuration using generic helper
   LOG_DEBUG("loadConfig file");
   JsonDocument json;
-  if (!readJsonFile("/config.json", json))
+  if (!readJsonFile("/ws_config.json", json))
   {
     LOG_DEBUG("Create new file with default values");
     return saveConfig();
@@ -611,7 +611,6 @@ void ws_setup()
     }
     else
     {
-      bool stateSave = false;
       for (JsonPair state : root.as<JsonObject>())
       {
         const char *key = state.key().c_str();
@@ -670,10 +669,6 @@ void ws_setup()
           {
             lights[light].lightState = false;
           }
-          if (startup == 0)
-          {
-            stateSave = true;
-          }
         }
 
         if (!!values["bri"].isNull())
@@ -731,10 +726,7 @@ void ws_setup()
       String output;
       serializeJson(root, output);
       server_ws.send(200, "text/plain", output);
-      if (stateSave)
-      {
-        saveState();
-      }
+      saveState();
     }
   });
 

@@ -178,6 +178,40 @@ void request_lightdata(uint8_t light)
 	}
 }
 
+void saveState_i2c()
+{
+	LOG_DEBUG("save i2c state");
+	JsonDocument json;
+	for (uint8_t i = 0; i < LIGHT_COUNT_I2C; i++)
+	{
+		JsonObject light = json[String(i)].to<JsonObject>();
+		light["on"] = lights_i2c[i].lightState;
+		light["bri"] = lights_i2c[i].bri;
+	}
+	writeJsonFile("/i2c_state.json", json);
+}
+
+void restoreState_i2c()
+{
+	LOG_DEBUG("restore i2c state");
+	JsonDocument json;
+	if (!readJsonFile("/i2c_state.json", json))
+	{
+		saveState_i2c();
+		return;
+	}
+	for (JsonPair state : json.as<JsonObject>())
+	{
+		const char *key = state.key().c_str();
+		int lightId = atoi(key);
+		JsonObject values = state.value();
+		if (!values["on"].isNull())
+			lights_i2c[lightId].lightState = values["on"];
+		if (!values["bri"].isNull())
+			lights_i2c[lightId].bri = (int)values["bri"];
+	}
+}
+
 void i2c_setup()
 {
 	Wire.begin();
@@ -189,6 +223,9 @@ void i2c_setup()
 		lights_i2c[i].lightadress = lightadress_i2c[i];
 		request_lightdata(i);
 	}
+
+	// Restore saved I2C light state if available
+	restoreState_i2c();
 
 	server_i2c.on("/state", HTTP_PUT, []() { // HTTP PUT request used to set a new light state
 		infoLight(RgbColor(255, 255, 0));	 // Yellow for I2C requests
@@ -249,6 +286,7 @@ void i2c_setup()
 			serializeJson(root, output);
 			LOG_DEBUG("/state put", output);
 			server_i2c.send(200, "text/plain", output);
+			saveState_i2c();
 		}
 	});
 
