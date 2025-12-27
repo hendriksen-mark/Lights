@@ -160,17 +160,30 @@ void lightEngine_i2c()
 void request_lightdata(uint8_t light)
 {
 	int light_rec = Wire.requestFrom(lightadress_i2c[light], 2, 1);
-	byte buff[2];
-	Wire.readBytes(buff, 2);
-	if (light_rec > 0)
+	byte buff[2] = {0, 0};
+	if (light_rec == 2)
 	{
-		lights_i2c[light].bri = buff[0];
-		lights_i2c[light].lightState = buff[1];
-		// lights_i2c[light].currentBri = lights_i2c[light].bri;
+		size_t read = Wire.readBytes(buff, 2);
+		if (read == 2)
+		{
+			lights_i2c[light].bri = buff[0];
+			lights_i2c[light].lightState = buff[1];
 
-		LOG_DEBUG("Light:", light);
-		LOG_DEBUG("bri:", lights_i2c[light].bri);
-		LOG_DEBUG("state:", lights_i2c[light].lightState);
+			LOG_DEBUG("Light:", light);
+			LOG_DEBUG("bri:", lights_i2c[light].bri);
+			LOG_DEBUG("state:", lights_i2c[light].lightState);
+		}
+		else
+		{
+			LOG_ERROR("Light:", light, "partial read");
+		}
+	}
+	else if (light_rec > 0)
+	{
+		// fewer bytes than expected
+		size_t read = Wire.readBytes(buff, min((int)sizeof(buff), light_rec));
+		(void)read;
+		LOG_ERROR("Light:", light, "unexpected byte count:", light_rec);
 	}
 	else
 	{
@@ -354,13 +367,16 @@ void i2c_setup()
 						  {
 							  send_alert(light);
 						  }
+						  // Ensure we don't divide by zero; clamp transition to at least 1
+						  int ttime = transitiontime_i2c;
+						  if (ttime <= 0) ttime = 1;
 						  if (lights_i2c[light].lightState)
 						  {
-							  lights_i2c[light].stepLevel = ((float)lights_i2c[light].bri - lights_i2c[light].currentBri) / transitiontime_i2c;
+							  lights_i2c[light].stepLevel = ((float)lights_i2c[light].bri - lights_i2c[light].currentBri) / ttime;
 						  }
 						  else
 						  {
-							  lights_i2c[light].stepLevel = lights_i2c[light].currentBri / transitiontime_i2c;
+							  lights_i2c[light].stepLevel = lights_i2c[light].currentBri / ttime;
 						  }
 					  }
 
