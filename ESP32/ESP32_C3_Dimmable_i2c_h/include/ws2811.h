@@ -1,7 +1,6 @@
 #pragma once
 
 #include <NeoPixelBus.h>
-#include <LittleFS.h>
 #include <ArduinoJson.h>
 #include <WiFi.h>
 #include <WebServer.h>

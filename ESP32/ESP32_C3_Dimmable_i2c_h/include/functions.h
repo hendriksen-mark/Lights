@@ -2,6 +2,7 @@
 
 #include <NeoPixelBus.h>
 #include <LittleFS.h>
+#include <ArduinoJson.h>
 
 #include "config.h"
 #include "debug.h"
@@ -26,3 +27,7 @@ void infoLedError();
 void blinkLed(uint8_t count, uint16_t interval = 200);
 void factoryReset();
 void resetESP();
+
+// Generic JSON file helpers (shared by multiple modules)
+bool readJsonFile(const char* path, JsonDocument &doc);
+bool writeJsonFile(const char* path, JsonDocument &doc);

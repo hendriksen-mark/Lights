@@ -219,3 +219,54 @@ void resetESP()
 	delay(500);
 	ESP.restart();
 }
+
+// Generic JSON file helpers
+bool readJsonFile(const char* path, JsonDocument &doc)
+{
+	if (!LittleFS.exists(path))
+	{
+		LOG_DEBUG("readJsonFile: file not found", path);
+		return false;
+	}
+	File file = LittleFS.open(path, "r");
+	if (!file)
+	{
+		LOG_DEBUG("readJsonFile: failed to open", path);
+		return false;
+	}
+	size_t size = file.size();
+	if (size == 0)
+	{
+		LOG_DEBUG("readJsonFile: empty file", path);
+		file.close();
+		return false;
+	}
+	// Read into string to avoid streaming issues
+	String content = file.readString();
+	file.close();
+	DeserializationError err = deserializeJson(doc, content);
+	if (err)
+	{
+		LOG_DEBUG("readJsonFile: failed to parse", path);
+		return false;
+	}
+	return true;
+}
+
+bool writeJsonFile(const char* path, JsonDocument &doc)
+{
+	File file = LittleFS.open(path, "w");
+	if (!file)
+	{
+		LOG_DEBUG("failed to open for write", path);
+		return false;
+	}
+	if (serializeJson(doc, file) == 0)
+	{
+		LOG_DEBUG("failed to write json", path);
+		file.close();
+		return false;
+	}
+	file.close();
+	return true;
+}

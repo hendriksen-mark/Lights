@@ -406,7 +406,7 @@ void lightEngine()
 }
 
 void saveState()
-{ // save the lights state on LittleFS partition in JSON format
+{ // save the lights state using generic helper
   LOG_DEBUG("save state");
   JsonDocument json;
   for (uint8_t i = 0; i < lightsCount; i++)
@@ -429,27 +429,19 @@ void saveState()
       light["sat"] = lights[i].sat;
     }
   }
-  File stateFile = LittleFS.open("/state.json", "w");
-  serializeJson(json, stateFile);
+  writeJsonFile("/state.json", json);
 }
 
 void restoreState()
-{ // restore the lights state from LittleFS partition
+{ // restore the lights state using generic helper
   LOG_DEBUG("restore state");
-  File stateFile = LittleFS.open("/state.json", "r");
-  if (!stateFile)
+  JsonDocument json;
+  if (!readJsonFile("/state.json", json))
   {
     saveState();
     return;
   }
 
-  JsonDocument json;
-  DeserializationError error = deserializeJson(json, stateFile.readString());
-  if (error)
-  {
-    LOG_DEBUG("Failed to parse config file");
-    return;
-  }
   for (JsonPair state : json.as<JsonObject>())
   {
     const char *key = state.key().c_str();
@@ -457,25 +449,25 @@ void restoreState()
     JsonObject values = state.value();
     lights[lightId].lightState = values["on"];
     lights[lightId].bri = (uint8_t)values["bri"];
-    if (!!values["x"].isNull())
+    if (!values["x"].isNull())
     {
       lights[lightId].x = values["x"];
       lights[lightId].y = values["y"];
       lights[lightId].colorMode = 1;
     }
-    else if (!!values["ct"].isNull())
+    else if (!values["ct"].isNull())
     {
       lights[lightId].ct = values["ct"];
       lights[lightId].colorMode = 2;
     }
     else
     {
-      if (!!values["hue"].isNull())
+      if (!values["hue"].isNull())
       {
         lights[lightId].hue = values["hue"];
         lights[lightId].colorMode = 3;
       }
-      if (!!values["sat"].isNull())
+      if (!values["sat"].isNull())
       {
         lights[lightId].sat = (uint8_t)values["sat"];
         lights[lightId].colorMode = 3;
@@ -485,7 +477,7 @@ void restoreState()
 }
 
 bool saveConfig()
-{ // save config in LittleFS partition in JSON file
+{ // save config using generic helper
   JsonDocument json;
   json["name"] = lightName;
   json["startup"] = startup;
@@ -500,40 +492,17 @@ bool saveConfig()
   json["rpct"] = rgb_multiplier[0];
   json["gpct"] = rgb_multiplier[1];
   json["bpct"] = rgb_multiplier[2];
-  File configFile = LittleFS.open("/config.json", "w");
-  if (!configFile)
-  {
-    LOG_DEBUG("Failed to open config file for writing");
-    return false;
-  }
-
-  serializeJson(json, configFile);
-  return true;
+  return writeJsonFile("/config.json", json);
 }
 
 bool loadConfig()
-{ // load the configuration from LittleFS partition
+{ // load the configuration using generic helper
   LOG_DEBUG("loadConfig file");
-  File configFile = LittleFS.open("/config.json", "r");
-  if (!configFile)
+  JsonDocument json;
+  if (!readJsonFile("/config.json", json))
   {
     LOG_DEBUG("Create new file with default values");
     return saveConfig();
-  }
-
-  size_t size = configFile.size();
-  if (size > 1024)
-  {
-    LOG_DEBUG("Config file size is too large");
-    return false;
-  }
-
-  JsonDocument json;
-  DeserializationError error = deserializeJson(json, configFile.readString());
-  if (error)
-  {
-    LOG_DEBUG("Failed to parse config file");
-    return false;
   }
 
   strcpy(lightName, json["name"]);
@@ -546,7 +515,7 @@ bool loadConfig()
   }
   pixelCount = (uint16_t)json["pixelCount"];
   transitionLeds = (uint8_t)json["transLeds"];
-  if (!!json["rpct"].isNull())
+  if (!json["rpct"].isNull())
   {
     rgb_multiplier[0] = (uint8_t)json["rpct"];
     rgb_multiplier[1] = (uint8_t)json["gpct"];
@@ -568,15 +537,7 @@ void ChangeNeoPixels(uint16_t newCount) // this set the number of leds of the st
 void ws_setup()
 {
   LOG_DEBUG("Setup WS2811");
-  // pinMode(POWER_MOSFET_PIN, OUTPUT);
   blinkLed(2);
-  // digitalWrite(POWER_MOSFET_PIN, HIGH); mosftetState = true; // reuired if HIGH logic power the strip, otherwise must be commented.
-
-  /*if (!LittleFS.begin()) {
-    LOG_DEBUG("Failed to mount file system");
-    //Serial.println("Failed to mount file system");
-    LittleFS.format();
-    }*/
 
   if (!loadConfig())
   {
