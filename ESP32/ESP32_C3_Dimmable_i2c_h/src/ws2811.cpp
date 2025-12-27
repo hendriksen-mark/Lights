@@ -153,7 +153,7 @@ bool resizeLights(uint16_t newCapacity)
   state *newLights = new (std::nothrow) state[newCapacity];
   if (newLights == nullptr)
   {
-    LOG_DEBUG("resizeLights: allocation failed for " + String(newCapacity) + " lights");
+    LOG_DEBUG("allocation failed for", String(newCapacity), "lights");
     return false;
   }
 
