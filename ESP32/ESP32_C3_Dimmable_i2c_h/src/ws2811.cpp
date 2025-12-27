@@ -405,7 +405,7 @@ void lightEngine()
   }
 }
 
-void saveState()
+void saveState_ws()
 { // save the lights state using generic helper
   LOG_DEBUG("save state");
   JsonDocument json;
@@ -432,13 +432,13 @@ void saveState()
   writeJsonFile("/ws_state.json", json);
 }
 
-void restoreState()
+void restoreState_ws()
 { // restore the lights state using generic helper
   LOG_DEBUG("restore state");
   JsonDocument json;
   if (!readJsonFile("/ws_state.json", json))
   {
-    saveState();
+    saveState_ws();
     return;
   }
 
@@ -476,7 +476,7 @@ void restoreState()
   }
 }
 
-bool saveConfig()
+bool saveConfig_ws()
 { // save config using generic helper
   JsonDocument json;
   json["name"] = lightName;
@@ -495,14 +495,14 @@ bool saveConfig()
   return writeJsonFile("/ws_config.json", json);
 }
 
-bool loadConfig()
+bool loadConfig_ws()
 { // load the configuration using generic helper
-  LOG_DEBUG("loadConfig file");
+  LOG_DEBUG("loadConfig_ws file");
   JsonDocument json;
   if (!readJsonFile("/ws_config.json", json))
   {
     LOG_DEBUG("Create new file with default values");
-    return saveConfig();
+    return saveConfig_ws();
   }
 
   strcpy(lightName, json["name"]);
@@ -539,7 +539,7 @@ void ws_setup()
   LOG_DEBUG("Setup WS2811");
   blinkLed(2);
 
-  if (!loadConfig())
+  if (!loadConfig_ws())
   {
     LOG_DEBUG("Failed to load config");
   }
@@ -566,7 +566,7 @@ void ws_setup()
     {
       lights[light].dividedLights = pixelCount / lightsCount;
     }
-    saveConfig();
+    saveConfig_ws();
   }
 
   ChangeNeoPixels(pixelCount);
@@ -580,7 +580,7 @@ void ws_setup()
   }
   if (startup == 0)
   {
-    restoreState();
+    restoreState_ws();
   }
   else
   {
@@ -726,7 +726,7 @@ void ws_setup()
       String output;
       serializeJson(root, output);
       server_ws.send(200, "text/plain", output);
-      saveState();
+      saveState_ws();
     }
   });
 
@@ -822,7 +822,7 @@ void ws_setup()
       {
         lights[i].dividedLights = server_ws.arg("dividedLight_" + String(i)).toInt();
       }
-      saveConfig();
+      saveConfig_ws();
     }
 
     server_ws.send_P(200, "text/html", htmlContent_ws);
