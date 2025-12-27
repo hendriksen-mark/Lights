@@ -12,8 +12,8 @@ extern byte target_ont;
 extern byte current_ont;
 extern int state_ont;
 
-String sendData(String command, const int timeout, bool set_target);
-void deserial(String message);
+int sendData(const char* command, char* responseBuf, size_t respBufLen, const int timeout, bool set_target, uint8_t retries=1);
+void deserial(const char* message);
 void set_Target_Pos(byte target_set);
 void homeing();
 void get_info();
