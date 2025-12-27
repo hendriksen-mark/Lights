@@ -42,8 +42,6 @@
 #define LIGHT_COUNT_WS 9           // Number of WS2811 lights
 #define PIXEL_COUNT_WS 9           // Number of pixels per WS2811 light
 #define TRANSITION_LEDS_WS 0       // Number of transition leds between virtual lights
-#define LIGHT_ONPIN_WS 8           // Hardware on switch pin
-#define LIGHT_OFFPIN_WS 9          // Hardware off switch pin
 #ifndef DATA_PIN
 #define DATA_PIN 4 // WS2811 data pin
 #endif

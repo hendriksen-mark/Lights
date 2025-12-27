@@ -16,14 +16,13 @@ struct state
 // Dynamic lights array — allocate at runtime so `lightsCount` can change via web UI
 state *lights = nullptr;
 uint16_t lightsCapacity = 0; // currently allocated capacity
-bool inTransition, entertainmentRun, mosftetState, useDhcp = true;
+bool inTransition, entertainmentRun;
 byte packetBuffer[46];
 unsigned long lastEPMillis;
 
 // settings
 char lightName[LIGHT_NAME_MAX_LENGTH] = LIGHT_NAME_WS2811;
-uint8_t effect, scene, startup, onPin = LIGHT_ONPIN_WS, offPin = LIGHT_OFFPIN_WS;
-bool hwSwitch = false;
+uint8_t effect, scene, startup;
 uint8_t rgb_multiplier[] = {100, 100, 100}; // light multiplier in percentage /R, G, B/
 
 uint8_t lightsCount = LIGHT_COUNT_WS;
@@ -247,28 +246,6 @@ RgbColor convFloat(float color[3])
   return RgbColor((uint8_t)color[0], (uint8_t)color[1], (uint8_t)color[2]);
 }
 
-void cutPower()
-{
-  bool any_on = false;
-  for (int light = 0; light < lightsCount; light++)
-  {
-    if (lights[light].lightState)
-    {
-      any_on = true;
-    }
-  }
-  if (!any_on && !inTransition && mosftetState)
-  {
-    // digitalWrite(POWER_MOSFET_PIN, LOW);
-    mosftetState = false;
-  }
-  else if (any_on && !mosftetState)
-  {
-    // digitalWrite(POWER_MOSFET_PIN, HIGH);
-    mosftetState = true;
-  }
-}
-
 void lightEngine()
 { // core function executed in loop()
   for (int light = 0; light < lightsCount; light++)
@@ -410,7 +387,6 @@ void lightEngine()
       }
     }
   }
-  cutPower(); // if all lights are off GPIO12 can cut the power to the strip using a powerful P-Channel MOSFET
   if (inTransition)
   { // wait 6ms for a nice transition effect
     delay(6);
@@ -425,67 +401,6 @@ void lightEngine()
     else if (effect == 2)
     { // fireplace effect
       firePlaceEffect();
-    }
-    if (hwSwitch == true)
-    { // if you want to use some GPIO's for on/off and brightness controll
-      if (digitalRead(onPin) == LOW)
-      { // on button pressed
-        int i = 0;
-        while (digitalRead(onPin) == LOW && i < 30)
-        { // count how log is the button pressed
-          delay(20);
-          i++;
-        }
-        for (int light = 0; light < lightsCount; light++)
-        {
-          if (i < 30)
-          { // there was a short press
-            lights[light].lightState = true;
-          }
-          else
-          { // there was a long press
-            if (lights[light].bri < 198)
-            {
-              lights[light].bri += 56;
-            }
-            else
-            {
-              lights[light].bri = 254;
-            }
-            processLightdata(light);
-          }
-        }
-      }
-      else if (digitalRead(offPin) == LOW)
-      { // off button pressed
-        int i = 0;
-        while (digitalRead(offPin) == LOW && i < 30)
-        {
-          delay(20);
-          i++;
-        }
-        for (int light = 0; light < lightsCount; light++)
-        {
-          if (i < 30)
-          {
-            // there was a short press
-            lights[light].lightState = false;
-          }
-          else
-          {
-            // there was a long press
-            if (lights[light].bri > 57)
-            {
-              lights[light].bri -= 56;
-            }
-            else
-            {
-              lights[light].bri = 1;
-            }
-            processLightdata(light);
-          }
-        }
-      }
     }
   }
 }
@@ -575,10 +490,6 @@ bool saveConfig()
   json["name"] = lightName;
   json["startup"] = startup;
   json["scene"] = scene;
-  json["on"] = onPin;
-  json["off"] = offPin;
-  json["hw"] = hwSwitch;
-  json["dhcp"] = useDhcp;
   json["lightsCount"] = lightsCount;
   for (uint16_t i = 0; i < lightsCount; i++)
   {
@@ -628,9 +539,6 @@ bool loadConfig()
   strcpy(lightName, json["name"]);
   startup = (uint8_t)json["startup"];
   scene = (uint8_t)json["scene"];
-  onPin = (uint8_t)json["on"];
-  offPin = (uint8_t)json["off"];
-  hwSwitch = json["hw"];
   lightsCount = (uint16_t)json["lightsCount"];
   for (uint16_t i = 0; i < lightsCount; i++)
   {
@@ -644,7 +552,6 @@ bool loadConfig()
     rgb_multiplier[1] = (uint8_t)json["gpct"];
     rgb_multiplier[2] = (uint8_t)json["bpct"];
   }
-  useDhcp = json["dhcp"];
   return true;
 }
 
@@ -913,10 +820,6 @@ void ws_setup()
     root["name"] = lightName;
     root["scene"] = scene;
     root["startup"] = startup;
-    root["hw"] = hwSwitch;
-    root["on"] = onPin;
-    root["off"] = offPin;
-    root["hwswitch"] = (int)hwSwitch;
     root["lightscount"] = lightsCount;
     for (uint8_t i = 0; i < lightsCount; i++)
     {
@@ -927,7 +830,6 @@ void ws_setup()
     root["rpct"] = rgb_multiplier[0];
     root["gpct"] = rgb_multiplier[1];
     root["bpct"] = rgb_multiplier[2];
-    root["disdhcp"] = (int)!useDhcp;
     String output;
     serializeJson(root, output);
     server_ws.send(200, "text/plain", output);
@@ -967,17 +869,6 @@ void ws_setup()
       {
         lights[i].dividedLights = server_ws.arg("dividedLight_" + String(i)).toInt();
       }
-      hwSwitch = server_ws.hasArg("hwswitch") ? server_ws.arg("hwswitch").toInt() : 0;
-      if (server_ws.hasArg("hwswitch"))
-      {
-        onPin = server_ws.arg("on").toInt();
-        offPin = server_ws.arg("off").toInt();
-      }
-      saveConfig();
-    }
-    else if (server_ws.arg("section").toInt() == 2)
-    {
-      useDhcp = (!server_ws.hasArg("disdhcp")) ? 1 : server_ws.arg("disdhcp").toInt();
       saveConfig();
     }
 

@@ -35,7 +35,6 @@ const char htmlContent_ws[] PROGMEM = R"=====(
                 <ul class="tabs tabs-transparent">
                     <li class="tab" title="#home"><a class="active" href="#home">Home</a></li>
                     <li class="tab" title="#preferences"><a href="#preferences">Preferences</a></li>
-                    <li class="tab" title="#network"><a href="#network">Network settings</a></li>
                     <li class="tab" title="/update"><a href="/update">Updater</a></li>
                 </ul>
             </div>
@@ -171,66 +170,6 @@ const char htmlContent_ws[] PROGMEM = R"=====(
                                 <label for="bpct" class="form-label">Blue multiplier</label>
                                 <input type="number" id="bpct" class="js-range-slider" data-skin="round" name="bpct"
                                     value="" />
-                            </div>
-                        </div>
-                        <div class="row">
-                            <label class="control-label col s10">HW buttons:</label>
-                            <div class="col s10">
-                                <div class="switch section">
-                                    <label> Disable
-                                        <input type="checkbox" name="hwswitch" id="hwswitch" value="1">
-                                        <span class="lever"></span> Enable
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="switchable">
-                            <div class="row">
-                                <div class="col s4 m3">
-                                    <label for="on">On Pin</label>
-                                    <input type="number" id="on" name="on">
-                                </div>
-                                <div class="col s4 m3">
-                                    <label for="off">Off Pin</label>
-                                    <input type="number" id="off" name="off">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col s10">
-                                <button type="submit" class="waves-effect waves-light btn teal">Save</button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div id="network" class="col s12">
-                    <form method="POST" action="/">
-                        <input type="hidden" name="section" value="2">
-                        <div class="row">
-                            <div class="col s12">
-                                <label class="control-label">Manual IP assignment:</label>
-                                <div class="switch section">
-                                    <label> Disable
-                                        <input type="checkbox" name="disdhcp" id="disdhcp" value="0">
-                                        <span class="lever"></span> Enable
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="switchable">
-                            <div class="row">
-                                <div class="col s12 m3">
-                                    <label for="addr">Ip</label>
-                                    <input type="text" id="addr" name="addr">
-                                </div>
-                                <div class="col s12 m3">
-                                    <label for="sm">Submask</label>
-                                    <input type="text" id="sm" name="sm">
-                                </div>
-                                <div class="col s12 m3">
-                                    <label for="gw">Gateway</label>
-                                    <input type="text" id="gw" name="gw">
-                                </div>
                             </div>
                         </div>
                         <div class="row">
