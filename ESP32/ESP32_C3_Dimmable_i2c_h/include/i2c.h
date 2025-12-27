@@ -7,6 +7,7 @@
 #include "config.h"
 #include "debug.h"
 #include "ethernet_server.h"
+#include "i2c_http_content.h"
 
 #define I2C_DEV_ADDR 0x55
 
