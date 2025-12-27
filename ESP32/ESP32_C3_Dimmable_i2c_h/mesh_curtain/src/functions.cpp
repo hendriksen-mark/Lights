@@ -1,4 +1,6 @@
 #include "functions.h"
+#include <ctype.h>
+#include <string.h>
 
 unsigned long lastreq = 0;
 unsigned long MasterPreviousMillis = 0;
@@ -19,12 +21,23 @@ int sendData(const char* command, char* responseBuf, size_t respBufLen, const in
       while (Serial.available() && idx < respBufLen - 1) {
         char c = Serial.read();
         responseBuf[idx++] = c;
+        if (c == '\n') break; // stop at newline terminator
       }
-      if (idx > 0 && responseBuf[idx - 1] == '}') break; // likely end of JSON
+      if (idx > 0 && responseBuf[idx - 1] == '\n') break;
     }
-    if (idx < respBufLen) responseBuf[idx] = '\0';
-    else responseBuf[respBufLen - 1] = '\0';
-    if (idx > 0) return (int)idx;
+    if (idx > 0) {
+      // strip trailing whitespace/newline/carriage returns
+      while (idx > 0 && (responseBuf[idx - 1] == '\n' || responseBuf[idx - 1] == '\r' || isspace((unsigned char)responseBuf[idx - 1]))) idx--;
+      responseBuf[idx] = '\0';
+      // strip leading whitespace
+      size_t startPos = 0;
+      while (startPos < idx && isspace((unsigned char)responseBuf[startPos])) startPos++;
+      if (startPos > 0) {
+        memmove(responseBuf, responseBuf + startPos, idx - startPos + 1);
+      }
+      return (int)strlen(responseBuf);
+    }
+    if (respBufLen > 0) responseBuf[0] = '\0';
     delay(50);
   }
   return 0; // no response

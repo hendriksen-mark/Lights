@@ -19,7 +19,8 @@ void processSerialData(SoftwareSerial &esp8266)
     if (c < 0) break;
 
     if (c == 0x06) {
-      esp8266.println('P');
+      esp8266.print('P');
+      esp8266.print('\n');
       continue;
     }
 
@@ -31,12 +32,15 @@ void processSerialData(SoftwareSerial &esp8266)
           Serial.print("rec: ");
           Serial.println(cmdBuf);
         }
-        String retVal = processCommand(String(cmdBuf));
-        if (retVal != "") {
-          esp8266.println(retVal);
+        char respBuf[192];
+        respBuf[0] = '\0';
+        bool ok = processCommand(cmdBuf, respBuf, sizeof(respBuf));
+        if (ok && respBuf[0] != '\0') {
+          esp8266.print(respBuf);
+          esp8266.print('\n');
           if (DEBUG == true) {
             Serial.print("send: ");
-            Serial.println(retVal);
+            Serial.println(respBuf);
             senddebug();
           }
         }
@@ -55,77 +59,82 @@ void processSerialData(SoftwareSerial &esp8266)
 }
 
 
-String processCommand(String inCmd)
+bool processCommand(const char *inCmd, char *respBuf, size_t respBufLen)
 {
+  if (inCmd == NULL || inCmd[0] == '\0') return false;
   if (inCmd[0] == ':')
   {
-    // Apparently some LX200 implementations put spaces in their commands..... remove them with impunity.
-    int spacePos;
-    while ((spacePos = inCmd.indexOf(' ')) != -1)
-    {
-      inCmd.remove(spacePos, 1);
+    // copy and remove spaces into a local buffer
+    char tmp[64];
+    size_t ti = 0;
+    for (size_t i = 0; inCmd[i] != '\0' && ti < sizeof(tmp) - 1; ++i) {
+      if (inCmd[i] == ' ') continue;
+      tmp[ti++] = inCmd[i];
     }
-    char command = inCmd[1];
-    inCmd        = inCmd.substring(2);
+    tmp[ti] = '\0';
+    char command = tmp[1];
+    const char *rest = &tmp[2];
     switch (command)
     {
       case 'S': // set
-        return handleMeadeSetInfo(inCmd);
+        return handleMeadeSetInfo(rest, respBuf, respBufLen);
       case 'G': // get
-        return handleMeadeGetInfo(inCmd);
+        return handleMeadeGetInfo(rest, respBuf, respBufLen);
       default:
         break;
     }
   }
-  return "";
+  return false;
 }
 
-String handleMeadeSetInfo(String inCmd)
+bool handleMeadeSetInfo(const char *inCmd, char *respBuf, size_t respBufLen)
 {
+  if (inCmd == NULL || inCmd[0] == '\0') return false;
   if (inCmd[0] == 'A')  // set target pos :SA100#
   {
-    target = inCmd.substring(1, 4).toInt();
+    int parsed = atoi(inCmd + 1);
+    if (parsed < 0) parsed = 0;
+    if (parsed > 100) parsed = 100;
+    target = (byte)parsed;
     long totalSteps = totalrond * MOTOR_STEPS * MICROSTEPS;
     uitvoeren = (totalSteps * (long)target) / 100L;
-    //uitvoeren = uitvoeren * MOTOR_STEPS * MICROSTEPS;
-    return jsoninfo();
+    return jsoninfo(respBuf, respBufLen);
   }
   if (inCmd[0] == 'H')  // go home :SH#
   {
     homeing();
-    return jsoninfo();
+    return jsoninfo(respBuf, respBufLen);
   }
-  return "";
+  return false;
 }
 
-String handleMeadeGetInfo(String inCmd)
+bool handleMeadeGetInfo(const char *inCmd, char *respBuf, size_t respBufLen)
 {
+  if (inCmd == NULL || inCmd[0] == '\0') return false;
   char cmdOne = inCmd[0];
 
   switch (cmdOne)
   {
     case 'C': // get current pos
-      return jsoninfo();
+      return jsoninfo(respBuf, respBufLen);
     default:
       break;
   }
-  return "";
+  return false;
 }
 
-String jsoninfo() {
+bool jsoninfo(char *respBuf, size_t respBufLen) {
+  if (respBuf == NULL || respBufLen == 0) return false;
   JsonDocument root;
   root["target"] = target;
   root["current"] = current;
   if (target > current) {
-    root["state"] =  "0";
+    root["state"] = 0;
+  } else if (target < current) {
+    root["state"] = 1;
+  } else {
+    root["state"] = 2;
   }
-  if (target < current) {
-    root["state"] =  "1";
-  }
-  if (target == current) {
-    root["state"] =  "2";
-  }
-  String output;
-  serializeJson(root, output);
-  return output;
+  size_t n = serializeJson(root, respBuf, respBufLen);
+  return n > 0;
 }

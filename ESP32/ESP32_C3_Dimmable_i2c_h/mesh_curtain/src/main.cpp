@@ -35,7 +35,7 @@ void receivedCallback(uint32_t from, String& msg) {
 }
 
 void setup() {
-  Serial.begin(19200);
+  Serial.begin(9600);
   //mesh.setDebugMsgTypes( ERROR | MESH_STATUS | COMMUNICATION );
   mesh.init(MESH_PREFIX, MESH_PASSWORD, MESH_PORT);
   mesh.onReceive(&receivedCallback);

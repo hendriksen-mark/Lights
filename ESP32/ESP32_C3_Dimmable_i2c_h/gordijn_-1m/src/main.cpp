@@ -51,7 +51,7 @@ void setup() {
     Serial.println(totalstep);
   }
   configureRAdriver(SW_RX, SW_TX, R_SENSE, DRIVER_ADDRESS, R_current, 100);
-  esp8266.begin(19200);
+  esp8266.begin(9600);
 
   pinMode(home_switch, INPUT);
 
