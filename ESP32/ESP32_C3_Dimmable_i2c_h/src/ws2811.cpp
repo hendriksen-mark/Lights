@@ -571,25 +571,30 @@ void ws_setup()
 
   ChangeNeoPixels(pixelCount);
 
-  if (startup == 1)
+  switch (startup)
   {
+  case 0:
+    LOG_DEBUG("Startup: Restore previous state");
     for (uint8_t i = 0; i < lightsCount; i++)
     {
       lights[i].lightState = true;
     }
-  }
-  if (startup == 0)
-  {
+    break;
+  case 1:
+    LOG_DEBUG("Startup: All lights ON");
     restoreState_ws();
-  }
-  else
-  {
+    break;
+  default:
+    LOG_DEBUG("Startup: Apply scene", String(scene));
     apply_scene_ws(scene);
+    break;
   }
+
   for (uint8_t i = 0; i < lightsCount; i++)
   {
     processLightdata(i);
   }
+
   if (lights[0].lightState)
   {
     for (uint8_t i = 0; i < 200; i++)
