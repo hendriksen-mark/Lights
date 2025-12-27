@@ -13,7 +13,9 @@ struct state
   uint16_t dividedLights = 0;
 };
 
-state lights[10];
+// Dynamic lights array — allocate at runtime so `lightsCount` can change via web UI
+state *lights = nullptr;
+uint16_t lightsCapacity = 0; // currently allocated capacity
 bool inTransition, entertainmentRun, mosftetState, useDhcp = true;
 byte packetBuffer[46];
 unsigned long lastEPMillis;
@@ -139,6 +141,38 @@ void apply_scene_ws(uint8_t new_scene)
       convertCt(light);
     }
   }
+}
+
+// Resize the dynamic `lights` array to `newCapacity` elements.
+// Preserves existing entries up to the smaller of current count and new capacity.
+// Returns true on success, false on allocation failure.
+bool resizeLights(uint16_t newCapacity)
+{
+  if (newCapacity == lightsCapacity)
+    return true;
+
+  state *newLights = new (std::nothrow) state[newCapacity];
+  if (newLights == nullptr)
+  {
+    LOG_DEBUG("resizeLights: allocation failed for " + String(newCapacity) + " lights");
+    return false;
+  }
+
+  uint16_t copyCount = 0;
+  if (lights != nullptr)
+  {
+    copyCount = (lightsCount < newCapacity) ? lightsCount : newCapacity;
+    for (uint16_t i = 0; i < copyCount; ++i)
+      newLights[i] = lights[i];
+    delete[] lights;
+  }
+  // Initialize any newly created entries with default values
+  for (uint16_t i = copyCount; i < newCapacity; ++i)
+    newLights[i] = state();
+
+  lights = newLights;
+  lightsCapacity = newCapacity;
+  return true;
 }
 
 void processLightdata(uint8_t light, float transitiontime)
@@ -646,6 +680,18 @@ void ws_setup()
     LOG_DEBUG("Config loaded");
   }
 
+  // Ensure dynamic array is allocated according to loaded or default lightsCount
+  if (lightsCount == 0)
+    lightsCount = 1; // avoid zero-sized usage
+  if (!resizeLights(lightsCount))
+  {
+    LOG_DEBUG("ws_setup: Failed to allocate lights for initial lightsCount, falling back to 1");
+    lightsCount = 1;
+    // Try to allocate minimal working set; if this fails, subsequent code may still crash, but we attempt.
+    resizeLights(1);
+  }
+
+
   if (lights[0].dividedLights == 0)
   {
     for (uint8_t light = 0; light < lightsCount; light++)
@@ -893,7 +939,25 @@ void ws_setup()
       server_ws.arg("name").toCharArray(lightName, LIGHT_NAME_MAX_LENGTH);
       startup = server_ws.arg("startup").toInt();
       scene = server_ws.arg("scene").toInt();
-      lightsCount = server_ws.arg("lightscount").toInt();
+      {
+        uint16_t requested = server_ws.arg("lightscount").toInt();
+        if (requested == 0)
+          requested = 1;
+        if (requested != lightsCount)
+        {
+          if (requested > MAX_RUNTIME_LIGHTS)
+          {
+            server_ws.send(400, "text/plain", "Requested lights count exceeds maximum of " + String(MAX_RUNTIME_LIGHTS));
+            return;
+          }
+          if (!resizeLights(requested))
+          {
+            server_ws.send(500, "text/plain", "Failed to allocate memory for requested lights");
+            return;
+          }
+          lightsCount = requested;
+        }
+      }
       pixelCount = server_ws.arg("pixelcount").toInt();
       transitionLeds = server_ws.arg("transitionleds").toInt();
       rgb_multiplier[0] = server_ws.arg("rpct").toInt();

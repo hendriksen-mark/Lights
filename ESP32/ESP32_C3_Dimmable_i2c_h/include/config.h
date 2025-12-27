@@ -47,6 +47,10 @@
 #ifndef DATA_PIN
 #define DATA_PIN 4 // WS2811 data pin
 #endif
+// Maximum allowed runtime virtual lights to protect heap on embedded device
+#ifndef MAX_RUNTIME_LIGHTS
+#define MAX_RUNTIME_LIGHTS 10
+#endif
 // #define POWER_MOSFET_PIN 35          // WS2812 consume ~1mA/led when off. By installing a MOSFET it will cut the power to the leds when lights are off.
 
 // ============================================

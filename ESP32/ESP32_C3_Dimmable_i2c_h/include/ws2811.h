@@ -6,6 +6,7 @@
 #include <WiFi.h>
 #include <WebServer.h>
 #include <HTTPUpdateServer.h>
+#include <new>
 
 #include "config.h"
 #include "debug.h"
