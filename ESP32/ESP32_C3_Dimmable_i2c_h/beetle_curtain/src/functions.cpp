@@ -6,16 +6,6 @@
 
 unsigned long MasterPreviousMillis = 0;
 
-void deserial(const char* message) {
-  if (message == NULL || message[0] == '\0') return;
-  JsonDocument json;
-  DeserializationError error = deserializeJson(json, message);
-  if (error) return; // malformed JSON -> ignore
-  if (json["target"].is<int>()) target = uint8_t(json["target"]);
-  if (json["current"].is<int>()) current = uint8_t(json["current"]);
-  if (json["state"].is<int>()) state = int(json["state"]);
-}
-
 void set_Target_Pos(byte target_set) {
   if (target_set > 100) target_set = 100;
   target = target_set;
@@ -77,8 +67,6 @@ void stopMotor() {
     }
   }
 }
-
-
 
 void ask_master() {
   if ((unsigned long)(millis() - MasterPreviousMillis) >= REQUEST_TIMEOUT) {
