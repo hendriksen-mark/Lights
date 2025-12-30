@@ -27,7 +27,7 @@ WebServer server_mesh(MESH_SERVER_PORT);
 void loadMeshConfig()
 {
   JsonDocument doc;
-  if (!readJsonFile("/mesh_config.json", doc))
+  if (!readJsonFile(MESH_CONFIG_PATH, doc))
   {
     LOG_DEBUG("mesh config not found, using defaults");
     return;
@@ -48,7 +48,7 @@ void saveMeshConfig()
 {
   JsonDocument doc;
   doc["subip"] = subip;
-  if (!writeJsonFile("/mesh_config.json", doc))
+  if (!writeJsonFile(MESH_CONFIG_PATH, doc))
   {
     LOG_DEBUG("Failed to save mesh config");
   }

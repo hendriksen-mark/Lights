@@ -201,14 +201,14 @@ void saveState_i2c()
 		light["on"] = lights_i2c[i].lightState;
 		light["bri"] = lights_i2c[i].bri;
 	}
-	writeJsonFile("/i2c_state.json", json);
+	writeJsonFile(I2C_STATE_PATH, json);
 }
 
 void restoreState_i2c()
 {
 	LOG_DEBUG("restore i2c state");
 	JsonDocument json;
-	if (!readJsonFile("/i2c_state.json", json))
+	if (!readJsonFile(I2C_STATE_PATH, json))
 	{
 		saveState_i2c();
 		return;

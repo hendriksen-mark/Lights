@@ -445,14 +445,14 @@ void saveState_ws()
       light["sat"] = lights[i].sat;
     }
   }
-  writeJsonFile("/ws_state.json", json);
+  writeJsonFile(WS_STATE_PATH, json);
 }
 
 void restoreState_ws()
 { // restore the lights state using generic helper
   LOG_DEBUG("restore state");
   JsonDocument json;
-  if (!readJsonFile("/ws_state.json", json))
+  if (!readJsonFile(WS_STATE_PATH, json))
   {
     saveState_ws();
     return;
@@ -509,14 +509,14 @@ bool saveConfig_ws()
   json["rpct"] = rgb_multiplier[0];
   json["gpct"] = rgb_multiplier[1];
   json["bpct"] = rgb_multiplier[2];
-  return writeJsonFile("/ws_config.json", json);
+  return writeJsonFile(WS_CONFIG_PATH, json);
 }
 
 bool loadConfig_ws()
 { // load the configuration using generic helper
   LOG_DEBUG("loadConfig_ws file");
   JsonDocument json;
-  if (!readJsonFile("/ws_config.json", json))
+  if (!readJsonFile(WS_CONFIG_PATH, json))
   {
     LOG_DEBUG("Create new file with default values");
     return saveConfig_ws();
