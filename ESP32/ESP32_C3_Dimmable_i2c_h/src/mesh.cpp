@@ -115,6 +115,10 @@ void mesh_setup()
 
   server_mesh.on(F("/"), mesh_handleRoot);
   server_mesh.on("/setIP/", set_IP);
+  server_mesh.on("/discover/", []() {
+    discoverBridgeMdns();
+    server_mesh.send(200, "text/plain", "Discovery triggered");
+  });
   server_mesh.on("/setPORT/", set_PORT);
   server_mesh.onNotFound(mesh_handleNotFound);
   server_mesh.begin();
@@ -484,6 +488,11 @@ void mesh_handleRoot()
   message += "</form>";
   message += "Current PORT = ";
   message += String(bridgePort);
+
+  message += "<br><br>";
+  message += "<form action=\"/discover/\">";
+  message += "<input type=\"submit\" value=\"Discover DIYhue Bridge\">";
+  message += "</form>";
 
   message += "<br><br>";
   message += "<a href=\"/\"\"><button>RELOAD PAGE</button></a><br/>";
