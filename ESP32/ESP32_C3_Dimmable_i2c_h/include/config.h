@@ -81,11 +81,7 @@
 #define PORDIJN_SERVER_PORT 82
 #define MESH_SERVER_PORT 83
 
-// Bridge IP Configuration
-#define BRIDGE_IP_OCTET_1 192
-#define BRIDGE_IP_OCTET_2 168
-#define BRIDGE_IP_OCTET_3 1
-#define BRIDGE_IP_OCTET_4 25 // Default last octet (can be changed via web interface)
+#define BRIDGE_IP "192.168.1.25" // Bridge IP as a string; last octet can be changed via web interface
 #define BRIDGE_PORT 80 // Default bridge port (can be changed via web interface)
 
 // ============================================

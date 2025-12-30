@@ -1,8 +1,8 @@
 #include "mesh.h"
 #include "functions.h"
 
-int subip = BRIDGE_IP_OCTET_4;
-IPAddress bridgeIp(BRIDGE_IP_OCTET_1, BRIDGE_IP_OCTET_2, BRIDGE_IP_OCTET_3, subip);
+int subip = 0;
+IPAddress bridgeIp;
 int bridgePort = BRIDGE_PORT;
 
 painlessMesh mesh;
@@ -33,16 +33,21 @@ void loadMeshConfig()
     LOG_DEBUG("mesh config not found, using defaults");
     return;
   }
+  // parse base address from BRIDGE_IP string and set default subip
+  IPAddress base;
+  base.fromString(String(BRIDGE_IP));
+  subip = base[3];
   if (doc["subip"].is<int>())
   {
     int v = doc["subip"];
     if (v >= 0 && v <= 255)
     {
       subip = v;
-      bridgeIp = IPAddress(BRIDGE_IP_OCTET_1, BRIDGE_IP_OCTET_2, BRIDGE_IP_OCTET_3, subip);
       LOG_DEBUG("Loaded mesh subip:", subip);
     }
   }
+  base[3] = subip;
+  bridgeIp = base;
   if (doc["bridge"].is<int>())
   {
     int v = doc["bridge"];
@@ -466,7 +471,7 @@ void mesh_handleRoot()
   message += "<input type=\"submit\" value=\"Submit\">";
   message += "</form>";
   message += "Current IP = ";
-  message += String(BRIDGE_IP_OCTET_1) + "." + String(BRIDGE_IP_OCTET_2) + "." + String(BRIDGE_IP_OCTET_3) + "." + String(subip);
+  message += bridgeIp.toString();
 
   message += "<br><br>";
   message += "<form action=\"/setPORT/\">";
@@ -493,7 +498,12 @@ void set_IP()
       subip = server_mesh.arg(i).toInt();
     }
   }
-  bridgeIp = IPAddress(BRIDGE_IP_OCTET_1, BRIDGE_IP_OCTET_2, BRIDGE_IP_OCTET_3, subip);
+  {
+    IPAddress base;
+    base.fromString(String(BRIDGE_IP));
+    base[3] = subip;
+    bridgeIp = base;
+  }
   saveMeshConfig();
   server_mesh.sendHeader("Location", "/", true); // Redirect to our html web page
   server_mesh.send(302, "text/plane", "");
