@@ -86,10 +86,8 @@ void mesh_setup()
   mesh.onNewConnection(&newConnectionCallback);
   newConnectionCallback(0);
 
-  loadMeshConfig();
-
-  // Try to discover diyhue bridge via mDNS (service: _hue._tcp.local.)
   discoverBridgeMdns();
+  loadMeshConfig();
 
   server_gordijn.on(F("/"), handleRoot);
   server_gordijn.on("/setTargetPosTest/", set_Target_Pos_test);
