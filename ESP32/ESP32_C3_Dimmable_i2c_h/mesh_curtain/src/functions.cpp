@@ -1,6 +1,8 @@
+#if defined(VSCODE)
 #include "functions.h"
-#include <ctype.h>
-#include <string.h>
+#else 
+#include "include/functions.h"
+#endif
 
 unsigned long lastreq = 0;
 unsigned long MasterPreviousMillis = 0;

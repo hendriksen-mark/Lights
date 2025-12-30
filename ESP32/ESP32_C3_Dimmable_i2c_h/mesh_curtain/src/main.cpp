@@ -1,4 +1,8 @@
+#if defined(VSCODE)
 #include "functions.h"
+#else 
+#include "include/functions.h"
+#endif
 
 painlessMesh mesh;
 
