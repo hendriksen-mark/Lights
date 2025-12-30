@@ -96,11 +96,10 @@ void mesh_setup()
 
   server_gordijn.on("/info", handleinfo);
 
-  server_gordijn.on("/reset", []()
-                    {
+  server_gordijn.on("/reset", []() { // trigger manual reset
     server_gordijn.send(200, "text/html", "reset");
-    delay(1000);
-    ESP.restart(); });
+    resetESP(); 
+  });
 
   server_gordijn.onNotFound(handleNotFound);
 
