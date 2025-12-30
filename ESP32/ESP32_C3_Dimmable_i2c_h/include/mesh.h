@@ -30,3 +30,4 @@ void mesh_handleNotFound();
 void mesh_handleRoot();
 void set_IP();
 void set_PORT();
+void discoverBridgeMdns();

@@ -88,6 +88,9 @@ void mesh_setup()
 
   loadMeshConfig();
 
+  // Try to discover diyhue bridge via mDNS (service: _hue._tcp.local.)
+  discoverBridgeMdns();
+
   server_gordijn.on(F("/"), handleRoot);
   server_gordijn.on("/setTargetPosTest/", set_Target_Pos_test);
   server_gordijn.on("/CurrentPosTest", get_current_pos_test);
@@ -103,7 +106,7 @@ void mesh_setup()
 
   server_gordijn.on("/reset", []() { // trigger manual reset
     server_gordijn.send(200, "text/html", "reset");
-    resetESP(); 
+    resetESP();
   });
 
   server_gordijn.onNotFound(handleNotFound);
@@ -521,4 +524,67 @@ void set_PORT()
   saveMeshConfig();
   server_mesh.sendHeader("Location", "/", true); // Redirect to our html web page
   server_mesh.send(302, "text/plane", "");
+}
+
+void discoverBridgeMdns()
+{
+  LOG_DEBUG("Starting mDNS query for diyhue (_hue._tcp.local.) on Ethernet");
+
+  // mDNS responder should be started on Ethernet in ESP_Server_setup();
+  // perform a query directly — this will use the active mDNS responder/interface.
+
+  // Query mDNS for _hue._tcp.local. with a short timeout (ms)
+  int n = MDNS.queryService("hue", "tcp");
+  if (n <= 0)
+  {
+    LOG_DEBUG("diyhue not found via mDNS, keeping configured bridge IP");
+    return;
+  }
+
+  IPAddress firstIp(0, 0, 0, 0);
+  int firstPort = 0;
+
+  for (int i = 0; i < n; i++)
+  {
+    IPAddress ip = MDNS.IP(i);
+    if (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0)
+      continue;
+
+    // Try to detect diyhue by hostname containing 'diyhue'
+    String hostName;
+#ifdef MDNS
+    // many ESPmDNS implementations provide hostname(i)
+    hostName = String(MDNS.hostname(i));
+#endif
+
+    if (hostName.length() > 0)
+    {
+      hostName.toLowerCase();
+      if (hostName.indexOf("diyhue") >= 0)
+      {
+        bridgeIp = ip;
+        int p = MDNS.port(i);
+        if (p > 0)
+          bridgePort = p;
+        LOG_DEBUG("Found diyhue via mDNS (hostname match):", hostName, bridgeIp.toString(), "port:", bridgePort);
+        return;
+      }
+    }
+
+    // otherwise store first valid candidate as fallback
+    if (firstIp[0] == 0 && firstIp[1] == 0 && firstIp[2] == 0 && firstIp[3] == 0)
+    {
+      firstIp = ip;
+      firstPort = MDNS.port(i);
+    }
+  }
+
+  // If we didn't find an explicit 'diyhue' hostname, use the first candidate
+  if (firstIp[0] != 0 || firstIp[1] != 0 || firstIp[2] != 0 || firstIp[3] != 0)
+  {
+    bridgeIp = firstIp;
+    if (firstPort > 0)
+      bridgePort = firstPort;
+    LOG_DEBUG("Using first mDNS candidate for bridge:", bridgeIp.toString(), "port:", bridgePort);
+  }
 }
