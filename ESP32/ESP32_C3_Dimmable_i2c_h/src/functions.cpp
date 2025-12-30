@@ -6,11 +6,21 @@ RgbColor green = RgbColor(0, 255, 0);
 RgbColor white = RgbColor(255);
 RgbColor black = RgbColor(0);
 
-NeoPixelBus<NeoRgbFeature, NeoEsp32Rmt0Ws2812xMethod> *strip_info = NULL;
+NeoPixelBus<NeoGrbFeature, NeoEsp32Rmt0Ws2812xMethod> *strip_info = NULL;
 float info_led_brightness = 0.3; // Default brightness (30% to avoid being too bright)
 
 void functions_setup()
 {
+	// Give user time to open serial monitor: print a heartbeat during the 10s wait
+	const int waitMs = 10000;
+	const int intervalMs = 500;
+	int loops = waitMs / intervalMs;
+	for (int i = 0; i < loops; ++i)
+	{
+		LOG_INFO("Waiting for serial monitor...");
+		delay(intervalMs);
+	}
+
 	if (!LittleFS.begin())
 	{
 		LOG_ERROR("Failed to mount file system");
@@ -22,7 +32,7 @@ void functions_setup()
 	}
 	else
 	{
-		// LOG_ATTACH_FS_AUTO(LittleFS, "/log.txt", FILE_WRITE);
+		LOG_DEBUG("File system mounted");
 	}
 }
 
@@ -32,7 +42,16 @@ void ChangeNeoPixels_info() // this set the number of leds of the strip based on
 	{
 		delete strip_info; // delete the previous dynamically created strip
 	}
-	strip_info = new NeoPixelBus<NeoRgbFeature, NeoEsp32Rmt0Ws2812xMethod>(1, INFO_DATA_PIN); // and recreate with new count
+	// Sanity check pin again before initializing RMT
+	int infoPin = INFO_DATA_PIN;
+	LOG_DEBUG("INFO_DATA_PIN=", infoPin);
+	if (infoPin < 0 || infoPin > 47)
+	{
+		LOG_ERROR("ChangeNeoPixels_info: invalid INFO_DATA_PIN, aborting strip init");
+		strip_info = NULL;
+		return;
+	}
+	strip_info = new NeoPixelBus<NeoGrbFeature, NeoEsp32Rmt0Ws2812xMethod>(1, INFO_DATA_PIN); // and recreate with new count
 	strip_info->Begin();
 }
 
@@ -58,6 +77,9 @@ void blinkLed(uint8_t count, uint16_t interval)
 		ChangeNeoPixels_info();
 	}
 
+	if (strip_info == NULL)
+		return;
+
 	RgbColor color = strip_info->GetPixelColor(0);
 	for (uint8_t i = 0; i < count; i++)
 	{
@@ -77,6 +99,9 @@ void infoLight(RgbColor color)
 		ChangeNeoPixels_info();
 	}
 
+	if (strip_info == NULL)
+		return;
+
 	// Flash the strip in the selected color. White = booted, green = WLAN connected, red = WLAN could not connect
 	RgbColor adjusted_color = applyBrightness(color, info_led_brightness);
 	strip_info->SetPixelColor(0, adjusted_color);
@@ -89,6 +114,10 @@ void infoLedOff()
 	{
 		ChangeNeoPixels_info();
 	}
+
+	if (strip_info == NULL)
+		return;
+
 	strip_info->SetPixelColor(0, black);
 	strip_info->Show();
 }
@@ -99,6 +128,9 @@ void infoLedFadeIn(RgbColor color, uint16_t duration)
 	{
 		ChangeNeoPixels_info();
 	}
+
+	if (strip_info == NULL)
+		return;
 
 	uint8_t steps = 50;
 	uint16_t stepDelay = duration / steps;
@@ -119,6 +151,9 @@ void infoLedFadeOut(uint16_t duration)
 	{
 		ChangeNeoPixels_info();
 	}
+
+	if (strip_info == NULL)
+		return;
 
 	RgbColor current_color = strip_info->GetPixelColor(0);
 	uint8_t steps = 50;
@@ -145,6 +180,9 @@ void infoLedPulse(RgbColor color, uint8_t pulses, uint16_t pulseDuration)
 	{
 		ChangeNeoPixels_info();
 	}
+
+	if (strip_info == NULL)
+		return;
 
 	for (uint8_t p = 0; p < pulses; p++)
 	{
@@ -221,7 +259,7 @@ void resetESP()
 }
 
 // Generic JSON file helpers
-bool readJsonFile(const char* path, JsonDocument &doc)
+bool readJsonFile(const char *path, JsonDocument &doc)
 {
 	if (!LittleFS.exists(path))
 	{
@@ -253,7 +291,7 @@ bool readJsonFile(const char* path, JsonDocument &doc)
 	return true;
 }
 
-bool writeJsonFile(const char* path, JsonDocument &doc)
+bool writeJsonFile(const char *path, JsonDocument &doc)
 {
 	File file = LittleFS.open(path, "w");
 	if (!file)

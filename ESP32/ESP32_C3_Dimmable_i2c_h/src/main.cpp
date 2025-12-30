@@ -15,7 +15,7 @@ unsigned long lastWiFiCheck = 0;
 void setup()
 {
   Serial.begin(115200);
-  LOG_DEBUG("Start ESP32");
+  LOG_INFO("Start ESP32");
   functions_setup();
   ChangeNeoPixels_info();
   infoLedFadeIn(white, 500); // Smooth startup indication

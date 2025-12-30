@@ -33,6 +33,9 @@
 #define MAC_ADDR_3 0xFF
 #define MAC_ADDR_4 0xEF
 #define MAC_ADDR_5 0xDE
+#ifndef W5500_INT_GPIO
+#define W5500_INT_GPIO 9 // GPIO pin for W5500 interrupt
+#endif
 
 // ============================================
 // WS2811 LED Strip Configuration

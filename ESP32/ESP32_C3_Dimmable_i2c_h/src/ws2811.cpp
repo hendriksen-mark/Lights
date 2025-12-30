@@ -556,6 +556,15 @@ void ChangeNeoPixels(uint16_t newCount) // this set the number of leds of the st
   {
     delete strip; // delete the previous dynamically created strip
   }
+  // Sanity check DATA_PIN before initializing NeoPixelBus / RMT
+  int dataPin = DATA_PIN;
+  LOG_DEBUG("DATA_PIN=", dataPin);
+  if (dataPin < 0 || dataPin > 47)
+  {
+    LOG_ERROR("ChangeNeoPixels: invalid DATA_PIN, aborting strip init");
+    strip = NULL;
+    return;
+  }
   strip = new NeoPixelBus<NeoRgbFeature, NeoEsp32Rmt1Ws2812xMethod>(newCount, DATA_PIN); // and recreate with new count
   strip->Begin();
 }
