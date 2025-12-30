@@ -1,4 +1,5 @@
 #include "mesh.h"
+#include "functions.h"
 
 int subip = BRIDGE_IP_OCTET_4;
 IPAddress bridgeIp(BRIDGE_IP_OCTET_1, BRIDGE_IP_OCTET_2, BRIDGE_IP_OCTET_3, subip);
@@ -23,6 +24,40 @@ int state_ont; // 0 1 2
 WebServer server_gordijn(PORDIJN_SERVER_PORT);
 WebServer server_mesh(MESH_SERVER_PORT);
 
+void loadMeshConfig()
+{
+  JsonDocument doc;
+  if (!readJsonFile("/mesh_config.json", doc))
+  {
+    LOG_DEBUG("mesh config not found, using defaults");
+    return;
+  }
+  if (doc["subip"].is<int>())
+  {
+    int v = doc["subip"];
+    if (v >= 0 && v <= 255)
+    {
+      subip = v;
+      bridgeIp = IPAddress(BRIDGE_IP_OCTET_1, BRIDGE_IP_OCTET_2, BRIDGE_IP_OCTET_3, subip);
+      LOG_DEBUG("Loaded mesh subip:", subip);
+    }
+  }
+}
+
+void saveMeshConfig()
+{
+  JsonDocument doc;
+  doc["subip"] = subip;
+  if (!writeJsonFile("/mesh_config.json", doc))
+  {
+    LOG_DEBUG("Failed to save mesh config");
+  }
+  else
+  {
+    LOG_DEBUG("Saved mesh config");
+  }
+}
+
 void mesh_setup()
 {
   // mesh.setDebugMsgTypes( ERROR | MESH_STATUS | CONNECTION | SYNC | COMMUNICATION | GENERAL | MSG_TYPES | REMOTE | DEBUG ); // all types on
@@ -34,6 +69,8 @@ void mesh_setup()
   mesh.onReceive(&receivedCallback);
   mesh.onNewConnection(&newConnectionCallback);
   newConnectionCallback(0);
+
+  loadMeshConfig();
 
   server_gordijn.on(F("/"), handleRoot);
   server_gordijn.on("/setTargetPosTest/", set_Target_Pos_test);
@@ -437,6 +474,7 @@ void set_IP()
     }
   }
   bridgeIp = IPAddress(BRIDGE_IP_OCTET_1, BRIDGE_IP_OCTET_2, BRIDGE_IP_OCTET_3, subip);
+  saveMeshConfig();
   server_mesh.sendHeader("Location", "/", true); // Redirect to our html web page
   server_mesh.send(302, "text/plane", "");
 }
