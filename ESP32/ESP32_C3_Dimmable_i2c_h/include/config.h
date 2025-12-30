@@ -86,7 +86,7 @@
 #define BRIDGE_IP_OCTET_2 168
 #define BRIDGE_IP_OCTET_3 1
 #define BRIDGE_IP_OCTET_4 25 // Default last octet (can be changed via web interface)
-#define BRIDGE_PORT 80
+#define BRIDGE_PORT 80 // Default bridge port (can be changed via web interface)
 
 // ============================================
 // Sensor Types Configuration

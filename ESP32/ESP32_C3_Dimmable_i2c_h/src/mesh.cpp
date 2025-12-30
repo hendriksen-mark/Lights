@@ -3,6 +3,7 @@
 
 int subip = BRIDGE_IP_OCTET_4;
 IPAddress bridgeIp(BRIDGE_IP_OCTET_1, BRIDGE_IP_OCTET_2, BRIDGE_IP_OCTET_3, subip);
+int bridgePort = BRIDGE_PORT;
 
 painlessMesh mesh;
 
@@ -42,12 +43,22 @@ void loadMeshConfig()
       LOG_DEBUG("Loaded mesh subip:", subip);
     }
   }
+  if (doc["bridge"].is<int>())
+  {
+    int v = doc["bridge"];
+    if (v > 0 && v <= 65535)
+    {
+      bridgePort = v;
+      LOG_DEBUG("Loaded mesh bridge port:", bridgePort);
+    }
+  }
 }
 
 void saveMeshConfig()
 {
   JsonDocument doc;
   doc["subip"] = subip;
+  doc["bridge"] = bridgePort;
   if (!writeJsonFile(MESH_CONFIG_PATH, doc))
   {
     LOG_DEBUG("Failed to save mesh config");
@@ -97,6 +108,7 @@ void mesh_setup()
 
   server_mesh.on(F("/"), mesh_handleRoot);
   server_mesh.on("/setIP/", set_IP);
+  server_mesh.on("/setPORT/", set_PORT);
   server_mesh.onNotFound(mesh_handleNotFound);
   server_mesh.begin();
 }
@@ -115,7 +127,7 @@ void send_change()
   {
     LOG_DEBUG("value:", value);
     LOG_DEBUG("room_mac:", room_mac);
-    LOG_ERROR(sendHttpRequest(value, room_mac, bridgeIp));
+    LOG_ERROR(sendHttpRequest(value, room_mac, bridgeIp, bridgePort));
     change = false;
   }
 }
@@ -458,6 +470,15 @@ void mesh_handleRoot()
   message += String(BRIDGE_IP_OCTET_1) + "." + String(BRIDGE_IP_OCTET_2) + "." + String(BRIDGE_IP_OCTET_3) + "." + String(subip);
 
   message += "<br><br>";
+  message += "<form action=\"/setPORT/\">";
+  message += "SEET PORT";
+  message += "<input type=\"text\"  name=\"subport\" value=\"" + (String)bridgePort + "\">";
+  message += "<input type=\"submit\" value=\"Submit\">";
+  message += "</form>";
+  message += "Current PORT = ";
+  message += String(bridgePort);
+
+  message += "<br><br>";
   message += "<a href=\"/\"\"><button>RELOAD PAGE</button></a><br/>";
 
   message += "</html>";
@@ -474,6 +495,20 @@ void set_IP()
     }
   }
   bridgeIp = IPAddress(BRIDGE_IP_OCTET_1, BRIDGE_IP_OCTET_2, BRIDGE_IP_OCTET_3, subip);
+  saveMeshConfig();
+  server_mesh.sendHeader("Location", "/", true); // Redirect to our html web page
+  server_mesh.send(302, "text/plane", "");
+}
+
+void set_PORT()
+{
+  for (uint8_t i = 0; i < server_mesh.args(); i++)
+  {
+    if (server_mesh.argName(i) == F("subport"))
+    {
+      bridgePort = server_mesh.arg(i).toInt();
+    }
+  }
   saveMeshConfig();
   server_mesh.sendHeader("Location", "/", true); // Redirect to our html web page
   server_mesh.send(302, "text/plane", "");

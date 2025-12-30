@@ -2,7 +2,7 @@
 
 WiFiClient client;
 
-String sendHttpRequest(int button, String mac, IPAddress bridgeIp)
+String sendHttpRequest(int button, String mac, IPAddress bridgeIp, int bridgePort)
 {
   String msg;
   msg.reserve(50); // Pre-allocate to reduce memory fragmentation
@@ -10,7 +10,7 @@ String sendHttpRequest(int button, String mac, IPAddress bridgeIp)
 
   while (true)
   {
-    if (!client.connect(bridgeIp, BRIDGE_PORT))
+    if (!client.connect(bridgeIp, bridgePort))
     {
       // LOG_ERROR("Connection failed");
       infoLedError(); // Show connection error
