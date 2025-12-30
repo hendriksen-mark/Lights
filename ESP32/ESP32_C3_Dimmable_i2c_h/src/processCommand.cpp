@@ -117,11 +117,11 @@ String sendHttpRequest(int button, String mac, IPAddress bridgeIp, int bridgePor
       return "deserializeJson() failed: ";
     }
     JsonObject obj = doc.as<JsonObject>();
-    if (!!obj["success"].isNull())
+    if (obj["success"].is<String>())
     {
       msg = doc["success"].as<String>();
     }
-    if (!!obj["fail"].isNull())
+    if (obj["fail"].is<String>())
     {
       msg = doc["fail"].as<String>();
     }
