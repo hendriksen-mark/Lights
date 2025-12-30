@@ -150,8 +150,8 @@ void newConnectionCallback(uint32_t nodeId)
   msg.reserve(256);
   serializeJson(doc, msg);
 
-  LOG_DEBUG("newConnection nodeId:", nodeId);
-  LOG_DEBUG("newConnection msg:", msg);
+  LOG_DEBUG("new nodeId:", nodeId);
+  LOG_DEBUG("reply msg:", msg);
 
   if (nodeId > 0)
   {
@@ -174,8 +174,8 @@ void receivedCallback(uint32_t from, String &msg)
     LOG_ERROR("deserializeJson() failed:", error.c_str());
     return;
   }
-  LOG_DEBUG("nodeId:", from);
-  LOG_DEBUG("msg:", msg);
+  LOG_DEBUG("from nodeId:", from);
+  LOG_DEBUG("got msg:", msg);
   if (bool(root["got_master"]) == true)
   {
     if (root["device"] == "switch")
