@@ -620,7 +620,7 @@ void ws_setup()
         JsonObject values = state.value();
         int transitiontime = 4;
 
-        if (values["effect"].is<const char*>())
+        if (values["effect"].is<const char *>())
         {
           if (values["effect"] == "no_effect")
           {
@@ -709,7 +709,7 @@ void ws_setup()
           transitiontime = values["transitiontime"];
         }
 
-        if (values["alert"].is<const char*>() && values["alert"] == "select")
+        if (values["alert"].is<const char *>() && values["alert"] == "select")
         {
           if (lights[light].lightState)
           {
