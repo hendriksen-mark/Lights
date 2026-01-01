@@ -546,7 +546,7 @@ void ChangeNeoPixels(uint16_t newCount) // this set the number of leds of the st
 void ws_setup()
 {
   LOG_DEBUG("Setup WS2811");
-  blinkLed(2);
+  infoLight(yellow);
 
   if (!loadConfig_ws())
   {
@@ -603,7 +603,7 @@ void ws_setup()
   Udp.begin(2100); // start entertainment UDP server
 
   server_ws.on("/state", HTTP_PUT, []() { // HTTP PUT request used to set a new light state
-    infoLight(RgbColor(0, 255, 255));     // Cyan for WS2811 requests
+    infoLight(cyan);     // Cyan for WS2811 requests
     JsonDocument root;
     DeserializationError error = deserializeJson(root, server_ws.arg("plain"));
 
@@ -872,7 +872,7 @@ void entertainment()
     static unsigned long lastEntertainmentBlink = 0;
     if (millis() - lastEntertainmentBlink > 500)
     {                                   // Pulse every 500ms during entertainment
-      infoLight(RgbColor(128, 0, 128)); // Purple for entertainment mode
+      infoLight(purple); // Purple for entertainment mode
       lastEntertainmentBlink = millis();
     }
     Udp.read(packetBuffer, packetSize);

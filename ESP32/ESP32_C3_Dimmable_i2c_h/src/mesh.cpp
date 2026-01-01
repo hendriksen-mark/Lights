@@ -76,6 +76,8 @@ void saveMeshConfig()
 
 void mesh_setup()
 {
+  LOG_DEBUG("Setup Mesh");
+  infoLight(magenta);
   // mesh.setDebugMsgTypes( ERROR | MESH_STATUS | CONNECTION | SYNC | COMMUNICATION | GENERAL | MSG_TYPES | REMOTE | DEBUG ); // all types on
   // mesh.setDebugMsgTypes( ERROR | CONNECTION | SYNC | S_TIME );  // set before init() so that you can see startup messages
   // mesh.setDebugMsgTypes( ERROR | CONNECTION | S_TIME );  // set before init() so that you can see startup messages
@@ -165,7 +167,7 @@ void newConnectionCallback(uint32_t nodeId)
 
 void receivedCallback(uint32_t from, String &msg)
 {
-  infoLight(RgbColor(0, 255, 0)); // Green for mesh messages
+  infoLight(green); // Green for mesh messages
   JsonDocument root;
   DeserializationError error = deserializeJson(root, msg);
 

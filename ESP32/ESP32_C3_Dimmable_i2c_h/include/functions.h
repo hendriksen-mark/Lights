@@ -6,11 +6,7 @@
 
 #include "config.h"
 #include "debug.h"
-
-extern RgbColor red;
-extern RgbColor green;
-extern RgbColor white;
-extern RgbColor black;
+#include "color.h"
 
 void functions_setup();
 void ChangeNeoPixels_info();

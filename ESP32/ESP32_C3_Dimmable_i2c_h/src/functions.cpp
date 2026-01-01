@@ -1,12 +1,15 @@
 #include "functions.h"
 
-// Define the color constants
-RgbColor red = RgbColor(255, 0, 0);
-RgbColor green = RgbColor(0, 255, 0);
-RgbColor white = RgbColor(255);
-RgbColor black = RgbColor(0);
+// Compact selection of NeoPixel color feature based on token `INFO_LED_ORDER`.
+// Example: set `-DINFO_LED_ORDER=Grb` in build flags to select `NeoGrbFeature`.
+#ifndef INFO_LED_ORDER
+#define INFO_LED_ORDER Grb
+#endif
+#define PRIMITIVE_CAT3(a,b,c) a##b##c
+#define CAT3(a,b,c) PRIMITIVE_CAT3(a,b,c)
+typedef CAT3(Neo, INFO_LED_ORDER, Feature) InfoLedColorFeature;
 
-NeoPixelBus<NeoGrbFeature, NeoEsp32Rmt0Ws2812xMethod> *strip_info = NULL;
+NeoPixelBus<InfoLedColorFeature, NeoEsp32Rmt0Ws2812xMethod> *strip_info = NULL;
 float info_led_brightness = 0.3; // Default brightness (30% to avoid being too bright)
 
 void functions_setup()
@@ -18,7 +21,7 @@ void functions_setup()
 	for (int i = 0; i < loops; ++i)
 	{
 		LOG_INFO("Waiting for serial monitor...");
-		delay(intervalMs);
+		infoLedPulse(white, 1, intervalMs); // Pulse white while waiting for serial monitor
 	}
 
 	if (!LittleFS.begin())
@@ -51,7 +54,7 @@ void ChangeNeoPixels_info() // this set the number of leds of the strip based on
 		strip_info = NULL;
 		return;
 	}
-	strip_info = new NeoPixelBus<NeoGrbFeature, NeoEsp32Rmt0Ws2812xMethod>(1, INFO_DATA_PIN); // and recreate with new count
+	strip_info = new NeoPixelBus<InfoLedColorFeature, NeoEsp32Rmt0Ws2812xMethod>(1, INFO_DATA_PIN); // and recreate with new count
 	strip_info->Begin();
 }
 
@@ -202,7 +205,7 @@ void infoLedIdle()
 	{
 		ChangeNeoPixels_info();
 	}
-	RgbColor dim_blue = applyBrightness(RgbColor(0, 0, 255), info_led_brightness * 0.3);
+	RgbColor dim_blue = applyBrightness(blue, info_led_brightness * 0.3);
 	strip_info->SetPixelColor(0, dim_blue);
 	strip_info->Show();
 }
@@ -213,7 +216,7 @@ void infoLedBusy()
 	{
 		ChangeNeoPixels_info();
 	}
-	infoLedPulse(RgbColor(255, 165, 0), 1, 1000); // Orange pulse
+	infoLedPulse(orange, 1, 1000); // Orange pulse
 }
 
 void infoLedSuccess()
@@ -244,13 +247,13 @@ void factoryReset()
 	infoLedBusy(); // Show formatting in progress
 	LittleFS.format();
 	// WiFi.disconnect(false, true);
-	infoLedPulse(RgbColor(255, 0, 255), 2, 400); // Magenta pulses before restart
+	infoLedPulse(magenta, 2, 400); // Magenta pulses before restart
 	ESP.restart();
 }
 
 void resetESP()
 {
-	infoLight(RgbColor(255, 165, 0)); // Orange for restart
+	infoLight(orange); // Orange for restart
 	blinkLed(3, 200);
 	delay(500);
 	infoLedFadeOut(500); // Smooth fade out before restart

@@ -227,6 +227,7 @@ void i2c_setup()
 {
 	Wire.begin();
 	LOG_DEBUG("Setup I2C");
+	infoLight(cyan);
 
 	// Assign I2C addresses to each light in the struct
 	for (int i = 0; i < LIGHT_COUNT_I2C; i++)
@@ -239,7 +240,7 @@ void i2c_setup()
 	restoreState_i2c();
 
 	server_i2c.on("/state", HTTP_PUT, []() { // HTTP PUT request used to set a new light state
-		infoLight(RgbColor(255, 255, 0));	 // Yellow for I2C requests
+		infoLight(yellow);	 // Yellow for I2C requests
 		JsonDocument root;					 // Reduced from 1024 - more efficient for actual usage
 		DeserializationError error = deserializeJson(root, server_i2c.arg("plain"));
 
