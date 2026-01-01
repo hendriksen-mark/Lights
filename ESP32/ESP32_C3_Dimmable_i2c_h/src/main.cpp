@@ -4,9 +4,6 @@
 #include "debug.h"
 #include "functions.h"
 #include "config.h"
-#include <WiFi.h>
-
-void ESP_Server_setup(); // Forward declaration
 
 void setup()
 {
@@ -18,7 +15,7 @@ void setup()
   delay(200);
 
   ESP_Server_setup();
-
+  ota_setup();
   i2c_setup();
   ws_setup();
   mesh_setup();
@@ -29,6 +26,7 @@ void setup()
 
 void loop()
 {
+  ethernet_loop();
   i2c_loop();
   ws_loop();
   mesh_loop();

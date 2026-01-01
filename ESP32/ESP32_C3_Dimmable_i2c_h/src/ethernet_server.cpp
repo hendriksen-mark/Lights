@@ -1,8 +1,6 @@
 #include "ethernet_server.h"
 #include <WebServer_ESP32_W5500.h>
 
-extern byte mac[];
-
 void ESP_Server_setup()
 {
 	LOG_DEBUG("start W5500");
@@ -27,6 +25,56 @@ void ESP_Server_setup()
 	}
 
 	infoLedSuccess(); // Show success with green pulses
+}
+
+void ota_setup()
+{
+	ArduinoOTA
+		.onStart([]() {
+			String type;
+			if (ArduinoOTA.getCommand() == U_FLASH)
+				type = "sketch";
+			else // U_SPIFFS
+				type = "filesystem";
+
+			LOG_DEBUG("Start updating " + type);
+		})
+		.onEnd([]() {
+			LOG_DEBUG("\nEnd");
+		})
+		.onProgress([](unsigned int progress, unsigned int total) {
+			LOG_INFO("Progress: " + String((progress / (total / 100))) + "%");
+		})
+		.onError([](ota_error_t error) {
+			LOG_ERROR("Error[%u]: ", error);
+			switch (error)
+			{
+			case OTA_AUTH_ERROR:
+				LOG_ERROR("Auth Failed");
+				break;
+			case OTA_BEGIN_ERROR:
+				LOG_ERROR("Begin Failed");
+				break;
+			case OTA_CONNECT_ERROR:
+				LOG_ERROR("Connect Failed");
+				break;
+			case OTA_RECEIVE_ERROR:
+				LOG_ERROR("Receive Failed");
+				break;
+			case OTA_END_ERROR:
+				LOG_ERROR("End Failed");
+				break;
+			default:
+				break;
+			}
+		})
+		.setHostname(DEVICE_NAME)
+		.begin();
+}
+
+void ethernet_loop()
+{
+	ArduinoOTA.handle();
 }
 
 String get_mac_address()
