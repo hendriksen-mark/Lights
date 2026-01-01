@@ -13,8 +13,7 @@ struct state
   uint16_t dividedLights = 0;
 };
 
-// Dynamic lights array — allocate at runtime so `lightsCount` can change via web UI
-state *lights = nullptr;
+state lights[10];
 uint16_t lightsCapacity = 0; // currently allocated capacity
 bool inTransition, entertainmentRun;
 byte packetBuffer[46];
@@ -144,38 +143,6 @@ void apply_scene_ws(uint8_t new_scene)
   }
 }
 
-// Resize the dynamic `lights` array to `newCapacity` elements.
-// Preserves existing entries up to the smaller of current count and new capacity.
-// Returns true on success, false on allocation failure.
-bool resizeLights(uint16_t newCapacity)
-{
-  if (newCapacity == lightsCapacity)
-    return true;
-
-  state *newLights = new (std::nothrow) state[newCapacity];
-  if (newLights == nullptr)
-  {
-    LOG_DEBUG("allocation failed for", String(newCapacity), "lights");
-    return false;
-  }
-
-  uint16_t copyCount = 0;
-  if (lights != nullptr)
-  {
-    copyCount = (lightsCount < newCapacity) ? lightsCount : newCapacity;
-    for (uint16_t i = 0; i < copyCount; ++i)
-      newLights[i] = lights[i];
-    delete[] lights;
-  }
-  // Initialize any newly created entries with default values
-  for (uint16_t i = copyCount; i < newCapacity; ++i)
-    newLights[i] = state();
-
-  lights = newLights;
-  lightsCapacity = newCapacity;
-  return true;
-}
-
 void processLightdata(uint8_t light, float transitiontime)
 {                                           // calculate the step level of every RGB channel for a smooth transition in requested transition time
   transitiontime *= 14 - (pixelCount / 70); // every extra led add a small delay that need to be counted for transition time match
@@ -275,21 +242,21 @@ void lightEngine()
         if (lightsCount > 1)
         { // if are more then 1 virtual light we need to apply transition leds (set in the web interface)
           if (light == 0)
-          {                                                             // if is the first light we must not have transition leds at the beginning
+          {                                                               // if is the first light we must not have transition leds at the beginning
             for (int pixel = 0; pixel < lights[0].dividedLights; pixel++) // loop with all leds of the light (declared in web interface)
-              {
-                if (pixel < lights[0].dividedLights - transitionLeds / 2)
-                { // apply raw color if we are outside transition leds
-                  strip->SetPixelColor(pixel, convFloat(lights[light].currentColors));
-                }
-                else
-                {
-                  strip->SetPixelColor(pixel, blending(lights[0].currentColors, lights[1].currentColors, pixel + 1 - (lights[0].dividedLights - transitionLeds / 2))); // calculate the transition led color
-                }
+            {
+              if (pixel < lights[0].dividedLights - transitionLeds / 2)
+              { // apply raw color if we are outside transition leds
+                strip->SetPixelColor(pixel, convFloat(lights[light].currentColors));
               }
+              else
+              {
+                strip->SetPixelColor(pixel, blending(lights[0].currentColors, lights[1].currentColors, pixel + 1 - (lights[0].dividedLights - transitionLeds / 2))); // calculate the transition led color
+              }
+            }
           }
           else
-          {                                                                 // is not the first virtual light
+          {                                                                   // is not the first virtual light
             for (int pixel = 0; pixel < lights[light].dividedLights; pixel++) // loop with all leds of the light
             {
               long pixelSum = 0;
@@ -346,7 +313,7 @@ void lightEngine()
         if (lightsCount > 1)
         { // if the strip has more than one light
           if (light == 0)
-          {                                                             // if is the first light of the strip
+          {                                                               // if is the first light of the strip
             for (int pixel = 0; pixel < lights[0].dividedLights; pixel++) // loop with every led of the virtual light
             {
               if (pixel < lights[0].dividedLights - transitionLeds / 2)
@@ -360,7 +327,7 @@ void lightEngine()
             }
           }
           else
-          {                                                                 // is not the first light
+          {                                                                   // is not the first light
             for (int pixel = 0; pixel < lights[light].dividedLights; pixel++) // loop with every led
             {
               long pixelSum = 0;
@@ -501,7 +468,16 @@ bool saveConfig_ws()
   json["lightsCount"] = lightsCount;
   for (uint16_t i = 0; i < lightsCount; i++)
   {
-    json["dividedLight_" + String(i)] = (int)lights[i].dividedLights;
+    int divided = 0;
+    if (lights != nullptr)
+    {
+      divided = (int)lights[i].dividedLights;
+    }
+    else if (lightsCount > 0)
+    {
+      divided = pixelCount / lightsCount; // reasonable default when lights not yet allocated
+    }
+    json["dividedLight_" + String(i)] = divided;
   }
   json["pixelCount"] = pixelCount;
   json["transLeds"] = transitionLeds;
@@ -582,18 +558,6 @@ void ws_setup()
   {
     LOG_DEBUG("Config loaded");
   }
-
-  // Ensure dynamic array is allocated according to loaded or default lightsCount
-  if (lightsCount == 0)
-    lightsCount = 1; // avoid zero-sized usage
-  if (!resizeLights(lightsCount))
-  {
-    LOG_DEBUG("ws_setup: Failed to allocate lights for initial lightsCount, falling back to 1");
-    lightsCount = 1;
-    // Try to allocate minimal working set; if this fails, subsequent code may still crash, but we attempt.
-    resizeLights(1);
-  }
-
 
   if (lights[0].dividedLights == 0)
   {
@@ -844,11 +808,6 @@ void ws_setup()
           if (requested > MAX_RUNTIME_LIGHTS)
           {
             server_ws.send(400, "text/plain", "Requested lights count exceeds maximum of " + String(MAX_RUNTIME_LIGHTS));
-            return;
-          }
-          if (!resizeLights(requested))
-          {
-            server_ws.send(500, "text/plain", "Failed to allocate memory for requested lights");
             return;
           }
           lightsCount = requested;
