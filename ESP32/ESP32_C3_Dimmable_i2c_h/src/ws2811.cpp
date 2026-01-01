@@ -64,35 +64,35 @@ void apply_scene_ws(uint8_t new_scene)
       lights[light].bri = 254;
       lights[light].ct = 346;
       lights[light].colorMode = 2;
-      convertCt(light);
+      convertCt(lights[light], rgb_multiplier);
     }
     else if (new_scene == 2)
     {
       lights[light].bri = 254;
       lights[light].ct = 233;
       lights[light].colorMode = 2;
-      convertCt(light);
+      convertCt(lights[light], rgb_multiplier);
     }
     else if (new_scene == 3)
     {
       lights[light].bri = 254;
       lights[light].ct = 156;
       lights[light].colorMode = 2;
-      convertCt(light);
+      convertCt(lights[light], rgb_multiplier);
     }
     else if (new_scene == 4)
     {
       lights[light].bri = 77;
       lights[light].ct = 367;
       lights[light].colorMode = 2;
-      convertCt(light);
+      convertCt(lights[light], rgb_multiplier);
     }
     else if (new_scene == 5)
     {
       lights[light].bri = 254;
       lights[light].ct = 447;
       lights[light].colorMode = 2;
-      convertCt(light);
+      convertCt(lights[light], rgb_multiplier);
     }
     else if (new_scene == 6)
     {
@@ -100,7 +100,7 @@ void apply_scene_ws(uint8_t new_scene)
       lights[light].x = 0.561;
       lights[light].y = 0.4042;
       lights[light].colorMode = 1;
-      convertXy(light);
+      convertXy(lights[light], rgb_multiplier);
     }
     else if (new_scene == 7)
     {
@@ -108,7 +108,7 @@ void apply_scene_ws(uint8_t new_scene)
       lights[light].x = 0.380328;
       lights[light].y = 0.39986;
       lights[light].colorMode = 1;
-      convertXy(light);
+      convertXy(lights[light], rgb_multiplier);
     }
     else if (new_scene == 8)
     {
@@ -116,7 +116,7 @@ void apply_scene_ws(uint8_t new_scene)
       lights[light].x = 0.359168;
       lights[light].y = 0.28807;
       lights[light].colorMode = 1;
-      convertXy(light);
+      convertXy(lights[light], rgb_multiplier);
     }
     else if (new_scene == 9)
     {
@@ -124,7 +124,7 @@ void apply_scene_ws(uint8_t new_scene)
       lights[light].x = 0.267102;
       lights[light].y = 0.23755;
       lights[light].colorMode = 1;
-      convertXy(light);
+      convertXy(lights[light], rgb_multiplier);
     }
     else if (new_scene == 10)
     {
@@ -132,14 +132,14 @@ void apply_scene_ws(uint8_t new_scene)
       lights[light].x = 0.393209;
       lights[light].y = 0.29961;
       lights[light].colorMode = 1;
-      convertXy(light);
+      convertXy(lights[light], rgb_multiplier);
     }
     else
     {
       lights[light].bri = 144;
       lights[light].ct = 447;
       lights[light].colorMode = 2;
-      convertCt(light);
+      convertCt(lights[light], rgb_multiplier);
     }
   }
 }
@@ -181,15 +181,15 @@ void processLightdata(uint8_t light, float transitiontime)
   transitiontime *= 14 - (pixelCount / 70); // every extra led add a small delay that need to be counted for transition time match
   if (lights[light].colorMode == 1 && lights[light].lightState == true)
   {
-    convertXy(light);
+    convertXy(lights[light], rgb_multiplier);
   }
   else if (lights[light].colorMode == 2 && lights[light].lightState == true)
   {
-    convertCt(light);
+    convertCt(lights[light], rgb_multiplier);
   }
   else if (lights[light].colorMode == 3 && lights[light].lightState == true)
   {
-    convertHue(light);
+    convertHue(lights[light]);
   }
   for (uint8_t i = 0; i < 3; i++)
   {
