@@ -8,8 +8,6 @@
 
 void ESP_Server_setup(); // Forward declaration
 
-unsigned long lastWiFiCheck = 0;
-
 void setup()
 {
   Serial.begin(115200);
@@ -31,26 +29,6 @@ void setup()
 
 void loop()
 {
-  // WiFi reconnection logic
-  unsigned long currentMillis = millis();
-  if (currentMillis - lastWiFiCheck >= WIFI_CHECK_INTERVAL)
-  {
-    lastWiFiCheck = currentMillis;
-    if (WiFi.status() != WL_CONNECTED)
-    {
-      LOG_ERROR("WiFi disconnected, attempting reconnection...");
-      infoLedPulse(RgbColor(255, 100, 0), 1, 300); // Orange pulse for WiFi issue
-      WiFi.reconnect();
-      delay(100);
-      if (WiFi.status() == WL_CONNECTED)
-      {
-        infoLedSuccess(); // Reconnected successfully
-        delay(200);
-        infoLedIdle(); // Back to idle
-      }
-    }
-  }
-
   i2c_loop();
   ws_loop();
   mesh_loop();

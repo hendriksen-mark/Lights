@@ -18,12 +18,6 @@
 // #define I2C_CONFIG_PATH "/i2c_config.json"
 #define I2C_STATE_PATH "/i2c_state.json"
 
-
-// ============================================
-// WiFi Configuration
-// ============================================
-#define WIFI_CHECK_INTERVAL 30000 // Check WiFi every 30 seconds (millis)
-
 // ============================================
 // Ethernet Configuration
 // ============================================
