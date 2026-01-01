@@ -91,7 +91,7 @@ void mesh_setup()
   discoverBridgeMdns();
   loadMeshConfig();
 
-  server_gordijn.on(F("/"), handleRoot);
+  server_gordijn.on("/", handleRoot);
   server_gordijn.on("/setTargetPosTest/", set_Target_Pos_test);
   server_gordijn.on("/CurrentPosTest", get_current_pos_test);
   server_gordijn.on("/getTargetPosTest", get_target_pos_test);
@@ -113,7 +113,7 @@ void mesh_setup()
 
   server_gordijn.begin();
 
-  server_mesh.on(F("/"), mesh_handleRoot);
+  server_mesh.on("/", mesh_handleRoot);
   server_mesh.on("/setIP/", set_IP);
   server_mesh.on("/discover/", []() {
     discoverBridgeMdns();
@@ -279,7 +279,7 @@ void set_Target_Pos_test()
 {
   for (uint8_t i = 0; i < server_gordijn.args(); i++)
   {
-    if (server_gordijn.argName(i) == F("Pos"))
+    if (server_gordijn.argName(i) == "Pos")
     {
       target = server_gordijn.arg(i).toInt();
     }
@@ -301,7 +301,7 @@ void set_Target_Pos()
 {
   for (uint8_t i = 0; i < server_gordijn.args(); i++)
   {
-    if (server_gordijn.argName(i) == F("Pos"))
+    if (server_gordijn.argName(i) == "Pos")
     {
       target = server_gordijn.arg(i).toInt();
     }
@@ -315,7 +315,7 @@ void set_Target_Pos()
   msg.reserve(256);
   serializeJson(doc, msg);
   sendData(msg);
-  server_gordijn.send(200, F("text/plain"), F("OK"));
+  server_gordijn.send(200, "text/plain", "OK");
 }
 
 void homeing()
@@ -356,7 +356,7 @@ void get_current_pos()
   msg.reserve(256);
   serializeJson(doc, msg);
   sendData(msg);
-  server_gordijn.send(200, F("text/plain"), (String)current_ont);
+  server_gordijn.send(200, "text/plain", (String)current_ont);
 }
 
 void get_target_pos_test()
@@ -383,7 +383,7 @@ void get_target_pos()
   msg.reserve(256);
   serializeJson(doc, msg);
   sendData(msg);
-  server_gordijn.send(200, F("text/plain"), (String)target_ont);
+  server_gordijn.send(200, "text/plain", (String)target_ont);
 }
 
 void get_state_test()
@@ -410,7 +410,7 @@ void get_state()
   msg.reserve(256);
   serializeJson(doc, msg);
   sendData(msg);
-  server_gordijn.send(200, F("text/plain"), (String)state_ont);
+  server_gordijn.send(200, "text/plain", (String)state_ont);
 }
 
 void handleinfo()
@@ -505,7 +505,7 @@ void set_IP()
 {
   for (uint8_t i = 0; i < server_mesh.args(); i++)
   {
-    if (server_mesh.argName(i) == F("subip"))
+    if (server_mesh.argName(i) == "subip")
     {
       subip = server_mesh.arg(i).toInt();
     }
@@ -525,7 +525,7 @@ void set_PORT()
 {
   for (uint8_t i = 0; i < server_mesh.args(); i++)
   {
-    if (server_mesh.argName(i) == F("subport"))
+    if (server_mesh.argName(i) == "subport")
     {
       bridgePort = server_mesh.arg(i).toInt();
     }
