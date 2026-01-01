@@ -36,7 +36,7 @@ void handleNotFound_i2c()
 	{
 		message += " " + server_i2c.argName(i) + ": " + server_i2c.arg(i) + "\n";
 	}
-	REMOTE_LOG_DEBUG("from:", server_i2c.client().remoteIP().toString(), "not found:", server_i2c.uri());
+	REMOTE_LOG_DEBUG("from:", server_i2c.client().remoteIP().toString(), "not found:", server_i2c.uri(), server_i2c.args());
 	server_i2c.send(404, "text/plain", message);
 }
 

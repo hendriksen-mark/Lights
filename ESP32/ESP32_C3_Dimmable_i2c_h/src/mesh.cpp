@@ -260,6 +260,7 @@ void handleRoot()
   message += "<a href=\"/reset\"\"><button>RESET</button></a><br/>";
 
   message += "</html>";
+  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/", server_gordijn.args(), "args");
   server_gordijn.send(200, "text/html", message);
 }
 
@@ -293,6 +294,7 @@ void set_Target_Pos_test()
   msg.reserve(256);
   serializeJson(doc, msg);
   sendData(msg);
+  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/setTargetPosTest", msg);
   server_gordijn.sendHeader("Location", "/", true); // Redirect to our html web page
   server_gordijn.send(302, "text/plane", "");
 }
@@ -315,6 +317,7 @@ void set_Target_Pos()
   msg.reserve(256);
   serializeJson(doc, msg);
   sendData(msg);
+  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/setTargetPos", msg);
   server_gordijn.send(200, "text/plain", "OK");
 }
 
@@ -328,6 +331,7 @@ void homeing()
   msg.reserve(256);
   serializeJson(doc, msg);
   sendData(msg);
+  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/homeing", msg);
   server_gordijn.sendHeader("Location", "/", true); // Redirect to our html web page
   server_gordijn.send(302, "text/plane", "");
 }
@@ -342,6 +346,7 @@ void get_current_pos_test()
   msg.reserve(256);
   serializeJson(doc, msg);
   sendData(msg);
+  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/getCurrentPosTest", msg);
   server_gordijn.sendHeader("Location", "/", true); // Redirect to our html web page
   server_gordijn.send(302, "text/plane", "");
 }
@@ -356,6 +361,7 @@ void get_current_pos()
   msg.reserve(256);
   serializeJson(doc, msg);
   sendData(msg);
+  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/getCurrentPos", msg);
   server_gordijn.send(200, "text/plain", (String)current_ont);
 }
 
@@ -369,6 +375,7 @@ void get_target_pos_test()
   msg.reserve(256);
   serializeJson(doc, msg);
   sendData(msg);
+  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/getTargetPosTest", msg);
   server_gordijn.sendHeader("Location", "/", true); // Redirect to our html web page
   server_gordijn.send(302, "text/plane", "");
 }
@@ -383,6 +390,7 @@ void get_target_pos()
   msg.reserve(256);
   serializeJson(doc, msg);
   sendData(msg);
+  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/getTargetPos", msg);
   server_gordijn.send(200, "text/plain", (String)target_ont);
 }
 
@@ -396,6 +404,7 @@ void get_state_test()
   msg.reserve(256);
   serializeJson(doc, msg);
   sendData(msg);
+  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/getStateTest", msg);
   server_gordijn.sendHeader("Location", "/", true); // Redirect to our html web page
   server_gordijn.send(302, "text/plane", "");
 }
@@ -410,6 +419,7 @@ void get_state()
   msg.reserve(256);
   serializeJson(doc, msg);
   sendData(msg);
+  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/getState", msg);
   server_gordijn.send(200, "text/plain", (String)state_ont);
 }
 
@@ -423,6 +433,8 @@ void handleinfo()
   message += WiFi.localIP().toString();
 
   message += "<a href=\"/\"\"><button>HOME PAGE</button></a><br/>";
+  message += "</html>";
+  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/info");
   server_gordijn.send(200, "text/html", message);
 }
 
@@ -443,6 +455,7 @@ void handleNotFound()
   }
   message += "<br><br>";
   message += "<a href=\"/\"\"><button>HOME PAGE</button></a><br/>";
+  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/notFound", server_gordijn.uri(), server_gordijn.args());
   server_gordijn.send(404, "text/html", message);
 }
 
@@ -463,6 +476,7 @@ void mesh_handleNotFound()
   }
   message += "<br><br>";
   message += "<a href=\"/\"\"><button>HOME PAGE</button></a><br/>";
+  REMOTE_LOG_DEBUG("from:", server_mesh.client().remoteIP().toString(), "/notFound", server_mesh.uri(), server_mesh.args());
   server_mesh.send(404, "text/html", message);
 }
 
@@ -498,6 +512,7 @@ void mesh_handleRoot()
   message += "<a href=\"/\"\"><button>RELOAD PAGE</button></a><br/>";
 
   message += "</html>";
+  REMOTE_LOG_DEBUG("from:", server_mesh.client().remoteIP().toString(), "/", server_mesh.args(), "args");
   server_mesh.send(200, "text/html", message);
 }
 
@@ -517,6 +532,7 @@ void set_IP()
     bridgeIp = base;
   }
   saveMeshConfig();
+  REMOTE_LOG_DEBUG("from:", server_mesh.client().remoteIP().toString(), "/setIP", bridgeIp.toString());
   server_mesh.sendHeader("Location", "/", true); // Redirect to our html web page
   server_mesh.send(302, "text/plane", "");
 }
@@ -531,6 +547,7 @@ void set_PORT()
     }
   }
   saveMeshConfig();
+  REMOTE_LOG_DEBUG("from:", server_mesh.client().remoteIP().toString(), "/setPORT", String(bridgePort));
   server_mesh.sendHeader("Location", "/", true); // Redirect to our html web page
   server_mesh.send(302, "text/plane", "");
 }
