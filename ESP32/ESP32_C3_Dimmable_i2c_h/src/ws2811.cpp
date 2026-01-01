@@ -2,8 +2,6 @@
 
 HTTPUpdateServer httpUpdateServer;
 
-extern byte mac[];
-
 struct state
 {
   uint8_t colors[3], bri = 100, sat = 254, colorMode = 2;
@@ -757,15 +755,13 @@ void ws_setup()
   });
 
   server_ws.on("/detect", []() { // HTTP GET request used to discover the light type
-    char macString[32] = {0};
-    sprintf(macString, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     JsonDocument root;
     root["name"] = lightName;
     root["lights"] = lightsCount;
     root["protocol"] = LIGHT_PROTOCOL_WS;
     root["modelid"] = LIGHT_MODEL_WS;
     root["type"] = LIGHT_TYPE_WS;
-    root["mac"] = String(macString);
+    root["mac"] = get_mac_address();
     root["version"] = LIGHT_VERSION;
     String output;
     serializeJson(root, output);

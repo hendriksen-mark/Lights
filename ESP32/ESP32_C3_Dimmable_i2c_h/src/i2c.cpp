@@ -1,7 +1,5 @@
 #include "i2c.h"
 
-extern byte mac[];
-
 struct state
 {
 	bool lightState;
@@ -317,15 +315,13 @@ void i2c_setup()
 	});
 
 	server_i2c.on("/detect", []() { // HTTP GET request used to discover the light type
-		char macString[32] = {0};
-		sprintf(macString, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 		JsonDocument root; // Reduced from 1024 - optimized for actual content
 		root["name"] = LIGHT_NAME_I2C;
 		root["lights"] = LIGHT_COUNT_I2C;
 		root["protocol"] = LIGHT_PROTOCOL_I2C;
 		root["modelid"] = LIGHT_MODEL_I2C;
 		root["type"] = LIGHT_TYPE_I2C;
-		root["mac"] = String(macString);
+		root["mac"] = get_mac_address();
 		root["version"] = LIGHT_VERSION_I2C;
 		String output;
 		output.reserve(200); // Pre-allocate to reduce memory fragmentation

@@ -6,8 +6,6 @@
 #include "config.h"
 #include <WiFi.h>
 
-byte mac[] = {MAC_ADDR_0, MAC_ADDR_1, MAC_ADDR_2, MAC_ADDR_3, MAC_ADDR_4, MAC_ADDR_5};
-
 void ESP_Server_setup(); // Forward declaration
 
 unsigned long lastWiFiCheck = 0;

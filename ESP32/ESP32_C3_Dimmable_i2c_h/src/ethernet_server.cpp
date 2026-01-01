@@ -8,7 +8,7 @@ void ESP_Server_setup()
 	LOG_DEBUG("start W5500");
 	ESP32_W5500_onEvent();
 
-	ETH.begin(MISO, MOSI, SCK, SS, W5500_INT_GPIO, SPI_CLOCK_MHZ, ETH_SPI_HOST, mac);
+	ETH.begin(MISO, MOSI, SCK, SS, W5500_INT_GPIO, SPI_CLOCK_MHZ, ETH_SPI_HOST);
 
 	infoLight(white); // Initializing
 	while (!ESP32_W5500_isConnected())
@@ -17,7 +17,7 @@ void ESP_Server_setup()
 		infoLedPulse(red, 1, 500); // Pulse red while connecting
 	}
 	// Show that we are connected
-	LOG_DEBUG("W5500_isConnected: ", ESP32_W5500_isConnected(), " IP Address: ", ETH.localIP());
+	LOG_DEBUG("W5500_isConnected: ", ESP32_W5500_isConnected(), " IP Address: ", ETH.localIP(), " MAC: ", ETH.macAddress());
 
 	// Setup mDNS
 	if (MDNS.begin(DEVICE_NAME))
@@ -27,4 +27,9 @@ void ESP_Server_setup()
 	}
 
 	infoLedSuccess(); // Show success with green pulses
+}
+
+String get_mac_address()
+{
+	return ETH.macAddress();
 }
