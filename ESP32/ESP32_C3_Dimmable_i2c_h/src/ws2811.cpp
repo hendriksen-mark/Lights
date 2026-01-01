@@ -11,7 +11,7 @@ struct state
   uint16_t dividedLights = 0;
 };
 
-state lights[10];
+state lights[MAX_RUNTIME_LIGHTS];
 uint16_t lightsCapacity = 0; // currently allocated capacity
 bool inTransition, entertainmentRun;
 byte packetBuffer[46];
@@ -49,6 +49,7 @@ void handleNotFound_ws()
   {
     message += " " + server_ws.argName(i) + ": " + server_ws.arg(i) + "\n";
   }
+  REMOTE_LOG_DEBUG("from:", server_ws.client().remoteIP().toString(), "not found:", server_ws.uri());
   server_ws.send(404, "text/plain", message);
 }
 
@@ -144,16 +145,27 @@ void apply_scene_ws(uint8_t new_scene)
 void processLightdata(uint8_t light, float transitiontime)
 {                                           // calculate the step level of every RGB channel for a smooth transition in requested transition time
   transitiontime *= 14 - (pixelCount / 70); // every extra led add a small delay that need to be counted for transition time match
+
+  REMOTE_LOG_DEBUG("Light:", light);
+	REMOTE_LOG_DEBUG("bri:", lights[light].bri);
+	REMOTE_LOG_DEBUG("state:", lights[light].lightState);
+  REMOTE_LOG_DEBUG("colorMode:", lights[light].colorMode);
+
   if (lights[light].colorMode == 1 && lights[light].lightState == true)
   {
+    REMOTE_LOG_DEBUG("x:", lights[light].x);
+    REMOTE_LOG_DEBUG("y:", lights[light].y);
     convertXy(lights[light], rgb_multiplier);
   }
   else if (lights[light].colorMode == 2 && lights[light].lightState == true)
   {
+    REMOTE_LOG_DEBUG("ct:", lights[light].ct);
     convertCt(lights[light], rgb_multiplier);
   }
   else if (lights[light].colorMode == 3 && lights[light].lightState == true)
   {
+    REMOTE_LOG_DEBUG("hue:", lights[light].hue);
+    REMOTE_LOG_DEBUG("sat:", lights[light].sat);
     convertHue(lights[light]);
   }
   for (uint8_t i = 0; i < 3; i++)
@@ -167,6 +179,8 @@ void processLightdata(uint8_t light, float transitiontime)
       lights[light].stepLevel[i] = lights[light].currentColors[i] / transitiontime;
     }
   }
+  REMOTE_LOG_DEBUG("colors R:", lights[light].colors[0], "G:", lights[light].colors[1], "B:", lights[light].colors[2]);
+	REMOTE_LOG_DEBUG("transitiontime:", transitiontime);
 }
 
 RgbColor blending(const float left[3], const float right[3], uint8_t pixel)
@@ -388,7 +402,7 @@ void lightEngine()
 
 void saveState_ws()
 { // save the lights state using generic helper
-  REMOTE_LOG_DEBUG("save state");
+  REMOTE_LOG_DEBUG("save ws state");
   JsonDocument json;
   for (uint8_t i = 0; i < lightsCount; i++)
   {
@@ -415,7 +429,7 @@ void saveState_ws()
 
 void restoreState_ws()
 { // restore the lights state using generic helper
-  REMOTE_LOG_DEBUG("restore state");
+  REMOTE_LOG_DEBUG("restore ws state");
   JsonDocument json;
   if (!readJsonFile(WS_STATE_PATH, json))
   {
@@ -459,6 +473,7 @@ void restoreState_ws()
 
 bool saveConfig_ws()
 { // save config using generic helper
+  REMOTE_LOG_DEBUG("save ws config");
   JsonDocument json;
   json["name"] = lightName;
   json["startup"] = startup;
@@ -488,7 +503,7 @@ bool saveConfig_ws()
 
 bool loadConfig_ws()
 { // load the configuration using generic helper
-  REMOTE_LOG_DEBUG("loadConfig_ws file");
+  REMOTE_LOG_DEBUG("load ws config");
   JsonDocument json;
   if (!readJsonFile(WS_CONFIG_PATH, json))
   {
@@ -727,6 +742,7 @@ void ws_setup()
       }
       String output;
       serializeJson(root, output);
+      REMOTE_LOG_DEBUG("from:", server_ws.client().remoteIP().toString(), "/state put", output);
       server_ws.send(200, "text/plain", output);
       saveState_ws();
     }
@@ -751,6 +767,8 @@ void ws_setup()
       root["colormode"] = "hs";
     String output;
     serializeJson(root, output);
+    REMOTE_LOG_DEBUG("from:", server_ws.client().remoteIP().toString(), "/state get", output);
+		REMOTE_LOG_DEBUG("light :", light);
     server_ws.send(200, "text/plain", output);
   });
 
@@ -765,6 +783,7 @@ void ws_setup()
     root["version"] = LIGHT_VERSION;
     String output;
     serializeJson(root, output);
+		REMOTE_LOG_DEBUG("from:", server_ws.client().remoteIP().toString(), "/detect", output);
     server_ws.send(200, "text/plain", output);
   });
 
@@ -786,6 +805,7 @@ void ws_setup()
     root["bpct"] = rgb_multiplier[2];
     String output;
     serializeJson(root, output);
+    REMOTE_LOG_DEBUG("from:", server_ws.client().remoteIP().toString(), "/config", output);
     server_ws.send(200, "text/plain", output);
   });
 
@@ -829,17 +849,18 @@ void ws_setup()
       }
       saveConfig_ws();
     }
-
-    server_ws.send_P(200, "text/html", htmlContent_ws);
     if (server_ws.args())
     {
       resetESP();
     }
+    REMOTE_LOG_DEBUG("from:", server_ws.client().remoteIP().toString(), "/", server_ws.args(), "args");
+    server_ws.send_P(200, "text/html", htmlContent_ws);
 
   });
 
   server_ws.on("/reset", []() { // trigger manual reset
     server_ws.send(200, "text/html", "reset");
+		REMOTE_LOG_DEBUG("from:", server_ws.client().remoteIP().toString(), "/reset");
     resetESP();
   });
 
