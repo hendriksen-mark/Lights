@@ -257,7 +257,7 @@ void i2c_setup()
 				JsonObject values = state.value();
 				transitiontime_i2c = 4;
 
-				if (values["on"].is<bool>())
+				if (values["on"].is<int>() || values["on"].is<bool>())
 				{
 					if (values["on"])
 					{
@@ -269,9 +269,9 @@ void i2c_setup()
 					}
 				}
 
-				if (values["bri"].is<int>())
+				if (values["bri"].is<float>() || values["bri"].is<int>())
 				{
-					lights_i2c[light].bri = values["bri"];
+					lights_i2c[light].bri = (int)values["bri"];
 				}
 
 				if (values["bri_inc"].is<int>())

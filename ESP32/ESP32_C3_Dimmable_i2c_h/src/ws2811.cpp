@@ -661,7 +661,7 @@ void ws_setup()
           }
         }
 
-        if (values["on"].is<bool>())
+        if (values["on"].is<int>() || values["on"].is<bool>())
         {
           if (values["on"])
           {
@@ -673,9 +673,9 @@ void ws_setup()
           }
         }
 
-        if (values["bri"].is<int>())
+        if (values["bri"].is<float>() || values["bri"].is<int>())
         {
-          lights[light].bri = values["bri"];
+          lights[light].bri = (int)values["bri"];
         }
 
         if (values["bri_inc"].is<int>())
