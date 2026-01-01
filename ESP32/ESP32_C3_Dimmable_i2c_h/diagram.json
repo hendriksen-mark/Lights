@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "author": "Anonymous maker",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    {
+      "type": "wokwi-neopixel",
+      "id": "rgb1",
+      "top": -63.5,
+      "left": 37.6,
+      "rotate": 180,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-neopixel",
+      "id": "rgb2",
+      "top": 32.5,
+      "left": 143.2,
+      "rotate": 180,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-neopixel",
+      "id": "rgb3",
+      "top": 22.9,
+      "left": 172,
+      "rotate": 180,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-neopixel",
+      "id": "rgb4",
+      "top": 13.3,
+      "left": 200.8,
+      "rotate": 180,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-neopixel",
+      "id": "rgb5",
+      "top": 3.7,
+      "left": 229.6,
+      "rotate": 180,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-neopixel",
+      "id": "rgb6",
+      "top": -5.9,
+      "left": 258.4,
+      "rotate": 180,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-neopixel",
+      "id": "rgb7",
+      "top": -15.5,
+      "left": 287.2,
+      "rotate": 180,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-neopixel",
+      "id": "rgb8",
+      "top": -25.1,
+      "left": 316,
+      "rotate": 180,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-neopixel",
+      "id": "rgb9",
+      "top": -34.7,
+      "left": 344.8,
+      "rotate": 180,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-neopixel",
+      "id": "rgb10",
+      "top": -44.3,
+      "left": 373.6,
+      "rotate": 180,
+      "attrs": {}
+    }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+    [ "rgb1:VSS", "esp:3V3", "green", [ "h-8.8", "v87.3" ] ],
+    [ "rgb1:VDD", "esp:GND.2", "green", [ "h0" ] ],
+    [ "esp:16", "rgb1:DIN", "green", [ "h0" ] ],
+    [ "rgb10:DIN", "rgb9:DOUT", "green", [ "h0" ] ],
+    [ "rgb9:DIN", "rgb8:DOUT", "green", [ "h0" ] ],
+    [ "rgb8:DIN", "rgb7:DOUT", "green", [ "h0" ] ],
+    [ "rgb7:DIN", "rgb6:DOUT", "green", [ "h0" ] ],
+    [ "rgb6:DIN", "rgb5:DOUT", "green", [ "h0" ] ],
+    [ "rgb5:DIN", "rgb4:DOUT", "green", [ "h0" ] ],
+    [ "rgb4:DIN", "rgb3:DOUT", "green", [ "h0" ] ],
+    [ "rgb3:DIN", "rgb2:DOUT", "green", [ "h0" ] ],
+    [ "rgb2:VSS", "rgb3:VSS", "green", [ "v0" ] ],
+    [ "rgb3:VSS", "rgb4:VSS", "green", [ "v0" ] ],
+    [ "rgb4:VSS", "rgb5:VSS", "green", [ "v0" ] ],
+    [ "rgb5:VSS", "rgb6:VSS", "green", [ "v0" ] ],
+    [ "rgb6:VSS", "rgb7:VSS", "green", [ "v0" ] ],
+    [ "rgb7:VSS", "rgb8:VSS", "green", [ "v0" ] ],
+    [ "rgb8:VSS", "rgb9:VSS", "green", [ "v0" ] ],
+    [ "rgb9:VSS", "rgb10:VSS", "green", [ "v0" ] ],
+    [ "rgb2:VDD", "rgb3:VDD", "green", [ "h0" ] ],
+    [ "rgb3:VDD", "rgb4:VDD", "green", [ "h0" ] ],
+    [ "rgb4:VDD", "rgb5:VDD", "green", [ "h0" ] ],
+    [ "rgb5:VDD", "rgb6:VDD", "green", [ "h0" ] ],
+    [ "rgb6:VDD", "rgb7:VDD", "green", [ "h0" ] ],
+    [ "rgb7:VDD", "rgb8:VDD", "green", [ "h0" ] ],
+    [ "rgb8:VDD", "rgb9:VDD", "green", [ "h0" ] ],
+    [ "rgb9:VDD", "rgb10:VDD", "green", [ "h0" ] ],
+    [ "esp:17", "rgb2:DIN", "green", [ "h0" ] ],
+    [ "esp:GND.3", "rgb2:VDD", "black", [ "h0" ] ],
+    [ "rgb1:VSS", "rgb2:VSS", "green", [ "v-8.7", "h58.4" ] ]
+  ],
+  "dependencies": {}
+}

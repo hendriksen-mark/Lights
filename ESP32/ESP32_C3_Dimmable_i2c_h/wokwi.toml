@@ -1,0 +1,5 @@
+[wokwi]
+version = 1
+firmware = ".pio/build/wemos_d1_mini32/firmware.bin"
+elf = '.pio/build/wemos_d1_mini32/firmware.elf'
+rfc2217ServerPort = 4000
