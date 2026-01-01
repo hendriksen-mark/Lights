@@ -3,8 +3,7 @@
 struct state
 {
 	bool lightState;
-	int bri, lightadress;
-	float stepLevel, currentBri;
+	int bri, currentBri, lightadress;
 };
 
 state lights_i2c[LIGHT_COUNT_I2C];
@@ -37,6 +36,7 @@ void handleNotFound_i2c()
 	{
 		message += " " + server_i2c.argName(i) + ": " + server_i2c.arg(i) + "\n";
 	}
+	REMOTE_LOG_DEBUG("from:", server_i2c.client().remoteIP().toString(), "not found:", server_i2c.uri());
 	server_i2c.send(404, "text/plain", message);
 }
 
@@ -166,6 +166,7 @@ void request_lightdata(uint8_t light)
 		{
 			lights_i2c[light].bri = buff[0];
 			lights_i2c[light].lightState = buff[1];
+			lights_i2c[light].currentBri = lights_i2c[light].bri;
 
 			REMOTE_LOG_DEBUG("Light:", light);
 			REMOTE_LOG_DEBUG("bri:", lights_i2c[light].bri);
@@ -274,7 +275,7 @@ void i2c_setup()
 					lights_i2c[light].bri = (int)values["bri"];
 				}
 
-				if (values["bri_inc"].is<int>())
+				if (values["bri_inc"].is<float>() || values["bri_inc"].is<int>())
 				{
 					lights_i2c[light].bri += (int)values["bri_inc"];
 					if (lights_i2c[light].bri > 255)
@@ -288,15 +289,15 @@ void i2c_setup()
 					send_alert(light);
 				}
 
-				if (values["transitiontime"].is<int>())
+				if (values["transitiontime"].is<float>() || values["transitiontime"].is<int>())
 				{
-					transitiontime_i2c = values["transitiontime"];
+					transitiontime_i2c = (int)values["transitiontime"];
 				}
 				// process_lightdata_i2c(light, transitiontime);
 			}
 			String output;
 			serializeJson(root, output);
-			REMOTE_LOG_DEBUG("/state put", output);
+			REMOTE_LOG_DEBUG("from:", server_i2c.client().remoteIP().toString(), "/state put", output);
 			server_i2c.send(200, "text/plain", output);
 			saveState_i2c();
 		}
@@ -310,7 +311,7 @@ void i2c_setup()
 		String output;
 		output.reserve(50); // Pre-allocate to reduce memory fragmentation
 		serializeJson(root, output);
-		REMOTE_LOG_DEBUG("/state get", output);
+		REMOTE_LOG_DEBUG("from:", server_i2c.client().remoteIP().toString(), "/state get", output);
 		REMOTE_LOG_DEBUG("light :", light);
 		server_i2c.send(200, "text/plain", output);
 	});
@@ -327,6 +328,7 @@ void i2c_setup()
 		String output;
 		output.reserve(200); // Pre-allocate to reduce memory fragmentation
 		serializeJson(root, output);
+		REMOTE_LOG_DEBUG("from:", server_i2c.client().remoteIP().toString(), "/detect", output);
 		server_i2c.send(200, "text/plain", output);
 	});
 
@@ -364,17 +366,6 @@ void i2c_setup()
 						  {
 							  send_alert(light);
 						  }
-						  // Ensure we don't divide by zero; clamp transition to at least 1
-						  int ttime = transitiontime_i2c;
-						  if (ttime <= 0) ttime = 1;
-						  if (lights_i2c[light].lightState)
-						  {
-							  lights_i2c[light].stepLevel = ((float)lights_i2c[light].bri - lights_i2c[light].currentBri) / ttime;
-						  }
-						  else
-						  {
-							  lights_i2c[light].stepLevel = lights_i2c[light].currentBri / ttime;
-						  }
 					  }
 
 					  if (server_i2c.hasArg("reset"))
@@ -382,11 +373,14 @@ void i2c_setup()
 						  resetESP();
 					  }
 
+					  REMOTE_LOG_DEBUG("from:", server_i2c.client().remoteIP().toString(), "/", server_i2c.args(), "args");
+
 					  server_i2c.send_P(200, "text/html", http_content_i2c);
 				  });
 
 	server_i2c.on("/reset", []() { // trigger manual reset
 		server_i2c.send(200, "text/html", "reset");
+		REMOTE_LOG_DEBUG("from:", server_i2c.client().remoteIP().toString(), "/reset");
 		resetESP();
 	});
 

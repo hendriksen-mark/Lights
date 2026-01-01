@@ -41,7 +41,7 @@ void ota_setup()
 			REMOTE_LOG_DEBUG("Start updating " + type);
 		})
 		.onEnd([]() {
-			REMOTE_LOG_DEBUG("\nEnd");
+			REMOTE_LOG_DEBUG("End");
 		})
 		.onProgress([](unsigned int progress, unsigned int total) {
 			REMOTE_LOG_INFO("Progress: " + String((progress / (total / 100))) + "%");
