@@ -8,7 +8,7 @@
 #include <new>
 
 #include "config.h"
-#include "debug.h"
+#include "custom_log.h"
 #include "functions.h"
 #include "color.h"
 #include "ws2811_http_content.h"

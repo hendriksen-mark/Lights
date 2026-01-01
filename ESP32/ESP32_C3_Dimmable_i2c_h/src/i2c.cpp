@@ -96,38 +96,38 @@ void process_lightdata_i2c(uint8_t light)
 	Wire.write(lowByte(transitiontime_i2c));
 	int error_code = Wire.endTransmission(true);
 
-	LOG_DEBUG("Light:", light);
-	LOG_DEBUG("bri:", lights_i2c[light].bri);
-	LOG_DEBUG("state:", lights_i2c[light].lightState);
-	LOG_DEBUG("transitiontime:", transitiontime_i2c);
+	REMOTE_LOG_DEBUG("Light:", light);
+	REMOTE_LOG_DEBUG("bri:", lights_i2c[light].bri);
+	REMOTE_LOG_DEBUG("state:", lights_i2c[light].lightState);
+	REMOTE_LOG_DEBUG("transitiontime:", transitiontime_i2c);
 	switch (error_code)
 	{
 	case 0:
-		LOG_DEBUG("wire code:", "success");
+		REMOTE_LOG_DEBUG("wire code:", "success");
 		break;
 	case 1:
-		LOG_DEBUG("wire code:", "data too long to fit in transmit buffer");
+		REMOTE_LOG_DEBUG("wire code:", "data too long to fit in transmit buffer");
 		infoLedError(); // Quick error indication
 		delay(100);
 		break;
 	case 2:
-		LOG_DEBUG("wire code:", "received NO ACK on transmit of address");
+		REMOTE_LOG_DEBUG("wire code:", "received NO ACK on transmit of address");
 		infoLedError(); // Quick error indication
 		delay(100);
 		break;
 	case 3:
-		LOG_DEBUG("wire code:", "received NO ACK on transmit of data");
+		REMOTE_LOG_DEBUG("wire code:", "received NO ACK on transmit of data");
 		infoLedError(); // Quick error indication
 		delay(100);
 		break;
 	case 4:
-		LOG_DEBUG("wire code:", "other error");
+		REMOTE_LOG_DEBUG("wire code:", "other error");
 		break;
 	case 5:
-		LOG_DEBUG("wire code:", "timeout");
+		REMOTE_LOG_DEBUG("wire code:", "timeout");
 		break;
 	default:
-		LOG_DEBUG("wire code:", "unknown error");
+		REMOTE_LOG_DEBUG("wire code:", "unknown error");
 		break;
 	}
 }
@@ -167,13 +167,13 @@ void request_lightdata(uint8_t light)
 			lights_i2c[light].bri = buff[0];
 			lights_i2c[light].lightState = buff[1];
 
-			LOG_DEBUG("Light:", light);
-			LOG_DEBUG("bri:", lights_i2c[light].bri);
-			LOG_DEBUG("state:", lights_i2c[light].lightState);
+			REMOTE_LOG_DEBUG("Light:", light);
+			REMOTE_LOG_DEBUG("bri:", lights_i2c[light].bri);
+			REMOTE_LOG_DEBUG("state:", lights_i2c[light].lightState);
 		}
 		else
 		{
-			LOG_ERROR("Light:", light, "partial read");
+			REMOTE_LOG_ERROR("Light:", light, "partial read");
 		}
 	}
 	else if (light_rec > 0)
@@ -181,17 +181,17 @@ void request_lightdata(uint8_t light)
 		// fewer bytes than expected
 		size_t read = Wire.readBytes(buff, min((int)sizeof(buff), light_rec));
 		(void)read;
-		LOG_ERROR("Light:", light, "unexpected byte count:", light_rec);
+		REMOTE_LOG_ERROR("Light:", light, "unexpected byte count:", light_rec);
 	}
 	else
 	{
-		LOG_ERROR("Light:", light, "no response");
+		REMOTE_LOG_ERROR("Light:", light, "no response");
 	}
 }
 
 void saveState_i2c()
 {
-	LOG_DEBUG("save i2c state");
+	REMOTE_LOG_DEBUG("save i2c state");
 	JsonDocument json;
 	for (uint8_t i = 0; i < LIGHT_COUNT_I2C; i++)
 	{
@@ -204,7 +204,7 @@ void saveState_i2c()
 
 void restoreState_i2c()
 {
-	LOG_DEBUG("restore i2c state");
+	REMOTE_LOG_DEBUG("restore i2c state");
 	JsonDocument json;
 	if (!readJsonFile(I2C_STATE_PATH, json))
 	{
@@ -226,7 +226,7 @@ void restoreState_i2c()
 void i2c_setup()
 {
 	Wire.begin();
-	LOG_DEBUG("Setup I2C");
+	REMOTE_LOG_DEBUG("Setup I2C");
 	infoLight(cyan);
 
 	// Assign I2C addresses to each light in the struct
@@ -296,7 +296,7 @@ void i2c_setup()
 			}
 			String output;
 			serializeJson(root, output);
-			LOG_DEBUG("/state put", output);
+			REMOTE_LOG_DEBUG("/state put", output);
 			server_i2c.send(200, "text/plain", output);
 			saveState_i2c();
 		}
@@ -310,8 +310,8 @@ void i2c_setup()
 		String output;
 		output.reserve(50); // Pre-allocate to reduce memory fragmentation
 		serializeJson(root, output);
-		LOG_DEBUG("/state get", output);
-		LOG_DEBUG("light :", light);
+		REMOTE_LOG_DEBUG("/state get", output);
+		REMOTE_LOG_DEBUG("light :", light);
 		server_i2c.send(200, "text/plain", output);
 	});
 

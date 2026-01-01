@@ -5,7 +5,7 @@
 #include <WebServer.h>
 
 #include "config.h"
-#include "debug.h"
+#include "custom_log.h"
 #include "processCommand.h"
 
 void mesh_setup();

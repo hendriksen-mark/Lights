@@ -388,7 +388,7 @@ void lightEngine()
 
 void saveState_ws()
 { // save the lights state using generic helper
-  LOG_DEBUG("save state");
+  REMOTE_LOG_DEBUG("save state");
   JsonDocument json;
   for (uint8_t i = 0; i < lightsCount; i++)
   {
@@ -415,7 +415,7 @@ void saveState_ws()
 
 void restoreState_ws()
 { // restore the lights state using generic helper
-  LOG_DEBUG("restore state");
+  REMOTE_LOG_DEBUG("restore state");
   JsonDocument json;
   if (!readJsonFile(WS_STATE_PATH, json))
   {
@@ -488,11 +488,11 @@ bool saveConfig_ws()
 
 bool loadConfig_ws()
 { // load the configuration using generic helper
-  LOG_DEBUG("loadConfig_ws file");
+  REMOTE_LOG_DEBUG("loadConfig_ws file");
   JsonDocument json;
   if (!readJsonFile(WS_CONFIG_PATH, json))
   {
-    LOG_DEBUG("Create new file with default values");
+    REMOTE_LOG_DEBUG("Create new file with default values");
     return saveConfig_ws();
   }
 
@@ -532,10 +532,10 @@ void ChangeNeoPixels(uint16_t newCount) // this set the number of leds of the st
   }
   // Sanity check DATA_PIN before initializing NeoPixelBus / RMT
   int dataPin = DATA_PIN;
-  LOG_DEBUG("DATA_PIN=", dataPin);
+  REMOTE_LOG_DEBUG("DATA_PIN=", dataPin);
   if (dataPin < 0 || dataPin > 47)
   {
-    LOG_ERROR("ChangeNeoPixels: invalid DATA_PIN, aborting strip init");
+    REMOTE_LOG_ERROR("ChangeNeoPixels: invalid DATA_PIN, aborting strip init");
     strip = NULL;
     return;
   }
@@ -545,16 +545,16 @@ void ChangeNeoPixels(uint16_t newCount) // this set the number of leds of the st
 
 void ws_setup()
 {
-  LOG_DEBUG("Setup WS2811");
+  REMOTE_LOG_DEBUG("Setup WS2811");
   infoLight(yellow);
 
   if (!loadConfig_ws())
   {
-    LOG_DEBUG("Failed to load config");
+    REMOTE_LOG_DEBUG("Failed to load config");
   }
   else
   {
-    LOG_DEBUG("Config loaded");
+    REMOTE_LOG_DEBUG("Config loaded");
   }
 
   if (lights[0].dividedLights == 0)
@@ -571,18 +571,18 @@ void ws_setup()
   switch (startup)
   {
   case 0:
-    LOG_DEBUG("Startup: Restore previous state");
+    REMOTE_LOG_DEBUG("Startup: Restore previous state");
     for (uint8_t i = 0; i < lightsCount; i++)
     {
       lights[i].lightState = true;
     }
     break;
   case 1:
-    LOG_DEBUG("Startup: All lights ON");
+    REMOTE_LOG_DEBUG("Startup: All lights ON");
     restoreState_ws();
     break;
   default:
-    LOG_DEBUG("Startup: Apply scene", String(scene));
+    REMOTE_LOG_DEBUG("Startup: Apply scene", String(scene));
     apply_scene_ws(scene);
     break;
   }

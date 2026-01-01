@@ -30,7 +30,7 @@ void loadMeshConfig()
   JsonDocument doc;
   if (!readJsonFile(MESH_CONFIG_PATH, doc))
   {
-    LOG_DEBUG("mesh config not found, using defaults");
+    REMOTE_LOG_DEBUG("mesh config not found, using defaults");
     return;
   }
   // parse base address from BRIDGE_IP string and set default subip
@@ -43,7 +43,7 @@ void loadMeshConfig()
     if (v >= 0 && v <= 255)
     {
       subip = v;
-      LOG_DEBUG("Loaded mesh subip:", subip);
+      REMOTE_LOG_DEBUG("Loaded mesh subip:", subip);
     }
   }
   base[3] = subip;
@@ -54,7 +54,7 @@ void loadMeshConfig()
     if (v > 0 && v <= 65535)
     {
       bridgePort = v;
-      LOG_DEBUG("Loaded mesh bridge port:", bridgePort);
+      REMOTE_LOG_DEBUG("Loaded mesh bridge port:", bridgePort);
     }
   }
 }
@@ -66,17 +66,17 @@ void saveMeshConfig()
   doc["bridge"] = bridgePort;
   if (!writeJsonFile(MESH_CONFIG_PATH, doc))
   {
-    LOG_DEBUG("Failed to save mesh config");
+    REMOTE_LOG_DEBUG("Failed to save mesh config");
   }
   else
   {
-    LOG_DEBUG("Saved mesh config");
+    REMOTE_LOG_DEBUG("Saved mesh config");
   }
 }
 
 void mesh_setup()
 {
-  LOG_DEBUG("Setup Mesh");
+  REMOTE_LOG_DEBUG("Setup Mesh");
   infoLight(magenta);
   // mesh.setDebugMsgTypes( ERROR | MESH_STATUS | CONNECTION | SYNC | COMMUNICATION | GENERAL | MSG_TYPES | REMOTE | DEBUG ); // all types on
   // mesh.setDebugMsgTypes( ERROR | CONNECTION | SYNC | S_TIME );  // set before init() so that you can see startup messages
@@ -136,9 +136,9 @@ void send_change()
 {
   if (change == true)
   {
-    LOG_DEBUG("value:", value);
-    LOG_DEBUG("room_mac:", room_mac);
-    LOG_ERROR(sendHttpRequest(value, room_mac, bridgeIp, bridgePort));
+    REMOTE_LOG_DEBUG("value:", value);
+    REMOTE_LOG_DEBUG("room_mac:", room_mac);
+    REMOTE_LOG_ERROR(sendHttpRequest(value, room_mac, bridgeIp, bridgePort));
     change = false;
   }
 }
@@ -152,8 +152,8 @@ void newConnectionCallback(uint32_t nodeId)
   msg.reserve(256);
   serializeJson(doc, msg);
 
-  LOG_DEBUG("new nodeId:", nodeId);
-  LOG_DEBUG("reply msg:", msg);
+  REMOTE_LOG_DEBUG("new nodeId:", nodeId);
+  REMOTE_LOG_DEBUG("reply msg:", msg);
 
   if (nodeId > 0)
   {
@@ -173,11 +173,11 @@ void receivedCallback(uint32_t from, String &msg)
 
   if (error)
   {
-    LOG_ERROR("deserializeJson() failed:", error.c_str());
+    REMOTE_LOG_ERROR("deserializeJson() failed:", error.c_str());
     return;
   }
-  LOG_DEBUG("from nodeId:", from);
-  LOG_DEBUG("got msg:", msg);
+  REMOTE_LOG_DEBUG("from nodeId:", from);
+  REMOTE_LOG_DEBUG("got msg:", msg);
   if (bool(root["got_master"]) == true)
   {
     if (root["device"] == "switch")
@@ -537,7 +537,7 @@ void set_PORT()
 
 void discoverBridgeMdns()
 {
-  LOG_DEBUG("Starting mDNS query for diyhue (_hue._tcp.local.) on Ethernet");
+  REMOTE_LOG_DEBUG("Starting mDNS query for diyhue (_hue._tcp.local.) on Ethernet");
 
   // mDNS responder should be started on Ethernet in ESP_Server_setup();
   // perform a query directly — this will use the active mDNS responder/interface.
@@ -546,7 +546,7 @@ void discoverBridgeMdns()
   int n = MDNS.queryService("hue", "tcp");
   if (n <= 0)
   {
-    LOG_DEBUG("diyhue not found via mDNS, keeping configured bridge IP");
+    REMOTE_LOG_DEBUG("diyhue not found via mDNS, keeping configured bridge IP");
     return;
   }
 
@@ -575,7 +575,7 @@ void discoverBridgeMdns()
         int p = MDNS.port(i);
         if (p > 0)
           bridgePort = p;
-        LOG_DEBUG("Found diyhue via mDNS (hostname match):", hostName, bridgeIp.toString(), "port:", bridgePort);
+        REMOTE_LOG_DEBUG("Found diyhue via mDNS (hostname match):", hostName, bridgeIp.toString(), "port:", bridgePort);
         return;
       }
     }
@@ -594,6 +594,6 @@ void discoverBridgeMdns()
     bridgeIp = firstIp;
     if (firstPort > 0)
       bridgePort = firstPort;
-    LOG_DEBUG("Using first mDNS candidate for bridge:", bridgeIp.toString(), "port:", bridgePort);
+    REMOTE_LOG_DEBUG("Using first mDNS candidate for bridge:", bridgeIp.toString(), "port:", bridgePort);
   }
 }

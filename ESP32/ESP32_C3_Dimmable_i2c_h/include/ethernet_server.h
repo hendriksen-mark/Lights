@@ -4,7 +4,7 @@
 #include <ESPmDNS.h>
 #include <ArduinoOTA.h>
 
-#include "debug.h"
+#include "custom_log.h"
 #include "functions.h"
 #include "config.h"
 

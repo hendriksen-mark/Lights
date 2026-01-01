@@ -20,13 +20,13 @@ void functions_setup()
 	int loops = waitMs / intervalMs;
 	for (int i = 0; i < loops; ++i)
 	{
-		LOG_INFO("Waiting for serial monitor...");
+		REMOTE_LOG_INFO("Waiting for serial monitor...");
 		infoLedPulse(white, 1, intervalMs); // Pulse white while waiting for serial monitor
 	}
 
 	if (!LittleFS.begin())
 	{
-		LOG_ERROR("Failed to mount file system");
+		REMOTE_LOG_ERROR("Failed to mount file system");
 		infoLedError(); // Show error indication
 		delay(500);
 		LittleFS.format();
@@ -35,7 +35,7 @@ void functions_setup()
 	}
 	else
 	{
-		LOG_DEBUG("File system mounted");
+		REMOTE_LOG_DEBUG("File system mounted");
 	}
 }
 
@@ -47,10 +47,10 @@ void ChangeNeoPixels_info() // this set the number of leds of the strip based on
 	}
 	// Sanity check pin again before initializing RMT
 	int infoPin = INFO_DATA_PIN;
-	LOG_DEBUG("INFO_DATA_PIN=", infoPin);
+	REMOTE_LOG_DEBUG("INFO_DATA_PIN=", infoPin);
 	if (infoPin < 0 || infoPin > 47)
 	{
-		LOG_ERROR("ChangeNeoPixels_info: invalid INFO_DATA_PIN, aborting strip init");
+		REMOTE_LOG_ERROR("ChangeNeoPixels_info: invalid INFO_DATA_PIN, aborting strip init");
 		strip_info = NULL;
 		return;
 	}
@@ -266,19 +266,19 @@ bool readJsonFile(const char *path, JsonDocument &doc)
 {
 	if (!LittleFS.exists(path))
 	{
-		LOG_DEBUG("readJsonFile: file not found", path);
+		REMOTE_LOG_DEBUG("readJsonFile: file not found", path);
 		return false;
 	}
 	File file = LittleFS.open(path, "r");
 	if (!file)
 	{
-		LOG_DEBUG("readJsonFile: failed to open", path);
+		REMOTE_LOG_DEBUG("readJsonFile: failed to open", path);
 		return false;
 	}
 	size_t size = file.size();
 	if (size == 0)
 	{
-		LOG_DEBUG("readJsonFile: empty file", path);
+		REMOTE_LOG_DEBUG("readJsonFile: empty file", path);
 		file.close();
 		return false;
 	}
@@ -288,7 +288,7 @@ bool readJsonFile(const char *path, JsonDocument &doc)
 	DeserializationError err = deserializeJson(doc, content);
 	if (err)
 	{
-		LOG_DEBUG("readJsonFile: failed to parse", path);
+		REMOTE_LOG_DEBUG("readJsonFile: failed to parse", path);
 		return false;
 	}
 	return true;
@@ -299,12 +299,12 @@ bool writeJsonFile(const char *path, JsonDocument &doc)
 	File file = LittleFS.open(path, "w");
 	if (!file)
 	{
-		LOG_DEBUG("failed to open for write", path);
+		REMOTE_LOG_DEBUG("failed to open for write", path);
 		return false;
 	}
 	if (serializeJson(doc, file) == 0)
 	{
-		LOG_DEBUG("failed to write json", path);
+		REMOTE_LOG_DEBUG("failed to write json", path);
 		file.close();
 		return false;
 	}

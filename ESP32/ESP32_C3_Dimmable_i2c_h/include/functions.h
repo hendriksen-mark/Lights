@@ -5,7 +5,7 @@
 #include <ArduinoJson.h>
 
 #include "config.h"
-#include "debug.h"
+#include "custom_log.h"
 #include "color.h"
 
 void functions_setup();

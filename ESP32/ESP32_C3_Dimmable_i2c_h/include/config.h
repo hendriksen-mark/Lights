@@ -19,6 +19,22 @@
 #define I2C_STATE_PATH "/i2c_state.json"
 
 // ============================================
+// LOG Server Configuration
+// ============================================
+#define LOG_SERVER_PORT     2001
+#define MAX_LOG_CONNECTIONS 1   // Log clients (reduced to fit socket limit)
+#define LOG_CLIENT_TIMEOUT  60000  // 60 seconds in milliseconds (longer for log clients)
+
+// NTP Time Configuration
+#define NTP_ENABLED         true            // Enable NTP time synchronization
+#define NTP_SERVER          "pool.ntp.org"  // NTP server to use
+#define NTP_UPDATE_INTERVAL 3600000         // Update every hour (3600 seconds)
+#define NTP_TIMEZONE_OFFSET 1               // UTC+1 for Netherlands (CET)
+#define NTP_DST_OFFSET      1               // Additional hour for DST (CEST)
+#define NTP_TIMEOUT         10000           // 10 second timeout for NTP requests
+
+
+// ============================================
 // Ethernet Configuration
 // ============================================
 #ifndef W5500_INT_GPIO

@@ -5,7 +5,7 @@
 #include <WebServer.h>
 
 #include "config.h"
-#include "debug.h"
+#include "custom_log.h"
 #include "ethernet_server.h"
 #include "i2c_http_content.h"
 

@@ -12,13 +12,13 @@ String sendHttpRequest(int button, String mac, IPAddress bridgeIp, int bridgePor
   {
     if (!client.connect(bridgeIp, bridgePort))
     {
-      // LOG_ERROR("Connection failed");
+      // REMOTE_LOG_ERROR("Connection failed");
       infoLedError(); // Show connection error
       delay(100);
       return "Connection failed";
     }
-    LOG_INFO("Connected!");
-    LOG_DEBUG("msg:", msg);
+    REMOTE_LOG_INFO("Connected!");
+    REMOTE_LOG_DEBUG("msg:", msg);
     String url;
     url.reserve(100); // Pre-allocate to reduce memory fragmentation
     url = "/switch";
@@ -65,7 +65,7 @@ String sendHttpRequest(int button, String mac, IPAddress bridgeIp, int bridgePor
       url += "&battery=";
       url += batteryPercent;
     }
-    LOG_DEBUG("url:", url);
+    REMOTE_LOG_DEBUG("url:", url);
 
     String message;
     message.reserve(150); // Pre-allocate to reduce memory fragmentation
@@ -81,7 +81,7 @@ String sendHttpRequest(int button, String mac, IPAddress bridgeIp, int bridgePor
 
     if (client.println() == 0)
     {
-      // LOG_ERROR("Failed to send request");
+      // REMOTE_LOG_ERROR("Failed to send request");
       client.stop();
       return "Failed to send request";
     }
@@ -91,7 +91,7 @@ String sendHttpRequest(int button, String mac, IPAddress bridgeIp, int bridgePor
     client.readBytesUntil('\r', status, sizeof(status));
     if (strcmp(status, "HTTP/1.1 200 OK") != 0)
     {
-      // LOG_ERROR("Unexpected response:", status);
+      // REMOTE_LOG_ERROR("Unexpected response:", status);
       client.stop();
       return "Unexpected response: ";
     }
@@ -100,7 +100,7 @@ String sendHttpRequest(int button, String mac, IPAddress bridgeIp, int bridgePor
     char endOfHeaders[] = "\r\n\r\n";
     if (!client.find(endOfHeaders))
     {
-      // LOG_ERROR("Invalid response");
+      // REMOTE_LOG_ERROR("Invalid response");
       client.stop();
       return "Invalid response";
     }
@@ -112,7 +112,7 @@ String sendHttpRequest(int button, String mac, IPAddress bridgeIp, int bridgePor
     DeserializationError error = deserializeJson(doc, client);
     if (error)
     {
-      // LOG_ERROR("deserializeJson() failed:", error.c_str());
+      // REMOTE_LOG_ERROR("deserializeJson() failed:", error.c_str());
       client.stop();
       return "deserializeJson() failed: ";
     }
