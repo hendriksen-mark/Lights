@@ -1,6 +1,8 @@
 #ifndef NTP_CLIENT_H
 #define NTP_CLIENT_H
 
+#pragma once
+
 #include "config.h"
 #include "ethernet_server.h"
 

@@ -1,3 +1,6 @@
+#ifndef COLOR_H
+#define COLOR_H
+
 #pragma once
 
 #include <stdint.h>
@@ -190,3 +193,4 @@ void convertCt(T &light, uint8_t rgb_multiplier[3]) // convert ct (color tempera
     light.colors[1] = (int)(g);
     light.colors[2] = (int)(b);
 }
+#endif

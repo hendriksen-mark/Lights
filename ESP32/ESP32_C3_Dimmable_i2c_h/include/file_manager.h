@@ -1,4 +1,8 @@
+#ifndef FILE_MANAGER_H
+#define FILE_MANAGER_H
+
 #pragma once
+
 #include <Arduino.h>
 #include <WebServer.h>
 #include <LittleFS.h>
@@ -14,3 +18,5 @@ void handleDeletePage();
 void handleDeleteFile();
 void handleDownloadPage();
 void handleFileDownload();
+
+#endif // FILE_MANAGER_H

@@ -1,3 +1,6 @@
+#ifndef WS2811_H
+#define WS2811_H
+
 #pragma once
 
 #include <NeoPixelBus.h>
@@ -32,3 +35,5 @@ void ws_setup();
 RgbColor blendingEntert(const float left[3], const float right[3], float pixel);
 void entertainment();
 void ws_loop();
+
+#endif // WS2811_H

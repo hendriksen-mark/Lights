@@ -1,3 +1,6 @@
+#ifndef FUNCTIONS_H
+#define FUNCTIONS_H
+
 #pragma once
 
 #include <NeoPixelBus.h>
@@ -25,3 +28,5 @@ void factoryReset();
 void resetESP();
 bool readJsonFile(const char* path, JsonDocument &doc);
 bool writeJsonFile(const char* path, JsonDocument &doc);
+
+#endif // FUNCTIONS_H

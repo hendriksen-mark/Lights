@@ -1,5 +1,9 @@
 // HTML content for I2C light setup page
+#ifndef I2C_HTTP_CONTENT_H
+#define I2C_HTTP_CONTENT_H
+
 #pragma once
+
 #include <pgmspace.h>
 
 const char http_content_i2c[] PROGMEM = R"=====(
@@ -185,3 +189,5 @@ const char http_content_i2c[] PROGMEM = R"=====(
 
 </html>
 )=====";
+
+#endif // I2C_HTTP_CONTENT_H

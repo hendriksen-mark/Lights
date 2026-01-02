@@ -25,7 +25,9 @@
 #define MAX_LOG_CONNECTIONS 1   // Log clients (reduced to fit socket limit)
 #define LOG_CLIENT_TIMEOUT  60000  // 60 seconds in milliseconds (longer for log clients)
 
+// ============================================
 // NTP Time Configuration
+// ============================================
 #define NTP_ENABLED         true            // Enable NTP time synchronization
 #define NTP_SERVER          "pool.ntp.org"  // NTP server to use
 #define NTP_UPDATE_INTERVAL 3600000         // Update every hour (3600 seconds)
@@ -87,8 +89,8 @@
 #define MESH_HIDDEN true
 #define PORDIJN_SERVER_PORT 82
 
-#define BRIDGE_IP "192.168.1.25" // Bridge IP as a string; last octet can be changed via web interface
-#define BRIDGE_PORT 80 // Default bridge port (can be changed via web interface)
+#define BRIDGE_IP "192.168.1.25" // DIYhue Bridge IP as a string; last octet can be changed via web interface
+#define BRIDGE_PORT 80 // Default DIYhue Bridge port (can be changed via web interface)
 
 // ============================================
 // Sensor Types Configuration

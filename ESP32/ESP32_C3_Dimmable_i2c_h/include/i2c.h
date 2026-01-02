@@ -1,3 +1,6 @@
+#ifndef I2C_H
+#define I2C_H
+
 #pragma once
 
 #include <Wire.h>
@@ -8,8 +11,6 @@
 #include "custom_log.h"
 #include "ethernet_server.h"
 #include "i2c_http_content.h"
-
-#define I2C_DEV_ADDR 0x55
 
 void handleNotFound_i2c();
 void apply_scene_i2c(uint8_t new_scene, uint8_t light);
@@ -22,3 +23,7 @@ void i2c_loop();
 // Persistence for I2C lights
 void saveState_i2c();
 void restoreState_i2c();
+bool saveConfig_i2c();
+void restoreConfig_i2c();
+
+#endif // I2C_H

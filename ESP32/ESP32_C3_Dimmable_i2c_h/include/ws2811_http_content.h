@@ -1,5 +1,9 @@
 // HTML content for WS2811 light setup page
+#ifndef WS2811_HTTP_CONTENT_H
+#define WS2811_HTTP_CONTENT_H
+
 #pragma once
+
 #include <pgmspace.h>
 
 const char htmlContent_ws[] PROGMEM = R"=====(
@@ -197,3 +201,5 @@ const char htmlContent_ws[] PROGMEM = R"=====(
 
 </html>
 )=====";
+
+#endif // WS2811_HTTP_CONTENT_H

@@ -1,3 +1,6 @@
+#ifndef ETHERNET_SERVER_H
+#define ETHERNET_SERVER_H
+
 #pragma once
 
 #include <DNSServer.h>
@@ -13,3 +16,5 @@ void ESP_Server_setup();
 void ota_setup();
 void ethernet_loop();
 String get_mac_address();
+
+#endif // ETHERNET_SERVER_H

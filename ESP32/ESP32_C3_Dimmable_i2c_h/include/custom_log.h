@@ -1,6 +1,8 @@
 #ifndef CUSTOM_LOG_H
 #define CUSTOM_LOG_H
 
+#pragma once
+
 #include <Arduino.h>
 #include <DebugLog.h>
 

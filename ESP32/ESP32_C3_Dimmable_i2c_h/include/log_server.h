@@ -1,6 +1,8 @@
 #ifndef LOG_SERVER_H
 #define LOG_SERVER_H
 
+#pragma once
+
 #include <Arduino.h>
 #include <WiFi.h>
 #include "ethernet_server.h"

@@ -1,3 +1,6 @@
+#ifndef MESH_H
+#define MESH_H
+
 #pragma once
 
 #include <painlessMesh.h>
@@ -29,3 +32,5 @@ void handleNotFound();
 void set_IP();
 void set_PORT();
 void discoverBridgeMdns();
+
+#endif // MESH_H
