@@ -900,7 +900,8 @@ void ws_setup()
 
   server_ws.begin();
 
-  httpUpdateServer.setup(&server_ws); // start http server
+  httpUpdateServer.setup(&server_ws); // start http server for firmware updates
+  setup_file(server_ws);
 }
 
 RgbColor blendingEntert(const float left[3], const float right[3], float pixel)

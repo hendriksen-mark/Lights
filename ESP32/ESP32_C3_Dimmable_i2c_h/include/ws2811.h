@@ -13,6 +13,7 @@
 #include "color.h"
 #include "ws2811_http_content.h"
 #include "ethernet_server.h"
+#include "file_manager.h"
 
 void handleNotFound_ws();
 void apply_scene_ws(uint8_t new_scene);
