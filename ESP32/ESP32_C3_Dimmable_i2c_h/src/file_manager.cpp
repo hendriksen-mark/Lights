@@ -4,9 +4,6 @@ WebServer *server;
 File uploadFile;
 bool uploadAborted = false;
 
-// Maximum upload size (bytes) - matches the UI note of ~300KB
-#define MAX_UPLOAD_SIZE (300 * 1024)
-
 // Simple URL-encode helper for filenames used in links
 static String urlEncode(const String &str)
 {
@@ -94,6 +91,7 @@ void setup_file(WebServer &server_instance)
     html += "  return true;";
     html += "}";
     html += "</script>";
+    html += "<p><a href='/'>Back to Light</a></p>";
     html += technicalInfo;
     html += siteFooter;
     html += "</body></html>";
@@ -256,10 +254,11 @@ void handleFSInfo()
     html += "<tr><td>Total Files</td><td>" + String(fileCount) + "</td></tr>";
     html += "</table>";
     html += "</div>";
+    html += "<p><a href='/files'>Back to Home</a></p>";
+    html += "<p><a href='/'>Back to Light</a></p>";
 
     // Technical information card - now using the common variable
     html += technicalInfo;
-    html += "<p><a href='/files'>Back to Home</a></p>";
     html += siteFooter;
     html += "</body></html>";
 
@@ -407,7 +406,8 @@ void handleFileList()
         }
         root.close();
     }
-    output += "</table><br><a href='/files'>Back to Home</a>";
+    output += "</table><br><p><a href='/files'>Back to Home</a></p>";
+    output += "<p><a href='/'>Back to Light</a></p>";
 
     // Add technical information before footer
     output += technicalInfo;
@@ -446,7 +446,8 @@ void handleDeletePage()
     output += "</table><br>";
     output += "<input type='submit' value='Delete Selected Files'>";
     output += "</form>";
-    output += "<br><a href='/files'>Back to Home</a>";
+    output += "<br><p><a href='/files'>Back to Home</a></p>";
+    output += "<p><a href='/'>Back to Light</a></p>";
 
     // Add technical information before footer
     output += technicalInfo;
@@ -552,7 +553,8 @@ void handleDownloadPage()
         root.close();
     }
     output += "</table><br>";
-    output += "<a href='/files'>Back to Home</a>";
+    output += "<p><a href='/files'>Back to Home</a></p>";
+    output += "<p><a href='/'>Back to Light</a></p>";
 
     // Add technical information before footer
     output += technicalInfo;

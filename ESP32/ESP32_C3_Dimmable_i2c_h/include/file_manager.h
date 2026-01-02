@@ -8,6 +8,7 @@
 #include <LittleFS.h>
 
 #include "custom_log.h"
+#include "config.h"
 
 void setup_file(WebServer& server_instance);
 void handleFSInfo();

@@ -17,6 +17,7 @@
 #define WS_STATE_PATH "/ws_state.json"
 #define I2C_CONFIG_PATH "/i2c_config.json"
 #define I2C_STATE_PATH "/i2c_state.json"
+#define MAX_UPLOAD_SIZE (300 * 1024)
 
 // ============================================
 // LOG Server Configuration
