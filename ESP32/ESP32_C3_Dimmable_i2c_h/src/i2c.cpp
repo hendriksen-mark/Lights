@@ -347,20 +347,17 @@ void i2c_setup()
 			String outputArgs;
 			outputArgs.reserve(64);
 			outputArgs = String("changed args:") + server_i2c.args();
-			REMOTE_LOG_DEBUG("from:", server_i2c.client().remoteIP().toString(), "/ (changed)", outputArgs.c_str());
-			// Redirect to root to avoid re-applying the same query on browser reload
-			server_i2c.sendHeader("Location", "/");
-			server_i2c.send(303, "text/plain", "");
-			return;
+			REMOTE_LOG_DEBUG("from:", server_i2c.client().remoteIP().toString(), "/ (changed)", "args:", outputArgs.c_str());
+		} else {
+			REMOTE_LOG_DEBUG("from:", server_i2c.client().remoteIP().toString(), "/ (no change)", "args:", server_i2c.args());
 		}
 
 		if (server_i2c.hasArg("reset")) {
 			resetESP();
 		}
 
-		REMOTE_LOG_DEBUG("from:", server_i2c.client().remoteIP().toString(), "/", server_i2c.args(), "args");
-
-		server_i2c.send_P(200, "text/html", http_content_i2c);
+		server_i2c.sendHeader("Location", "/");
+		server_i2c.send(303, "text/plain", "");
 	});
 
 	server_i2c.on("/reset", []() { // trigger manual reset
