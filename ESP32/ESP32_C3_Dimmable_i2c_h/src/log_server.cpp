@@ -43,10 +43,10 @@ void handleNewLogConnections() {
 			logClientLastActivity[availableSlot] = millis();
 
 			// Send welcome message
-			String welcomeMsg = "# Connected to P1 Bridge Log Server\r\n";
+			String welcomeMsg = "# Connected to ESP32 Light Server\r\n";
 			welcomeMsg += "# Time: " + getFormattedDateTime() + " (uptime: " + String(millis() / 1000) + "s)\r\n";
 			welcomeMsg += "# NTP Status: " + String(isNTPTimeValid() ? "Synchronized" : "Not synced") + "\r\n";
-			welcomeMsg += "# Log format: [TIMESTAMP] [LEVEL] MESSAGE\r\n";
+			welcomeMsg += "# Log format: [TIMESTAMP] [LEVEL] FILE LINE FUNCTION MESSAGE\r\n";
 			logClients[availableSlot].print(welcomeMsg);
 
 		} else {
@@ -74,7 +74,7 @@ void handleNewLogConnections() {
 			logClientLastActivity[oldestSlot] = millis();
 
 			// Send welcome message
-			String welcomeMsg = "# Connected to P1 Bridge Log Server\r\n";
+			String welcomeMsg = "# Connected to ESP32 Light Server\r\n";
 			welcomeMsg += "# Time: " + getFormattedDateTime() + " (uptime: " + String(millis() / 1000) + "s)\r\n";
 			welcomeMsg += "# NTP Status: " + String(isNTPTimeValid() ? "Synchronized" : "Not synced") + "\r\n";
 			welcomeMsg += "# Log format: [TIMESTAMP] [LEVEL] MESSAGE\r\n";
