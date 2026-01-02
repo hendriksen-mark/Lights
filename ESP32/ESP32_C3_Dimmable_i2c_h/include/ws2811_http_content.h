@@ -36,6 +36,7 @@ const char htmlContent_ws[] PROGMEM = R"=====(
                     <li class="tab" title="#home"><a class="active" href="#home">Home</a></li>
                     <li class="tab" title="#preferences"><a href="#preferences">Preferences</a></li>
                     <li class="tab" title="/update"><a href="/update">Updater</a></li>
+                    <li class="tab" title="/files"><a href="/files">File Manager</a></li>
                 </ul>
             </div>
         </nav>

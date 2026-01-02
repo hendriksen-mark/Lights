@@ -2,6 +2,31 @@
 
 WebServer *server;
 File uploadFile;
+bool uploadAborted = false;
+
+// Maximum upload size (bytes) - matches the UI note of ~300KB
+#define MAX_UPLOAD_SIZE (300 * 1024)
+
+// Simple URL-encode helper for filenames used in links
+static String urlEncode(const String &str)
+{
+    String encoded = "";
+    for (size_t i = 0; i < str.length(); ++i)
+    {
+        unsigned char c = (unsigned char)str.charAt(i);
+        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' || c == '_' || c == '.' || c == '~')
+        {
+            encoded += (char)c;
+        }
+        else
+        {
+            char buf[4];
+            sprintf(buf, "%%%02X", c);
+            encoded += String(buf);
+        }
+    }
+    return encoded;
+}
 
 // Common technical information for all pages
 const String technicalInfo = "<div class='info-card'>"
@@ -75,14 +100,19 @@ void setup_file(WebServer &server_instance)
     server->send(200, "text/html", html); });
 
     // Route to handle file uploads
-    server->on("/upload", HTTP_POST,
-               // This is the completion handler (called after upload finishes)
-               []()
-               {
-      server->sendHeader("Location", "/list");
-      server->send(303); },
-               // This is the upload handler (called during upload)
-               handleFileUpload);
+        server->on("/upload", HTTP_POST,
+                             // This is the completion handler (called after upload finishes)
+                             []()
+                             {
+            if (uploadAborted) {
+                server->send(400, "text/plain", "Upload aborted: invalid filename or file too large");
+            } else {
+                server->sendHeader("Location", "/list");
+                server->send(303);
+            }
+        },
+                             // This is the upload handler (called during upload)
+                             handleFileUpload);
 
     // Route to list all files in LittleFS
     server->on("/list", HTTP_GET, handleFileList);
@@ -202,6 +232,7 @@ void handleFSInfo()
             }
             file = root.openNextFile();
         }
+        root.close();
     }
 
     // Format the HTML output
@@ -262,25 +293,64 @@ void handleFileUpload()
         // Start a new upload
         String filename = "/" + upload.filename;
         REMOTE_LOG_DEBUG("handleFileUpload Name:", filename);
+        uploadAborted = false;
+
+        // Enforce filename length limit (LittleFS note) and avoid empty names
+        if (filename.length() > 32 || upload.filename.length() == 0) {
+            REMOTE_LOG_ERROR("Rejected upload: filename too long or empty", filename.c_str());
+            uploadAborted = true;
+            uploadFile = File();
+            return;
+        }
+
+        // If the client provided the total size and it's too large, abort early
+        if (upload.totalSize > 0 && upload.totalSize > MAX_UPLOAD_SIZE) {
+            REMOTE_LOG_ERROR("Rejected upload: file exceeds max size", String(upload.totalSize).c_str());
+            uploadAborted = true;
+            uploadFile = File();
+            return;
+        }
+
         uploadFile = LittleFS.open(filename, FILE_WRITE);
+        if (!uploadFile) {
+            REMOTE_LOG_ERROR("Failed to open file for upload:", filename.c_str());
+            uploadAborted = true;
+        }
     }
     else if (upload.status == UPLOAD_FILE_WRITE)
     {
-        // Write uploaded file data
+        // Write uploaded file data (if not aborted)
+        if (uploadAborted) return;
+
         if (uploadFile)
         {
             uploadFile.write(upload.buf, upload.currentSize);
+
+            // If total size unknown, keep a defensive check using current on-disk size
+            if (upload.totalSize == 0 && uploadFile.size() > MAX_UPLOAD_SIZE) {
+                REMOTE_LOG_ERROR("Aborting upload: exceeded max size during upload");
+                uploadAborted = true;
+                uploadFile.close();
+                LittleFS.remove(String("/") + upload.filename);
+                uploadFile = File();
+                return;
+            }
         }
-        REMOTE_LOG_DEBUG("handleFileUpload Data:", String(upload.currentSize));
+        REMOTE_LOG_DEBUG("handleFileUpload Chunk:", String(upload.currentSize));
     }
     else if (upload.status == UPLOAD_FILE_END)
     {
         // End of upload
-        if (uploadFile)
-        {
-            uploadFile.close();
+        if (uploadAborted) {
+            // Ensure any partial file is removed
+            if (uploadFile) { uploadFile.close(); }
+            String partial = "/" + upload.filename;
+            if (LittleFS.exists(partial)) LittleFS.remove(partial);
+            REMOTE_LOG_ERROR("Upload aborted and partial file removed");
+        } else {
+            if (uploadFile) { uploadFile.close(); }
+            REMOTE_LOG_DEBUG("handleFileUpload Size:", String(upload.totalSize));
         }
-        REMOTE_LOG_DEBUG("handleFileUpload Size:", String(upload.totalSize));
     }
 }
 
@@ -315,11 +385,13 @@ void handleFileList()
                 // Get the filename with the leading slash
                 String fileName = String(file.name());
                 output += "<tr><td>" + fileName + "</td><td>" + String(file.size()) + " bytes</td>";
-                // Pass the full filename including the slash in the URL
-                output += "<td><a href='/file?name=" + fileName + "'>View</a></td></tr>";
+                // Pass the full filename including the slash in the URL (URL-encoded)
+                String fileUrl = urlEncode(fileName);
+                output += "<td><a href='/file?name=" + fileUrl + "'>View</a></td></tr>";
             }
             file = root.openNextFile();
         }
+        root.close();
     }
     output += "</table><br><a href='/files'>Back to Home</a>";
 
@@ -355,6 +427,7 @@ void handleDeletePage()
             }
             file = root.openNextFile();
         }
+        root.close();
     }
     output += "</table><br>";
     output += "<input type='submit' value='Delete Selected Files'>";
@@ -457,10 +530,12 @@ void handleDownloadPage()
                 String fileName = String(file.name());
                 output += "<tr><td>" + fileName + "</td>";
                 output += "<td>" + String(file.size()) + " bytes</td>";
-                output += "<td><a href='/download-file?name=" + fileName + "'>Download</a></td></tr>";
+                String fileUrl = urlEncode(fileName);
+                output += "<td><a href='/download-file?name=" + fileUrl + "'>Download</a></td></tr>";
             }
             file = root.openNextFile();
         }
+        root.close();
     }
     output += "</table><br>";
     output += "<a href='/files'>Back to Home</a>";
