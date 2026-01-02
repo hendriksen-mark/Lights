@@ -464,6 +464,38 @@ void i2c_setup()
 		resetESP();
 	});
 
+	server_i2c.on("/get_state_save", []() { // display save file content for debugging
+    JsonDocument json;
+    if (readJsonFile(I2C_STATE_PATH, json))
+    {
+      String output;
+      serializeJson(json, output);
+      REMOTE_LOG_DEBUG("from:", server_i2c.client().remoteIP().toString(), "/get_state_save", output);
+      server_i2c.send(200, "text/plain", output);
+    }
+    else
+    {
+      REMOTE_LOG_DEBUG("from:", server_i2c.client().remoteIP().toString(), "/get_state_save", "failed to read file");
+      server_i2c.send(404, "text/plain", "Failed to read file");
+    }
+  });
+
+  server_i2c.on("/get_config_save", []() { // display config file content for debugging
+    JsonDocument json;
+    if (readJsonFile(I2C_CONFIG_PATH, json))
+    {
+      String output;
+      serializeJson(json, output);
+      REMOTE_LOG_DEBUG("from:", server_i2c.client().remoteIP().toString(), "/get_config_save", output);
+      server_i2c.send(200, "text/plain", output);
+    }
+    else
+    {
+      REMOTE_LOG_DEBUG("from:", server_i2c.client().remoteIP().toString(), "/get_config_save", "failed to read file");
+      server_i2c.send(404, "text/plain", "Failed to read file");
+    }
+  });
+
 	server_i2c.onNotFound(handleNotFound_i2c);
 
 	server_i2c.begin();

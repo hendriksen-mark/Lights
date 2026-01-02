@@ -864,6 +864,38 @@ void ws_setup()
     resetESP();
   });
 
+  server_ws.on("/get_state_save", []() { // display save file content for debugging
+    JsonDocument json;
+    if (readJsonFile(WS_STATE_PATH, json))
+    {
+      String output;
+      serializeJson(json, output);
+      REMOTE_LOG_DEBUG("from:", server_ws.client().remoteIP().toString(), "/get_state_save", output);
+      server_ws.send(200, "text/plain", output);
+    }
+    else
+    {
+      REMOTE_LOG_DEBUG("from:", server_ws.client().remoteIP().toString(), "/get_state_save", "failed to read file");
+      server_ws.send(404, "text/plain", "Failed to read file");
+    }
+  });
+
+  server_ws.on("/get_config_save", []() { // display config file content for debugging
+    JsonDocument json;
+    if (readJsonFile(WS_CONFIG_PATH, json))
+    {
+      String output;
+      serializeJson(json, output);
+      REMOTE_LOG_DEBUG("from:", server_ws.client().remoteIP().toString(), "/get_config_save", output);
+      server_ws.send(200, "text/plain", output);
+    }
+    else
+    {
+      REMOTE_LOG_DEBUG("from:", server_ws.client().remoteIP().toString(), "/get_config_save", "failed to read file");
+      server_ws.send(404, "text/plain", "Failed to read file");
+    }
+  });
+
   server_ws.onNotFound(handleNotFound_ws);
 
   server_ws.begin();
