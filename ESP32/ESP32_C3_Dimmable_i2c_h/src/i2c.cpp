@@ -3,7 +3,7 @@
 struct state
 {
 	bool lightState;
-	int bri, currentBri, lightadress;
+	int bri, lightadress;
 };
 
 state lights_i2c[LIGHT_COUNT_I2C];
@@ -132,29 +132,6 @@ void process_lightdata_i2c(uint8_t light)
 	}
 }
 
-void lightEngine_i2c()
-{
-	for (int i = 0; i < LIGHT_COUNT_I2C; i++)
-	{
-		if (lights_i2c[i].lightState)
-		{
-			if (lights_i2c[i].bri != lights_i2c[i].currentBri)
-			{
-				process_lightdata_i2c(i);
-				lights_i2c[i].currentBri = lights_i2c[i].bri;
-			}
-		}
-		else
-		{
-			if (lights_i2c[i].currentBri != 0)
-			{
-				process_lightdata_i2c(i);
-				lights_i2c[i].currentBri = 0;
-			}
-		}
-	}
-}
-
 void request_lightdata(uint8_t light)
 {
 	int light_rec = Wire.requestFrom(lightadress_i2c[light], 2, 1);
@@ -166,7 +143,6 @@ void request_lightdata(uint8_t light)
 		{
 			lights_i2c[light].bri = buff[0];
 			lights_i2c[light].lightState = buff[1];
-			lights_i2c[light].currentBri = lights_i2c[light].bri;
 
 			REMOTE_LOG_DEBUG("Light:", light);
 			REMOTE_LOG_DEBUG("bri:", lights_i2c[light].bri);
@@ -241,8 +217,8 @@ void i2c_setup()
 	restoreState_i2c();
 
 	server_i2c.on("/state", HTTP_PUT, []() { // HTTP PUT request used to set a new light state
-		infoLight(yellow);	 // Yellow for I2C requests
-		JsonDocument root;					 // Reduced from 1024 - more efficient for actual usage
+		infoLight(yellow);					 // Yellow for I2C requests
+		JsonDocument root;
 		DeserializationError error = deserializeJson(root, server_i2c.arg("plain"));
 
 		if (error)
@@ -284,7 +260,7 @@ void i2c_setup()
 						lights_i2c[light].bri = 1;
 				}
 
-				if (values["alert"].is<const char*>() && values["alert"] == "select")
+				if (values["alert"].is<const char *>() && values["alert"] == "select")
 				{
 					send_alert(light);
 				}
@@ -293,7 +269,7 @@ void i2c_setup()
 				{
 					transitiontime_i2c = (int)values["transitiontime"];
 				}
-				// process_lightdata_i2c(light, transitiontime);
+				process_lightdata_i2c(light);
 			}
 			String output;
 			serializeJson(root, output);
@@ -305,7 +281,7 @@ void i2c_setup()
 
 	server_i2c.on("/state", HTTP_GET, []() { // HTTP GET request used to fetch current light state
 		uint8_t light = server_i2c.arg("light").toInt() - 1;
-		JsonDocument root; // Reduced from 1024 - only needs 2 values
+		JsonDocument root;
 		root["on"] = lights_i2c[light].lightState;
 		root["bri"] = lights_i2c[light].bri;
 		String output;
@@ -317,7 +293,7 @@ void i2c_setup()
 	});
 
 	server_i2c.on("/detect", []() { // HTTP GET request used to discover the light type
-		JsonDocument root; // Reduced from 1024 - optimized for actual content
+		JsonDocument root;
 		root["name"] = LIGHT_NAME_I2C;
 		root["lights"] = LIGHT_COUNT_I2C;
 		root["protocol"] = LIGHT_PROTOCOL_I2C;
@@ -334,49 +310,58 @@ void i2c_setup()
 
 	server_i2c.on("/", []()
 				  {
-					  transitiontime_i2c = 4;
-					  for (int light = 0; light < LIGHT_COUNT_I2C; light++)
-					  {
-						  if (server_i2c.hasArg("scene"))
-						  {
-							  if (server_i2c.arg("bri") == "" && server_i2c.arg("hue") == "" && server_i2c.arg("ct") == "" && server_i2c.arg("sat") == "")
-							  {
-								  apply_scene_i2c(server_i2c.arg("scene").toInt(), light);
-							  }
-							  else
-							  {
-								  if (server_i2c.arg("bri") != "")
-								  {
-									  lights_i2c[light].bri = server_i2c.arg("bri").toInt();
-								  }
-							  }
-						  }
-						  else if (server_i2c.hasArg("on"))
-						  {
-							  if (server_i2c.arg("on") == "true")
-							  {
-								  lights_i2c[light].lightState = true;
-							  }
-							  else
-							  {
-								  lights_i2c[light].lightState = false;
-							  }
-						  }
-						  else if (server_i2c.hasArg("alert"))
-						  {
-							  send_alert(light);
-						  }
-					  }
+		transitiontime_i2c = 4;
+		bool anyChange = false;
+		bool toWrite[LIGHT_COUNT_I2C] = {false};
 
-					  if (server_i2c.hasArg("reset"))
-					  {
-						  resetESP();
-					  }
+		for (int light = 0; light < LIGHT_COUNT_I2C; light++) {
+			if (server_i2c.hasArg("scene")) {
+				if (server_i2c.arg("bri") == "" && server_i2c.arg("hue") == "" && server_i2c.arg("ct") == "" && server_i2c.arg("sat") == "") {
+					apply_scene_i2c(server_i2c.arg("scene").toInt(), light);
+					anyChange = true;
+					toWrite[light] = true;
+				} else {
+					if (server_i2c.arg("bri") != "") {
+						lights_i2c[light].bri = server_i2c.arg("bri").toInt();
+						anyChange = true;
+						toWrite[light] = true;
+					}
+				}
+			} else if (server_i2c.hasArg("on")) {
+				bool newState = (server_i2c.arg("on") == "true");
+				if (lights_i2c[light].lightState != newState) {
+					lights_i2c[light].lightState = newState;
+					anyChange = true;
+					toWrite[light] = true;
+				}
+			} else if (server_i2c.hasArg("alert")) {
+				send_alert(light);
+				// send_alert performs its own writes
+			}
+		}
 
-					  REMOTE_LOG_DEBUG("from:", server_i2c.client().remoteIP().toString(), "/", server_i2c.args(), "args");
+		if (anyChange) {
+			for (int light = 0; light < LIGHT_COUNT_I2C; light++) {
+				if (toWrite[light]) process_lightdata_i2c(light);
+			}
+			String outputArgs;
+			outputArgs.reserve(64);
+			outputArgs = String("changed args:") + server_i2c.args();
+			REMOTE_LOG_DEBUG("from:", server_i2c.client().remoteIP().toString(), "/ (changed)", outputArgs.c_str());
+			// Redirect to root to avoid re-applying the same query on browser reload
+			server_i2c.sendHeader("Location", "/");
+			server_i2c.send(303, "text/plain", "");
+			return;
+		}
 
-					  server_i2c.send_P(200, "text/html", http_content_i2c);
-				  });
+		if (server_i2c.hasArg("reset")) {
+			resetESP();
+		}
+
+		REMOTE_LOG_DEBUG("from:", server_i2c.client().remoteIP().toString(), "/", server_i2c.args(), "args");
+
+		server_i2c.send_P(200, "text/html", http_content_i2c);
+	});
 
 	server_i2c.on("/reset", []() { // trigger manual reset
 		server_i2c.send(200, "text/html", "reset");
@@ -392,7 +377,6 @@ void i2c_setup()
 void i2c_loop()
 {
 	server_i2c.handleClient();
-	lightEngine_i2c();
 
 	unsigned long currentMillis = millis();
 
