@@ -26,8 +26,6 @@ void get_state_test();
 void get_state();
 void handleinfo();
 void handleNotFound();
-void mesh_handleNotFound();
-void mesh_handleRoot();
 void set_IP();
 void set_PORT();
 void discoverBridgeMdns();

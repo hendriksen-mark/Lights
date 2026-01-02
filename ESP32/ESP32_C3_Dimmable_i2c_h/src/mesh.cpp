@@ -23,7 +23,6 @@ bool fout = false;
 int state_ont; // 0 1 2
 
 WebServer server_gordijn(PORDIJN_SERVER_PORT);
-WebServer server_mesh(MESH_SERVER_PORT);
 
 void loadMeshConfig()
 {
@@ -101,9 +100,14 @@ void mesh_setup()
   server_gordijn.on("/CurrentPos", get_current_pos);
   server_gordijn.on("/getTargetPos", get_target_pos);
   server_gordijn.on("/State", get_state);
-
   server_gordijn.on("/info", handleinfo);
-
+  server_gordijn.on("/setIP/", set_IP);
+  server_gordijn.on("/setPORT/", set_PORT);
+  server_gordijn.on("/discover/", []() {
+    discoverBridgeMdns();
+    server_gordijn.sendHeader("Location", "/", true); // Redirect to our html web page
+    server_gordijn.send(302, "text/plane", "");
+  });
   server_gordijn.on("/reset", []() { // trigger manual reset
     server_gordijn.send(200, "text/html", "reset");
     resetESP();
@@ -112,22 +116,11 @@ void mesh_setup()
   server_gordijn.onNotFound(handleNotFound);
 
   server_gordijn.begin();
-
-  server_mesh.on("/", mesh_handleRoot);
-  server_mesh.on("/setIP/", set_IP);
-  server_mesh.on("/discover/", []() {
-    discoverBridgeMdns();
-    server_mesh.send(200, "text/plain", "Discovery triggered");
-  });
-  server_mesh.on("/setPORT/", set_PORT);
-  server_mesh.onNotFound(mesh_handleNotFound);
-  server_mesh.begin();
 }
 
 void mesh_loop()
 {
   server_gordijn.handleClient();
-  server_mesh.handleClient();
   mesh.update();
   send_change();
 }
@@ -252,6 +245,30 @@ void handleRoot()
   message += "<a href=\"/CurrentPos\"\"><button>GET Current Pos</button></a>";
   message += "<a href=\"/getTargetPos\"\"><button>GET Target Pos</button></a>";
   message += "<a href=\"/State\"\"><button>GET State</button></a>";
+
+  message += "<h1 align=center>Set IP for mesh command</h1><br><br>";
+
+  message += "<form action=\"/setIP/\">";
+  message += "SET IP";
+  message += "<input type=\"text\"  name=\"subip\" value=\"" + (String)subip + "\">";
+  message += "<input type=\"submit\" value=\"Submit\">";
+  message += "</form>";
+  message += "Current IP = ";
+  message += bridgeIp.toString();
+
+  message += "<br><br>";
+  message += "<form action=\"/setPORT/\">";
+  message += "SEET PORT";
+  message += "<input type=\"text\"  name=\"subport\" value=\"" + (String)bridgePort + "\">";
+  message += "<input type=\"submit\" value=\"Submit\">";
+  message += "</form>";
+  message += "Current PORT = ";
+  message += String(bridgePort);
+
+  message += "<br><br>";
+  message += "<form action=\"/discover/\">";
+  message += "<input type=\"submit\" value=\"Discover DIYhue Bridge\">";
+  message += "</form>";
 
   message += "<br><br>";
   message += "<a href=\"/info\"\"><button>Info</button></a>";
@@ -459,70 +476,13 @@ void handleNotFound()
   server_gordijn.send(404, "text/html", message);
 }
 
-void mesh_handleNotFound()
-{
-  String message = "<!DOCTYPE HTML>";
-  message = "File Not Found<br><br>";
-  message += "URI: ";
-  message += server_mesh.uri();
-  message += "<br>Method: ";
-  message += (server_mesh.method() == HTTP_GET) ? "GET" : "POST";
-  message += "<br>Arguments: ";
-  message += server_mesh.args();
-  message += "<br>";
-  for (uint8_t i = 0; i < server_mesh.args(); i++)
-  {
-    message += " " + server_mesh.argName(i) + ": " + server_mesh.arg(i) + "\n";
-  }
-  message += "<br><br>";
-  message += "<a href=\"/\"\"><button>HOME PAGE</button></a><br/>";
-  REMOTE_LOG_DEBUG("from:", server_mesh.client().remoteIP().toString(), "/notFound", server_mesh.uri(), server_mesh.args());
-  server_mesh.send(404, "text/html", message);
-}
-
-void mesh_handleRoot()
-{
-  String message = "<!DOCTYPE HTML>";
-  message += "<html>";
-  message += "<h1 align=center>Set IP for mesh command</h1><br><br>";
-
-  message += "<form action=\"/setIP/\">";
-  message += "SET IP";
-  message += "<input type=\"text\"  name=\"subip\" value=\"" + (String)subip + "\">";
-  message += "<input type=\"submit\" value=\"Submit\">";
-  message += "</form>";
-  message += "Current IP = ";
-  message += bridgeIp.toString();
-
-  message += "<br><br>";
-  message += "<form action=\"/setPORT/\">";
-  message += "SEET PORT";
-  message += "<input type=\"text\"  name=\"subport\" value=\"" + (String)bridgePort + "\">";
-  message += "<input type=\"submit\" value=\"Submit\">";
-  message += "</form>";
-  message += "Current PORT = ";
-  message += String(bridgePort);
-
-  message += "<br><br>";
-  message += "<form action=\"/discover/\">";
-  message += "<input type=\"submit\" value=\"Discover DIYhue Bridge\">";
-  message += "</form>";
-
-  message += "<br><br>";
-  message += "<a href=\"/\"\"><button>RELOAD PAGE</button></a><br/>";
-
-  message += "</html>";
-  REMOTE_LOG_DEBUG("from:", server_mesh.client().remoteIP().toString(), "/", server_mesh.args(), "args");
-  server_mesh.send(200, "text/html", message);
-}
-
 void set_IP()
 {
-  for (uint8_t i = 0; i < server_mesh.args(); i++)
+  for (uint8_t i = 0; i < server_gordijn.args(); i++)
   {
-    if (server_mesh.argName(i) == "subip")
+    if (server_gordijn.argName(i) == "subip")
     {
-      subip = server_mesh.arg(i).toInt();
+      subip = server_gordijn.arg(i).toInt();
     }
   }
   {
@@ -532,24 +492,24 @@ void set_IP()
     bridgeIp = base;
   }
   saveMeshConfig();
-  REMOTE_LOG_DEBUG("from:", server_mesh.client().remoteIP().toString(), "/setIP", bridgeIp.toString());
-  server_mesh.sendHeader("Location", "/", true); // Redirect to our html web page
-  server_mesh.send(302, "text/plane", "");
+  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/setIP", bridgeIp.toString());
+  server_gordijn.sendHeader("Location", "/", true); // Redirect to our html web page
+  server_gordijn.send(302, "text/plane", "");
 }
 
 void set_PORT()
 {
-  for (uint8_t i = 0; i < server_mesh.args(); i++)
+  for (uint8_t i = 0; i < server_gordijn.args(); i++)
   {
-    if (server_mesh.argName(i) == "subport")
+    if (server_gordijn.argName(i) == "subport")
     {
-      bridgePort = server_mesh.arg(i).toInt();
+      bridgePort = server_gordijn.arg(i).toInt();
     }
   }
   saveMeshConfig();
-  REMOTE_LOG_DEBUG("from:", server_mesh.client().remoteIP().toString(), "/setPORT", String(bridgePort));
-  server_mesh.sendHeader("Location", "/", true); // Redirect to our html web page
-  server_mesh.send(302, "text/plane", "");
+  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/setPORT", String(bridgePort));
+  server_gordijn.sendHeader("Location", "/", true); // Redirect to our html web page
+  server_gordijn.send(302, "text/plane", "");
 }
 
 void discoverBridgeMdns()
