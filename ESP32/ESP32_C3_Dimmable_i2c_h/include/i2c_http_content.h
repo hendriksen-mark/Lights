@@ -122,6 +122,20 @@ const char http_content_i2c[] PROGMEM = R"=====(
         if (scene && cfg.scene !== undefined) scene.value = cfg.scene;
       }).catch(function(){/* ignore */});
     } catch(e) {}
+
+    // debounce slider submit
+    var briTimer = null;
+    if (s) {
+      s.addEventListener('input', function() {
+        // update display (inline oninput already updates for immediate feedback)
+        if (o) o.textContent = this.value;
+        if (briTimer) clearTimeout(briTimer);
+        briTimer = setTimeout(function() {
+          var f = document.querySelector('form');
+          if (f) f.submit();
+        }, 700);
+      });
+    }
     });
   </script>
 </head>

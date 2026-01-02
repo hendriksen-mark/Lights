@@ -427,8 +427,14 @@ void i2c_setup()
 			if (server_i2c.hasArg("startup") || server_i2c.hasArg("scene")) {
 				saveConfig_i2c();
 			}
-			// always save current light states when we made any change
-			saveState_i2c();
+			// save light state only if scene was applied or we actually wrote to any light
+			bool didWrite = false;
+			for (int i = 0; i < LIGHT_COUNT_I2C; i++) {
+				if (toWrite[i]) { didWrite = true; break; }
+			}
+			if (server_i2c.hasArg("scene") || didWrite) {
+				saveState_i2c();
+			}
 			String outputArgs;
 			outputArgs.reserve(64);
 			outputArgs = String("changed args:") + server_i2c.args();

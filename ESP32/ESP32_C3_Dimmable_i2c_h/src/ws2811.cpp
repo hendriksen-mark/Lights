@@ -595,10 +595,6 @@ void ws_setup()
   case 0:
     REMOTE_LOG_DEBUG("Startup: Restore previous state");
     restoreState_ws();
-    for (uint8_t i = 0; i < lightsCount; i++)
-    {
-      lights[i].lightState = true;
-    }
     break;
   case 1:
     REMOTE_LOG_DEBUG("Startup: All lights ON");
@@ -618,13 +614,7 @@ void ws_setup()
     processLightdata(i);
   }
 
-  if (lights[0].lightState)
-  {
-    for (uint8_t i = 0; i < 200; i++)
-    {
-      lightEngine();
-    }
-  }
+  lightEngine();
 
   Udp.begin(2100); // start entertainment UDP server
 
