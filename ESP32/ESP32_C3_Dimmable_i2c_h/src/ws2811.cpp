@@ -767,8 +767,7 @@ void ws_setup()
       root["colormode"] = "hs";
     String output;
     serializeJson(root, output);
-    REMOTE_LOG_DEBUG("from:", server_ws.client().remoteIP().toString(), "/state get", output);
-		REMOTE_LOG_DEBUG("light :", light);
+    REMOTE_LOG_DEBUG("from:", server_ws.client().remoteIP().toString(), "/state get light:", light, output);
     server_ws.send(200, "text/plain", output);
   });
 

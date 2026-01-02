@@ -144,9 +144,14 @@ void request_lightdata(uint8_t light)
 			lights_i2c[light].bri = buff[0];
 			lights_i2c[light].lightState = buff[1];
 
-			REMOTE_LOG_DEBUG("Light:", light);
-			REMOTE_LOG_DEBUG("bri:", lights_i2c[light].bri);
-			REMOTE_LOG_DEBUG("state:", lights_i2c[light].lightState);
+			JsonDocument json;
+			json["on"] = lights_i2c[light].lightState;
+			json["bri"] = lights_i2c[light].bri;
+			String output;
+			output.reserve(50); // Pre-allocate to reduce memory fragmentation
+			serializeJson(json, output);
+
+			REMOTE_LOG_DEBUG("Light:", light, "state fetched:", output);
 		}
 		else
 		{
@@ -287,8 +292,7 @@ void i2c_setup()
 		String output;
 		output.reserve(50); // Pre-allocate to reduce memory fragmentation
 		serializeJson(root, output);
-		REMOTE_LOG_DEBUG("from:", server_i2c.client().remoteIP().toString(), "/state get", output);
-		REMOTE_LOG_DEBUG("light :", light);
+		REMOTE_LOG_DEBUG("from:", server_i2c.client().remoteIP().toString(), "/state get light:", light, output);
 		server_i2c.send(200, "text/plain", output);
 	});
 
@@ -336,7 +340,7 @@ void i2c_setup()
 				}
 			} else if (server_i2c.hasArg("alert")) {
 				send_alert(light);
-				// send_alert performs its own writes
+				anyChange = true;
 			}
 		}
 
@@ -348,16 +352,24 @@ void i2c_setup()
 			outputArgs.reserve(64);
 			outputArgs = String("changed args:") + server_i2c.args();
 			REMOTE_LOG_DEBUG("from:", server_i2c.client().remoteIP().toString(), "/ (changed)", "args:", outputArgs.c_str());
-		} else {
-			REMOTE_LOG_DEBUG("from:", server_i2c.client().remoteIP().toString(), "/ (no change)", "args:", server_i2c.args());
+			server_i2c.sendHeader("Location", "/");
+			server_i2c.send(303, "text/plain", "");
+			return;
 		}
 
 		if (server_i2c.hasArg("reset")) {
+			REMOTE_LOG_DEBUG("from:", server_i2c.client().remoteIP().toString(), "/ reset requested");
+			server_i2c.sendHeader("Location", "/");
+			server_i2c.send(303, "text/plain", "");
 			resetESP();
+			return;
 		}
 
-		server_i2c.sendHeader("Location", "/");
-		server_i2c.send(303, "text/plain", "");
+		if (server_i2c.args() > 0) {
+			REMOTE_LOG_DEBUG("from:", server_i2c.client().remoteIP().toString(), "/ (no change)", "args:", server_i2c.args());
+		}
+
+		server_i2c.send_P(200, "text/html", http_content_i2c);
 	});
 
 	server_i2c.on("/reset", []() { // trigger manual reset
