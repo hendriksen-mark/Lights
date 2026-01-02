@@ -49,7 +49,7 @@ void handleNotFound_ws()
   {
     message += " " + server_ws.argName(i) + ": " + server_ws.arg(i) + "\n";
   }
-  REMOTE_LOG_DEBUG("from:", server_ws.client().remoteIP().toString(), "not found:", server_ws.uri(), server_ws.args());
+  REMOTE_LOG_DEBUG("from:", server_ws.client().remoteIP().toString(), "not found:", server_ws.uri(), "args:", server_ws.args());
   server_ws.send(404, "text/plain", message);
 }
 
@@ -853,7 +853,7 @@ void ws_setup()
     {
       resetESP();
     }
-    REMOTE_LOG_DEBUG("from:", server_ws.client().remoteIP().toString(), "/", server_ws.args(), "args");
+    REMOTE_LOG_DEBUG("from:", server_ws.client().remoteIP().toString(), "/", "args:", server_ws.args());
     server_ws.send_P(200, "text/html", htmlContent_ws);
 
   });

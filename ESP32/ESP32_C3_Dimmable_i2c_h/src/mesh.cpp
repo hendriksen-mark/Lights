@@ -277,7 +277,7 @@ void handleRoot()
   message += "<a href=\"/reset\"\"><button>RESET</button></a><br/>";
 
   message += "</html>";
-  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/", server_gordijn.args(), "args");
+  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/", "args:", server_gordijn.args());
   server_gordijn.send(200, "text/html", message);
 }
 
@@ -472,7 +472,7 @@ void handleNotFound()
   }
   message += "<br><br>";
   message += "<a href=\"/\"\"><button>HOME PAGE</button></a><br/>";
-  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/notFound", server_gordijn.uri(), server_gordijn.args());
+  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "not found:", server_gordijn.uri(), "args:", server_gordijn.args());
   server_gordijn.send(404, "text/html", message);
 }
 
