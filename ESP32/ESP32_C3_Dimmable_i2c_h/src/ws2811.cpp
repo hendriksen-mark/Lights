@@ -146,26 +146,27 @@ void processLightdata(uint8_t light, float transitiontime)
 {                                           // calculate the step level of every RGB channel for a smooth transition in requested transition time
   transitiontime *= 14 - (pixelCount / 70); // every extra led add a small delay that need to be counted for transition time match
 
-  REMOTE_LOG_DEBUG("Light:", light);
-	REMOTE_LOG_DEBUG("bri:", lights[light].bri);
-	REMOTE_LOG_DEBUG("state:", lights[light].lightState);
-  REMOTE_LOG_DEBUG("colorMode:", lights[light].colorMode);
+  JsonDocument json;
+  json["on"] = lights[light].lightState;
+  json["bri"] = lights[light].bri;
+  json["state"] = lights[light].lightState;
+  json["colormode"] = lights[light].colorMode;
 
   if (lights[light].colorMode == 1 && lights[light].lightState == true)
   {
-    REMOTE_LOG_DEBUG("x:", lights[light].x);
-    REMOTE_LOG_DEBUG("y:", lights[light].y);
+    json["x"] = lights[light].x;
+    json["y"] = lights[light].y;
     convertXy(lights[light], rgb_multiplier);
   }
   else if (lights[light].colorMode == 2 && lights[light].lightState == true)
   {
-    REMOTE_LOG_DEBUG("ct:", lights[light].ct);
+    json["ct"] = lights[light].ct;
     convertCt(lights[light], rgb_multiplier);
   }
   else if (lights[light].colorMode == 3 && lights[light].lightState == true)
   {
-    REMOTE_LOG_DEBUG("hue:", lights[light].hue);
-    REMOTE_LOG_DEBUG("sat:", lights[light].sat);
+    json["hue"] = lights[light].hue;
+    json["sat"] = lights[light].sat;
     convertHue(lights[light]);
   }
   for (uint8_t i = 0; i < 3; i++)
@@ -179,8 +180,14 @@ void processLightdata(uint8_t light, float transitiontime)
       lights[light].stepLevel[i] = lights[light].currentColors[i] / transitiontime;
     }
   }
-  REMOTE_LOG_DEBUG("colors R:", lights[light].colors[0], "G:", lights[light].colors[1], "B:", lights[light].colors[2]);
-	REMOTE_LOG_DEBUG("transitiontime:", transitiontime);
+  json["r"] = lights[light].colors[0];
+  json["g"] = lights[light].colors[1];
+  json["b"] = lights[light].colors[2];
+	json["transitiontime"] = transitiontime;
+  String output;
+	output.reserve(50); // Pre-allocate to reduce memory fragmentation
+	serializeJson(json, output);
+  REMOTE_LOG_DEBUG("Light:", light, "state sent:", output);
 }
 
 RgbColor blending(const float left[3], const float right[3], uint8_t pixel)

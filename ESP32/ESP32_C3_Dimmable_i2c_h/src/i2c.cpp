@@ -96,10 +96,15 @@ void process_lightdata_i2c(uint8_t light)
 	Wire.write(lowByte(transitiontime_i2c));
 	int error_code = Wire.endTransmission(true);
 
-	REMOTE_LOG_DEBUG("Light:", light);
-	REMOTE_LOG_DEBUG("bri:", lights_i2c[light].bri);
-	REMOTE_LOG_DEBUG("state:", lights_i2c[light].lightState);
-	REMOTE_LOG_DEBUG("transitiontime:", transitiontime_i2c);
+	JsonDocument json;
+	json["on"] = lights_i2c[light].lightState;
+	json["bri"] = lights_i2c[light].bri;
+	json["transitiontime"] = transitiontime_i2c;
+	String output;
+	output.reserve(50); // Pre-allocate to reduce memory fragmentation
+	serializeJson(json, output);
+
+	REMOTE_LOG_DEBUG("Light:", light, "state sent:", output);
 	switch (error_code)
 	{
 	case 0:
