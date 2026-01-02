@@ -100,19 +100,18 @@ void setup_file(WebServer &server_instance)
     server->send(200, "text/html", html); });
 
     // Route to handle file uploads
-        server->on("/upload", HTTP_POST,
-                             // This is the completion handler (called after upload finishes)
-                             []()
-                             {
+    server->on("/upload", HTTP_POST,
+               // This is the completion handler (called after upload finishes)
+               []()
+               {
             if (uploadAborted) {
                 server->send(400, "text/plain", "Upload aborted: invalid filename or file too large");
             } else {
                 server->sendHeader("Location", "/list");
                 server->send(303);
-            }
-        },
-                             // This is the upload handler (called during upload)
-                             handleFileUpload);
+            } },
+               // This is the upload handler (called during upload)
+               handleFileUpload);
 
     // Route to list all files in LittleFS
     server->on("/list", HTTP_GET, handleFileList);
@@ -296,7 +295,8 @@ void handleFileUpload()
         uploadAborted = false;
 
         // Enforce filename length limit (LittleFS note) and avoid empty names
-        if (filename.length() > 32 || upload.filename.length() == 0) {
+        if (filename.length() > 32 || upload.filename.length() == 0)
+        {
             REMOTE_LOG_ERROR("Rejected upload: filename too long or empty", filename.c_str());
             uploadAborted = true;
             uploadFile = File();
@@ -304,7 +304,8 @@ void handleFileUpload()
         }
 
         // If the client provided the total size and it's too large, abort early
-        if (upload.totalSize > 0 && upload.totalSize > MAX_UPLOAD_SIZE) {
+        if (upload.totalSize > 0 && upload.totalSize > MAX_UPLOAD_SIZE)
+        {
             REMOTE_LOG_ERROR("Rejected upload: file exceeds max size", String(upload.totalSize).c_str());
             uploadAborted = true;
             uploadFile = File();
@@ -312,7 +313,8 @@ void handleFileUpload()
         }
 
         uploadFile = LittleFS.open(filename, FILE_WRITE);
-        if (!uploadFile) {
+        if (!uploadFile)
+        {
             REMOTE_LOG_ERROR("Failed to open file for upload:", filename.c_str());
             uploadAborted = true;
         }
@@ -320,14 +322,16 @@ void handleFileUpload()
     else if (upload.status == UPLOAD_FILE_WRITE)
     {
         // Write uploaded file data (if not aborted)
-        if (uploadAborted) return;
+        if (uploadAborted)
+            return;
 
         if (uploadFile)
         {
             uploadFile.write(upload.buf, upload.currentSize);
 
             // If total size unknown, keep a defensive check using current on-disk size
-            if (upload.totalSize == 0 && uploadFile.size() > MAX_UPLOAD_SIZE) {
+            if (upload.totalSize == 0 && uploadFile.size() > MAX_UPLOAD_SIZE)
+            {
                 REMOTE_LOG_ERROR("Aborting upload: exceeded max size during upload");
                 uploadAborted = true;
                 uploadFile.close();
@@ -341,14 +345,24 @@ void handleFileUpload()
     else if (upload.status == UPLOAD_FILE_END)
     {
         // End of upload
-        if (uploadAborted) {
+        if (uploadAborted)
+        {
             // Ensure any partial file is removed
-            if (uploadFile) { uploadFile.close(); }
+            if (uploadFile)
+            {
+                uploadFile.close();
+            }
             String partial = "/" + upload.filename;
-            if (LittleFS.exists(partial)) LittleFS.remove(partial);
+            if (LittleFS.exists(partial))
+                LittleFS.remove(partial);
             REMOTE_LOG_ERROR("Upload aborted and partial file removed");
-        } else {
-            if (uploadFile) { uploadFile.close(); }
+        }
+        else
+        {
+            if (uploadFile)
+            {
+                uploadFile.close();
+            }
             REMOTE_LOG_DEBUG("handleFileUpload Size:", String(upload.totalSize));
         }
     }
