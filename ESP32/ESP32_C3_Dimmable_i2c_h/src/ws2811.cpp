@@ -21,7 +21,7 @@ unsigned long transitionFrameMs = TRANSITION_FRAME_MS_DEFAULT;
 
 // settings
 char lightName[LIGHT_NAME_MAX_LENGTH] = LIGHT_NAME_WS2811;
-uint8_t effect, scene, startup;
+uint8_t effect, scene_ws, startup_ws;
 uint8_t rgb_multiplier[] = {100, 100, 100}; // light multiplier in percentage /R, G, B/
 
 uint8_t lightsCount = LIGHT_COUNT_WS;
@@ -183,10 +183,10 @@ void processLightdata(uint8_t light, float transitiontime)
   json["r"] = lights[light].colors[0];
   json["g"] = lights[light].colors[1];
   json["b"] = lights[light].colors[2];
-	json["transitiontime"] = transitiontime;
+  json["transitiontime"] = transitiontime;
   String output;
-	output.reserve(50); // Pre-allocate to reduce memory fragmentation
-	serializeJson(json, output);
+  output.reserve(50); // Pre-allocate to reduce memory fragmentation
+  serializeJson(json, output);
   REMOTE_LOG_DEBUG("Light:", light, "state sent:", output);
 }
 
@@ -483,8 +483,8 @@ bool saveConfig_ws()
   REMOTE_LOG_DEBUG("save ws config");
   JsonDocument json;
   json["name"] = lightName;
-  json["startup"] = startup;
-  json["scene"] = scene;
+  json["startup"] = startup_ws;
+  json["scene"] = scene_ws;
   json["lightsCount"] = lightsCount;
   for (uint16_t i = 0; i < lightsCount; i++)
   {
@@ -519,8 +519,8 @@ bool loadConfig_ws()
   }
 
   strcpy(lightName, json["name"]);
-  startup = (uint8_t)json["startup"];
-  scene = (uint8_t)json["scene"];
+  startup_ws = (uint8_t)json["startup"];
+  scene_ws = (uint8_t)json["scene"];
   lightsCount = (uint16_t)json["lightsCount"];
   for (uint16_t i = 0; i < lightsCount; i++)
   {
@@ -590,10 +590,11 @@ void ws_setup()
 
   ChangeNeoPixels(pixelCount);
 
-  switch (startup)
+  switch (startup_ws)
   {
   case 0:
     REMOTE_LOG_DEBUG("Startup: Restore previous state");
+    restoreState_ws();
     for (uint8_t i = 0; i < lightsCount; i++)
     {
       lights[i].lightState = true;
@@ -601,11 +602,14 @@ void ws_setup()
     break;
   case 1:
     REMOTE_LOG_DEBUG("Startup: All lights ON");
-    restoreState_ws();
+    for (uint8_t i = 0; i < lightsCount; i++)
+    {
+      lights[i].lightState = true;
+    }
     break;
   default:
-    REMOTE_LOG_DEBUG("Startup: Apply scene", String(scene));
-    apply_scene_ws(scene);
+    REMOTE_LOG_DEBUG("Startup: Apply scene", String(scene_ws));
+    apply_scene_ws(scene_ws);
     break;
   }
 
@@ -625,7 +629,7 @@ void ws_setup()
   Udp.begin(2100); // start entertainment UDP server
 
   server_ws.on("/state", HTTP_PUT, []() { // HTTP PUT request used to set a new light state
-    infoLight(cyan);     // Cyan for WS2811 requests
+    infoLight(cyan);                      // Cyan for WS2811 requests
     JsonDocument root;
     DeserializationError error = deserializeJson(root, server_ws.arg("plain"));
 
@@ -789,15 +793,15 @@ void ws_setup()
     root["version"] = LIGHT_VERSION;
     String output;
     serializeJson(root, output);
-		REMOTE_LOG_DEBUG("from:", server_ws.client().remoteIP().toString(), "/detect", output);
+    REMOTE_LOG_DEBUG("from:", server_ws.client().remoteIP().toString(), "/detect", output);
     server_ws.send(200, "text/plain", output);
   });
 
   server_ws.on("/config", []() { // used by light web interface to get current configuration
     JsonDocument root;
     root["name"] = lightName;
-    root["scene"] = scene;
-    root["startup"] = startup;
+    root["scene"] = scene_ws;
+    root["startup"] = startup_ws;
     root["lightscount"] = lightsCount;
     for (uint8_t i = 0; i < lightsCount; i++)
     {
@@ -819,8 +823,8 @@ void ws_setup()
     if (server_ws.arg("section").toInt() == 1)
     {
       server_ws.arg("name").toCharArray(lightName, LIGHT_NAME_MAX_LENGTH);
-      startup = server_ws.arg("startup").toInt();
-      scene = server_ws.arg("scene").toInt();
+      startup_ws = server_ws.arg("startup").toInt();
+      scene_ws = server_ws.arg("scene").toInt();
       {
         uint16_t requested = server_ws.arg("lightscount").toInt();
         if (requested == 0)
@@ -866,7 +870,7 @@ void ws_setup()
 
   server_ws.on("/reset", []() { // trigger manual reset
     server_ws.send(200, "text/html", "reset");
-		REMOTE_LOG_DEBUG("from:", server_ws.client().remoteIP().toString(), "/reset");
+    REMOTE_LOG_DEBUG("from:", server_ws.client().remoteIP().toString(), "/reset");
     resetESP();
   });
 
@@ -898,7 +902,7 @@ void entertainment()
     // Visual indicator for entertainment mode - brief pulse every few packets
     static unsigned long lastEntertainmentBlink = 0;
     if (millis() - lastEntertainmentBlink > 500)
-    {                                   // Pulse every 500ms during entertainment
+    {                    // Pulse every 500ms during entertainment
       infoLight(purple); // Purple for entertainment mode
       lastEntertainmentBlink = millis();
     }

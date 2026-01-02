@@ -18,6 +18,8 @@ unsigned long previousMillis = 0;
 
 int transitiontime_i2c;
 
+uint8_t scene_i2c, startup_i2c;
+
 WebServer server_i2c(LIGHT_PORT_I2C);
 
 void handleNotFound_i2c()
@@ -45,14 +47,17 @@ void apply_scene_i2c(uint8_t new_scene, uint8_t light)
 	if (new_scene == 0)
 	{
 		lights_i2c[light].bri = 144;
+		lights_i2c[light].lightState = true;
 	}
 	else if (new_scene == 1)
 	{
 		lights_i2c[light].bri = 254;
+		lights_i2c[light].lightState = true;
 	}
 	else if (new_scene == 2)
 	{
 		lights_i2c[light].bri = 1;
+		lights_i2c[light].lightState = true;
 	}
 }
 
@@ -210,11 +215,37 @@ void restoreState_i2c()
 	}
 }
 
+bool saveConfig_i2c()
+{
+	REMOTE_LOG_DEBUG("save i2c config");
+	JsonDocument json;
+	json["startup"] = startup_i2c;
+	json["scene"] = scene_i2c;
+
+	return writeJsonFile(I2C_CONFIG_PATH, json);
+}
+
+void restoreConfig_i2c()
+{
+	REMOTE_LOG_DEBUG("restore i2c config");
+	JsonDocument json;
+	if (!readJsonFile(I2C_CONFIG_PATH, json))
+	{
+		REMOTE_LOG_DEBUG("Create new file with default values");
+		saveConfig_i2c();
+		return;
+	}
+	startup_i2c = (uint8_t)json["startup"];
+	scene_i2c = (uint8_t)json["scene"];
+}
+
 void i2c_setup()
 {
 	Wire.begin();
 	REMOTE_LOG_DEBUG("Setup I2C");
 	infoLight(cyan);
+
+	restoreConfig_i2c();
 
 	// Assign I2C addresses to each light in the struct
 	for (int i = 0; i < LIGHT_COUNT_I2C; i++)
@@ -223,8 +254,32 @@ void i2c_setup()
 		request_lightdata(i);
 	}
 
-	// Restore saved I2C light state if available
-	restoreState_i2c();
+	switch (startup_i2c)
+	{
+	case 0:
+		REMOTE_LOG_DEBUG("Startup: Restore previous state");
+		restoreState_i2c();
+		break;
+	case 1:
+		REMOTE_LOG_DEBUG("Startup: All lights ON");
+		for (uint8_t i = 0; i < LIGHT_COUNT_I2C; i++)
+		{
+			lights_i2c[i].lightState = true;
+		}
+		break;
+	default:
+		REMOTE_LOG_DEBUG("Startup: Apply scene", String(scene_i2c));
+		for (uint8_t i = 0; i < LIGHT_COUNT_I2C; i++)
+		{
+			apply_scene_i2c(scene_i2c, i);
+		}
+		break;
+	}
+
+	for (uint8_t i = 0; i < LIGHT_COUNT_I2C; i++)
+	{
+		process_lightdata_i2c(i);
+	}
 
 	server_i2c.on("/state", HTTP_PUT, []() { // HTTP PUT request used to set a new light state
 		infoLight(yellow);					 // Yellow for I2C requests
@@ -317,16 +372,30 @@ void i2c_setup()
 		server_i2c.send(200, "text/plain", output);
 	});
 
+	server_i2c.on("/config", HTTP_GET, []() {
+		JsonDocument cfg;
+		cfg["startup"] = startup_i2c;
+		cfg["scene"] = scene_i2c;
+		String out;
+		serializeJson(cfg, out);
+		REMOTE_LOG_DEBUG("from:", server_i2c.client().remoteIP().toString(), "/config", out);
+		server_i2c.send(200, "application/json", out);
+	});
+
 	server_i2c.on("/", []()
 				  {
-		transitiontime_i2c = 4;
 		bool anyChange = false;
 		bool toWrite[LIGHT_COUNT_I2C] = {false};
 
+		if (server_i2c.hasArg("startup")) {
+			startup_i2c = server_i2c.arg("startup").toInt();
+			anyChange = true; // treat startup change as a config change
+		}
 		for (int light = 0; light < LIGHT_COUNT_I2C; light++) {
 			if (server_i2c.hasArg("scene")) {
 				if (server_i2c.arg("bri") == "" && server_i2c.arg("hue") == "" && server_i2c.arg("ct") == "" && server_i2c.arg("sat") == "") {
-					apply_scene_i2c(server_i2c.arg("scene").toInt(), light);
+					scene_i2c = server_i2c.arg("scene").toInt();
+					apply_scene_i2c(scene_i2c, light);
 					anyChange = true;
 					toWrite[light] = true;
 				} else {
@@ -350,9 +419,16 @@ void i2c_setup()
 		}
 
 		if (anyChange) {
+			transitiontime_i2c = 4;
 			for (int light = 0; light < LIGHT_COUNT_I2C; light++) {
 				if (toWrite[light]) process_lightdata_i2c(light);
 			}
+			// persist startup/scene changes when provided
+			if (server_i2c.hasArg("startup") || server_i2c.hasArg("scene")) {
+				saveConfig_i2c();
+			}
+			// always save current light states when we made any change
+			saveState_i2c();
 			String outputArgs;
 			outputArgs.reserve(64);
 			outputArgs = String("changed args:") + server_i2c.args();
@@ -374,8 +450,7 @@ void i2c_setup()
 			REMOTE_LOG_DEBUG("from:", server_i2c.client().remoteIP().toString(), "/ (no change)", "args:", server_i2c.args());
 		}
 
-		server_i2c.send_P(200, "text/html", http_content_i2c);
-	});
+		server_i2c.send_P(200, "text/html", http_content_i2c); });
 
 	server_i2c.on("/reset", []() { // trigger manual reset
 		server_i2c.send(200, "text/html", "reset");

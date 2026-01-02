@@ -15,7 +15,7 @@
 #define MESH_CONFIG_PATH "/mesh_config.json"
 #define WS_CONFIG_PATH "/ws_config.json"
 #define WS_STATE_PATH "/ws_state.json"
-// #define I2C_CONFIG_PATH "/i2c_config.json"
+#define I2C_CONFIG_PATH "/i2c_config.json"
 #define I2C_STATE_PATH "/i2c_state.json"
 
 // ============================================
