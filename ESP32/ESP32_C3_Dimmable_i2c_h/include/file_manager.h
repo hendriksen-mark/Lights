@@ -5,7 +5,7 @@
 
 #include <Arduino.h>
 #include <WebServer.h>
-#include <LittleFS.h>
+#include "fs_wrapper.h"
 
 #include "custom_log.h"
 #include "config.h"

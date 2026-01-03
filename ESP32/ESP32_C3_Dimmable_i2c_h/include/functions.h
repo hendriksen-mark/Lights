@@ -4,7 +4,7 @@
 #pragma once
 
 #include <NeoPixelBus.h>
-#include <LittleFS.h>
+#include "fs_wrapper.h"
 #include <ArduinoJson.h>
 
 #include "config.h"
