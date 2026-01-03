@@ -1,18 +1,18 @@
 #include "fs_wrapper.h"
 
+#ifdef USE_LITTLEFS
+static FsType preferredFs = FS_LITTLEFS;
+fs::FS &fsys = LittleFS;
+#elif defined(USE_SD)
+static FsType preferredFs = FS_SD;
+fs::FS &fsys = SD;
+#else
 static FsType preferredFs = FS_NONE;
+fs::FS &fsys = fs::FS();
+#endif
+
 static FsType currentFs = FS_NONE;
 String FsName = "None";
-
-void fs_set_preferred(FsType t)
-{
-    preferredFs = t;
-}
-
-FsType fs_get_preferred()
-{
-    return preferredFs;
-}
 
 FsType fs_get_current()
 {
@@ -27,8 +27,10 @@ String fs_get_name()
 static bool try_littlefs()
 {
 #if defined(USE_LITTLEFS)
+    REMOTE_LOG_INFO("fs_begin: try mount LittleFS");
     if (LittleFS.begin())
     {
+        REMOTE_LOG_DEBUG("LittleFS Filesystem initialized");
         currentFs = FS_LITTLEFS;
         FsName = "LittleFS";
         return true;
@@ -41,8 +43,10 @@ static bool try_sd()
 {
 #if defined(USE_SD)
     // SD_CS_PIN should be defined in build flags (platformio.ini)
+    REMOTE_LOG_INFO("fs_begin: try mount SD");
     if (SD.begin(SD_CS_PIN))
     {
+        REMOTE_LOG_DEBUG("SD Filesystem initialized");
         currentFs = FS_SD;
         FsName = "SD";
         return true;
@@ -60,103 +64,93 @@ bool fs_begin()
     if (preferredFs == FS_SD)
     {
         if (try_sd())
+        {
             return true;
+        }
         if (try_littlefs())
+        {
             return true;
+        }
     }
     else if (preferredFs == FS_LITTLEFS)
     {
         if (try_littlefs())
+        {
             return true;
+        }
         if (try_sd())
+        {
             return true;
+        }
     }
 
     // If no preferred or preferred failed, try whichever is compiled in
     if (try_littlefs())
+    {
         return true;
+    }
     if (try_sd())
+    {
         return true;
+    }
 
     return false;
+}
+
+void listDir(const char * dirname, uint8_t levels)
+{
+    REMOTE_LOG_INFO("Listing directory:", dirname);
+
+    File root = fsys.open(dirname);
+    if (!root)
+    {
+        REMOTE_LOG_ERROR("Failed to open directory");
+        return;
+    }
+    if (!root.isDirectory())
+    {
+        REMOTE_LOG_ERROR("Not a directory");
+        return;
+    }
+
+    File file = root.openNextFile();
+    while (file)
+    {
+        if (file.isDirectory())
+        {
+            REMOTE_LOG_INFO("  DIR :", file.name());
+            if (levels)
+            {
+                listDir(file.name(), levels - 1);
+            }
+        }
+        else
+        {
+            REMOTE_LOG_INFO("  FILE:", file.name(), "  SIZE:", file.size());
+        }
+        file = root.openNextFile();
+    }
 }
 
 bool fs_exists(const char *path)
 {
-    if (currentFs == FS_LITTLEFS)
+    bool ex = fsys.exists(path);
+    if (!ex)
     {
-#if defined(USE_LITTLEFS)
-        return LittleFS.exists(path);
-#else
+        REMOTE_LOG_DEBUG("fs_exists: not found on", FsName, path);
         return false;
-#endif
     }
-    else if (currentFs == FS_SD)
-    {
-#if defined(USE_SD)
-        return SD.exists(path);
-#else
-        return false;
-#endif
-    }
-    return false;
+    return ex;
 }
 
-bool fs_exists(const String &path)
+File fs_open(const char *path, const char *mode = "r")
 {
-    return fs_exists(path.c_str());
-}
-
-File fs_open(const char *path, const char *mode)
-{
-    if (currentFs == FS_LITTLEFS)
-    {
-#if defined(USE_LITTLEFS)
-        return LittleFS.open(path, mode);
-#else
-        return File();
-#endif
-    }
-    else if (currentFs == FS_SD)
-    {
-#if defined(USE_SD)
-        return SD.open(path, mode);
-#else
-        return File();
-#endif
-    }
-    return File();
-}
-
-File fs_open(const String &path, const char *mode)
-{
-    return fs_open(path.c_str(), mode);
+    return fsys.open(path, mode);
 }
 
 bool fs_remove(const char *path)
 {
-    if (currentFs == FS_LITTLEFS)
-    {
-#if defined(USE_LITTLEFS)
-        return LittleFS.remove(path);
-#else
-        return false;
-#endif
-    }
-    else if (currentFs == FS_SD)
-    {
-#if defined(USE_SD)
-        return SD.remove(path);
-#else
-        return false;
-#endif
-    }
-    return false;
-}
-
-bool fs_remove(const String &path)
-{
-    return fs_remove(path.c_str());
+        return fsys.remove(path);
 }
 
 bool fs_format()
@@ -173,15 +167,23 @@ bool fs_format()
     {
 #if defined(USE_SD)
         // SD library doesn't provide a format; emulate by removing files in root
-        File root = SD.open("/");
+        File root = fsys.open("/");
         if (!root)
             return false;
         File file = root.openNextFile();
         while (file)
         {
             String name = String(file.name());
+            if (name.length() == 0)
+            {
+                file.close();
+                file = root.openNextFile();
+                continue;
+            }
+            if (name.charAt(0) != '/')
+                name = "/" + name;
             file.close();
-            SD.remove(name);
+            fsys.remove(name.c_str());
             file = root.openNextFile();
         }
         root.close();
@@ -205,7 +207,7 @@ size_t fs_usedBytes()
     else if (currentFs == FS_SD)
     {
 #if defined(USE_SD)
-        File root = SD.open("/");
+        File root = fs_open("/");
         if (root && root.isDirectory())
         {
             File f = root.openNextFile();
@@ -242,37 +244,10 @@ size_t fs_totalBytes()
 
 File fs_open_root()
 {
-    if (currentFs == FS_LITTLEFS)
-    {
-#if defined(USE_LITTLEFS)
-        return LittleFS.open("/");
-#else
-        return File();
-#endif
-    }
-    else if (currentFs == FS_SD)
-    {
-#if defined(USE_SD)
-        return SD.open("/");
-#else
-        return File();
-#endif
-    }
-    return File();
+        return fs_open("/");
 }
 
 void log_file()
 {
-#if defined(USE_LITTLEFS)
-    if (currentFs == FS_LITTLEFS)
-    {
-        LOG_ATTACH_FS_MANUAL(LittleFS, LOG_FILE_NAME, FILE_APPEND);
-    }
-#endif
-#if defined(USE_SD)
-    if (currentFs == FS_SD)
-    {
-        LOG_ATTACH_FS_MANUAL(SD, LOG_FILE_NAME, FILE_APPEND);
-    }
-#endif
+    LOG_ATTACH_FS_MANUAL(fsys, LOG_FILE_NAME, FILE_APPEND);
 }

@@ -12,12 +12,11 @@ void ESP_Server_setup()
 	infoLight(white); // Initializing
 	while (!ESP32_W5500_isConnected())
 	{ // connection to ethernet still not ready
-		REMOTE_LOG_DEBUG("W5500_isConnected: ", ESP32_W5500_isConnected());
+		REMOTE_LOG_DEBUG("W5500_isConnected:", (ESP32_W5500_isConnected() ? "true" : "false"), " MAC:", ETH.macAddress());
 		infoLedPulse(red, 1, 500); // Pulse red while connecting
 	}
 	// Show that we are connected
-	REMOTE_LOG_DEBUG("W5500_isConnected: ", ESP32_W5500_isConnected(), " IP Address: ", ETH.localIP(), " MAC: ", ETH.macAddress());
-
+	REMOTE_LOG_DEBUG("W5500_isConnected:", (ESP32_W5500_isConnected() ? "true" : "false"), " IP Address:", ETH.localIP(), " MAC:", ETH.macAddress());
 	// Setup mDNS
 	if (MDNS.begin(DEVICE_NAME))
 	{

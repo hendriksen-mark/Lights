@@ -164,7 +164,7 @@ void setup_file(WebServer &server_instance)
 
       REMOTE_LOG_DEBUG("Normalized filename:", fileName);
 
-    if (fs_exists(fileName)) {
+    if (fs_exists(fileName.c_str())) {
         // Determine content type based on file extension
         String contentType = "text/plain";
         if (fileName.endsWith(".htm") || fileName.endsWith(".html")) contentType = "text/html";
@@ -179,7 +179,7 @@ void setup_file(WebServer &server_instance)
         else if (fileName.endsWith(".zip")) contentType = "application/zip";
         else if (fileName.endsWith(".json")) contentType = "application/json";
 
-        File file = fs_open(fileName, "r");
+        File file = fs_open(fileName.c_str(), "r");
         if (file) {
           // For text files, you can use readString
           if (contentType.startsWith("text/") ||
@@ -330,7 +330,7 @@ void handleFileUpload()
             return;
         }
 
-        uploadFile = fs_open(filename, FILE_WRITE);
+        uploadFile = fs_open(filename.c_str(), "w");
         if (!uploadFile)
         {
             REMOTE_LOG_ERROR("Failed to open file for upload:", filename.c_str());
@@ -353,7 +353,7 @@ void handleFileUpload()
                 REMOTE_LOG_ERROR("Aborting upload: exceeded max size during upload");
                 uploadAborted = true;
                 uploadFile.close();
-                fs_remove(String("/") + upload.filename);
+                fs_remove(("/" + upload.filename).c_str());
                 uploadFile = File();
                 return;
             }
@@ -371,8 +371,8 @@ void handleFileUpload()
                 uploadFile.close();
             }
             String partial = "/" + upload.filename;
-            if (fs_exists(partial))
-                fs_remove(partial);
+            if (fs_exists(partial.c_str()))
+                fs_remove(partial.c_str());
             REMOTE_LOG_ERROR("Upload aborted and partial file removed");
         }
         else
@@ -498,9 +498,9 @@ void handleDeleteFile()
                 REMOTE_LOG_INFO("Attempting to delete file: %s\n", fileName.c_str());
 
                 // Make sure the file exists before attempting to delete
-                if (fs_exists(fileName))
+                if (fs_exists(fileName.c_str()))
                 {
-                    if (fs_remove(fileName))
+                    if (fs_remove(fileName.c_str()))
                     {
                         deletedCount++;
                         REMOTE_LOG_INFO("Successfully deleted file: %s\n", fileName.c_str());
@@ -595,9 +595,9 @@ void handleFileDownload()
 
         REMOTE_LOG_INFO("Attempting to download file:", fileName.c_str());
 
-        if (fs_exists(fileName))
+        if (fs_exists(fileName.c_str()))
         {
-            File file = fs_open(fileName, "r");
+            File file = fs_open(fileName.c_str(), "r");
             if (file)
             {
                 // Get file size

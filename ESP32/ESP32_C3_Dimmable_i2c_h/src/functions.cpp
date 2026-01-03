@@ -31,7 +31,7 @@ void functions_setup()
 	}
 	else
 	{
-		REMOTE_LOG_DEBUG("Filesystem initialized");
+		listDir("/", 0); // Log root directory contents
 		log_file();
 	}
 }
@@ -265,19 +265,19 @@ bool readJsonFile(const char *path, JsonDocument &doc)
 {
 	if (!fs_exists(path))
 	{
-		REMOTE_LOG_DEBUG("readJsonFile: file not found", path);
+		REMOTE_LOG_ERROR("readJsonFile: file not found", path);
 		return false;
 	}
-	File file = fs_open(path, FILE_READ);
+	File file = fs_open(path, "r");
 	if (!file)
 	{
-		REMOTE_LOG_DEBUG("readJsonFile: failed to open", path);
+		REMOTE_LOG_ERROR("readJsonFile: failed to open", path);
 		return false;
 	}
 	size_t size = file.size();
 	if (size == 0)
 	{
-		REMOTE_LOG_DEBUG("readJsonFile: empty file", path);
+		REMOTE_LOG_ERROR("readJsonFile: empty file", path);
 		file.close();
 		return false;
 	}
@@ -287,7 +287,7 @@ bool readJsonFile(const char *path, JsonDocument &doc)
 	DeserializationError err = deserializeJson(doc, content);
 	if (err)
 	{
-		REMOTE_LOG_DEBUG("readJsonFile: failed to parse", path);
+		REMOTE_LOG_ERROR("readJsonFile: failed to parse", path);
 		return false;
 	}
 	return true;
@@ -295,15 +295,15 @@ bool readJsonFile(const char *path, JsonDocument &doc)
 
 bool writeJsonFile(const char *path, JsonDocument &doc)
 {
-	File file = fs_open(path, FILE_WRITE);
+	File file = fs_open(path, "w");
 	if (!file)
 	{
-		REMOTE_LOG_DEBUG("failed to open for write", path);
+		REMOTE_LOG_ERROR("failed to open for write", path);
 		return false;
 	}
 	if (serializeJson(doc, file) == 0)
 	{
-		REMOTE_LOG_DEBUG("failed to write json", path);
+		REMOTE_LOG_ERROR("failed to write json", path);
 		file.close();
 		return false;
 	}

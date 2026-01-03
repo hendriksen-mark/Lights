@@ -30,6 +30,7 @@ void loadMeshConfig()
   if (!readJsonFile(MESH_CONFIG_PATH, doc))
   {
     REMOTE_LOG_DEBUG("mesh config not found, using defaults");
+    saveMeshConfig();
     return;
   }
   // parse base address from BRIDGE_IP string and set default subip

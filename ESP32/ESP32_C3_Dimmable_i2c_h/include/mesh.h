@@ -32,5 +32,7 @@ void handleNotFound();
 void set_IP();
 void set_PORT();
 void discoverBridgeMdns();
+void saveMeshConfig();
+void loadMeshConfig();
 
 #endif // MESH_H

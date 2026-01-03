@@ -6,6 +6,8 @@
 #include <Arduino.h>
 #include <FS.h>
 
+#include "custom_log.h"
+
 #if defined(USE_LITTLEFS)
 #include <LittleFS.h>
 #endif
@@ -14,8 +16,6 @@
 #include <SPI.h>
 #include <SD.h>
 #endif
-
-#include "custom_log.h"
 
 enum FsType {
     FS_NONE = 0,
@@ -43,6 +43,7 @@ bool fs_format();
 size_t fs_usedBytes();
 size_t fs_totalBytes();
 File fs_open_root();
+void listDir(const char * dirname, uint8_t levels);
 
 void log_file();
 
