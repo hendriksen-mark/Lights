@@ -2,14 +2,12 @@
 
 #ifdef USE_LITTLEFS
 static FsType preferredFs = FS_LITTLEFS;
-fs::FS &fsys = LittleFS;
 #elif defined(USE_SD)
 static FsType preferredFs = FS_SD;
-fs::FS &fsys = SD;
 #else
 static FsType preferredFs = FS_NONE;
-fs::FS &fsys = fs::FS();
 #endif
+static fs::FS *fsys = nullptr;
 
 static FsType currentFs = FS_NONE;
 String FsName = "None";
@@ -33,6 +31,7 @@ static bool try_littlefs()
         REMOTE_LOG_DEBUG("LittleFS Filesystem initialized");
         currentFs = FS_LITTLEFS;
         FsName = "LittleFS";
+        fsys = &LittleFS;
         return true;
     }
 #endif
@@ -49,6 +48,7 @@ static bool try_sd()
         REMOTE_LOG_DEBUG("SD Filesystem initialized");
         currentFs = FS_SD;
         FsName = "SD";
+        fsys = &SD;
         return true;
     }
 #endif
@@ -97,19 +97,24 @@ bool fs_begin()
     return false;
 }
 
-void listDir(const char * dirname, uint8_t levels)
+void listDir(const char *dirname, uint8_t levels)
 {
     REMOTE_LOG_INFO("Listing directory:", dirname);
+    if (!fsys)
+    {
+        REMOTE_LOG_ERROR("listDir: no filesystem mounted");
+        return;
+    }
 
-    File root = fsys.open(dirname);
+    File root = fsys->open(dirname);
     if (!root)
     {
-        REMOTE_LOG_ERROR("Failed to open directory");
+        REMOTE_LOG_ERROR("Failed to open directory", dirname);
         return;
     }
     if (!root.isDirectory())
     {
-        REMOTE_LOG_ERROR("Not a directory");
+        REMOTE_LOG_ERROR("Not a directory", dirname);
         return;
     }
 
@@ -134,23 +139,37 @@ void listDir(const char * dirname, uint8_t levels)
 
 bool fs_exists(const char *path)
 {
-    bool ex = fsys.exists(path);
+    if (!fsys)
+    {
+        REMOTE_LOG_ERROR("fs_exists: no filesystem mounted");
+        return false;
+    }
+    bool ex = fsys->exists(path);
     if (!ex)
     {
         REMOTE_LOG_DEBUG("fs_exists: not found on", FsName, path);
-        return false;
     }
     return ex;
 }
 
-File fs_open(const char *path, const char *mode = "r")
+File fs_open(const char *path, const char *mode)
 {
-    return fsys.open(path, mode);
+    if (!fsys)
+    {
+        REMOTE_LOG_ERROR("fs_open: no filesystem mounted", path);
+        return File();
+    }
+    return fsys->open(path, mode);
 }
 
 bool fs_remove(const char *path)
 {
-        return fsys.remove(path);
+    if (!fsys)
+    {
+        REMOTE_LOG_ERROR("fs_remove: no filesystem mounted", path);
+        return false;
+    }
+    return fsys->remove(path);
 }
 
 bool fs_format()
@@ -167,7 +186,9 @@ bool fs_format()
     {
 #if defined(USE_SD)
         // SD library doesn't provide a format; emulate by removing files in root
-        File root = fsys.open("/");
+        if (!fsys)
+            return false;
+        File root = fsys->open("/");
         if (!root)
             return false;
         File file = root.openNextFile();
@@ -183,7 +204,8 @@ bool fs_format()
             if (name.charAt(0) != '/')
                 name = "/" + name;
             file.close();
-            fsys.remove(name.c_str());
+            if (fsys)
+                fsys->remove(name.c_str());
             file = root.openNextFile();
         }
         root.close();
@@ -207,7 +229,9 @@ size_t fs_usedBytes()
     else if (currentFs == FS_SD)
     {
 #if defined(USE_SD)
-        File root = fs_open("/");
+        if (!fsys)
+            return used;
+        File root = fsys->open("/");
         if (root && root.isDirectory())
         {
             File f = root.openNextFile();
@@ -244,10 +268,23 @@ size_t fs_totalBytes()
 
 File fs_open_root()
 {
-        return fs_open("/");
+    return fs_open("/", "r");
 }
 
 void log_file()
 {
-    LOG_ATTACH_FS_MANUAL(fsys, LOG_FILE_NAME, FILE_APPEND);
+    if (fsys)
+    {
+        LOG_ATTACH_FS_MANUAL(*fsys, LOG_FILE_NAME, FILE_APPEND);
+    }
+}
+
+void fs_set_preferred(FsType t)
+{
+    preferredFs = t;
+}
+
+FsType fs_get_preferred()
+{
+    return preferredFs;
 }

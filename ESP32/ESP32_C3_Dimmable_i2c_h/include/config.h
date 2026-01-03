@@ -6,7 +6,6 @@
 // ============================================
 // General Configuration
 // ============================================
-#define USE_LITTLEFS
 #ifndef SD_CS_PIN
 #define SD_CS_PIN 5 // Chip Select pin for SD card
 #endif
