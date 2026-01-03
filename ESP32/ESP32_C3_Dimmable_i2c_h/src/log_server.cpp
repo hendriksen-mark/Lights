@@ -1,6 +1,4 @@
 #include "log_server.h"
-#include "custom_log.h"
-#include "ntp_client.h"
 
 // Global variables
 WiFiServer logServer(LOG_SERVER_PORT);

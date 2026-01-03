@@ -5,6 +5,9 @@
 
 #include <Arduino.h>
 #include <WiFi.h>
+
+#include "custom_log.h"
+#include "ntp_client.h"
 #include "ethernet_server.h"
 #include "config.h"
 

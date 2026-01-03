@@ -12,6 +12,8 @@
 #ifndef INFO_DATA_PIN
 #define INFO_DATA_PIN 12 // Data pin for info LED strip
 #endif
+#define LOG_FILE_NAME "/log.txt"
+#define LOG_MAX_FILE_SIZE_BYTES (1300 * 1024) // ~1.30 MB
 #define MESH_CONFIG_PATH "/mesh_config.json"
 #define WS_CONFIG_PATH "/ws_config.json"
 #define WS_STATE_PATH "/ws_state.json"

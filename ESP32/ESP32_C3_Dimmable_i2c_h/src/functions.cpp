@@ -36,6 +36,7 @@ void functions_setup()
 	else
 	{
 		REMOTE_LOG_DEBUG("File system mounted");
+		LOG_ATTACH_FS_MANUAL(LittleFS, LOG_FILE_NAME, FILE_APPEND);
 	}
 }
 
