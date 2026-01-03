@@ -1,5 +1,10 @@
 #include "functions.h"
 
+// Compact selection of NeoPixel color feature based on token `INFO_LED_ORDER`.
+// Example: set `-DINFO_LED_ORDER=Grb` in build flags to select `NeoGrbFeature`.
+#ifndef INFO_LED_ORDER
+#define INFO_LED_ORDER Grb
+#endif
 #define PRIMITIVE_CAT3(a,b,c) a##b##c
 #define CAT3(a,b,c) PRIMITIVE_CAT3(a,b,c)
 typedef CAT3(Neo, INFO_LED_ORDER, Feature) InfoLedColorFeature;
@@ -19,20 +24,18 @@ void functions_setup()
 		infoLedPulse(white, 1, intervalMs); // Pulse white while waiting for serial monitor
 	}
 
-	// Initialize filesystem (tries preferred if set, falls back)
-	if (!fs_begin())
+	if (!LittleFS.begin())
 	{
-		REMOTE_LOG_ERROR("Failed to initialize any filesystem");
-		infoLedError();
+		REMOTE_LOG_ERROR("Failed to mount file system");
+		infoLedError(); // Show error indication
 		delay(500);
-		fs_format();
-		infoLedBusy();
+		LittleFS.format();
+		infoLedBusy(); // Show formatting in progress
 		delay(300);
 	}
 	else
 	{
-		REMOTE_LOG_DEBUG("Filesystem initialized");
-		log_file();
+		REMOTE_LOG_DEBUG("File system mounted");
 	}
 }
 
@@ -242,9 +245,7 @@ void factoryReset()
 	blinkLed(8, 100); // 8 fast blinks
 	delay(300);
 	infoLedBusy(); // Show formatting in progress
-	// Emulate factory reset by removing all files from active FS
-	fs_format();
-	// WiFi.disconnect(false, true);
+	LittleFS.format();
 	infoLedPulse(magenta, 2, 400); // Magenta pulses before restart
 	ESP.restart();
 }
@@ -254,7 +255,6 @@ void resetESP()
 	infoLight(orange); // Orange for restart
 	blinkLed(3, 200);
 	delay(500);
-	fs_format();
 	infoLedFadeOut(500); // Smooth fade out before restart
 	delay(500);
 	ESP.restart();
@@ -263,12 +263,12 @@ void resetESP()
 // Generic JSON file helpers
 bool readJsonFile(const char *path, JsonDocument &doc)
 {
-	if (!fs_exists(path))
+	if (!LittleFS.exists(path))
 	{
 		REMOTE_LOG_DEBUG("readJsonFile: file not found", path);
 		return false;
 	}
-	File file = fs_open(path, FILE_READ);
+	File file = LittleFS.open(path, "r");
 	if (!file)
 	{
 		REMOTE_LOG_DEBUG("readJsonFile: failed to open", path);
@@ -295,7 +295,7 @@ bool readJsonFile(const char *path, JsonDocument &doc)
 
 bool writeJsonFile(const char *path, JsonDocument &doc)
 {
-	File file = fs_open(path, FILE_WRITE);
+	File file = LittleFS.open(path, "w");
 	if (!file)
 	{
 		REMOTE_LOG_DEBUG("failed to open for write", path);
