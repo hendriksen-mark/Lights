@@ -41,9 +41,11 @@ static bool try_littlefs()
 static bool try_sd()
 {
 #if defined(USE_SD)
-    // SD_CS_PIN should be defined in build flags (platformio.ini)
     REMOTE_LOG_INFO("fs_begin: try mount SD");
-    if (SD.begin(SD_CS_PIN))
+
+    SPI.begin(SD_SCLK_PIN, SD_MISO_PIN, SD_MOSI_PIN, -1);
+
+    if (SD.begin(SD_CS_PIN, SPI, 4000000)) // Use 4 MHz for SD card
     {
         REMOTE_LOG_DEBUG("SD Filesystem initialized");
         currentFs = FS_SD;

@@ -1,13 +1,13 @@
 #include "functions.h"
 
-#define PRIMITIVE_CAT3(a,b,c) a##b##c
-#define CAT3(a,b,c) PRIMITIVE_CAT3(a,b,c)
+#define PRIMITIVE_CAT3(a, b, c) a##b##c
+#define CAT3(a, b, c) PRIMITIVE_CAT3(a, b, c)
 typedef CAT3(Neo, INFO_LED_ORDER, Feature) InfoLedColorFeature;
 
 NeoPixelBus<InfoLedColorFeature, NeoEsp32Rmt0Ws2812xMethod> *strip_info = NULL;
 float info_led_brightness = 0.3; // Default brightness (30% to avoid being too bright)
 
-void functions_setup()
+void serialWait()
 {
 	// Give user time to open serial monitor: print a heartbeat during the 10s wait
 	const int waitMs = 10000;
@@ -18,7 +18,10 @@ void functions_setup()
 		REMOTE_LOG_INFO("Waiting for serial monitor...");
 		infoLedPulse(white, 1, intervalMs); // Pulse white while waiting for serial monitor
 	}
+}
 
+void functions_setup()
+{
 	// Initialize filesystem (tries preferred if set, falls back)
 	if (!fs_begin())
 	{
@@ -286,7 +289,7 @@ bool readJsonFile(const char *path, JsonDocument &doc)
 	// Read into string to avoid streaming issues
 	String content = file.readString();
 	file.close();
-	REMOTE_LOG_DEBUG("readJsonFile: content of file", path, String(content));
+	// REMOTE_LOG_DEBUG("readJsonFile: content of file", path, String(content));
 	DeserializationError err = deserializeJson(doc, content);
 	if (err)
 	{

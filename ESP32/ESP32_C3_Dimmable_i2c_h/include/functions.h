@@ -11,6 +11,7 @@
 #include "custom_log.h"
 #include "color.h"
 
+void serialWait();
 void functions_setup();
 void ChangeNeoPixels_info();
 void setInfoLedBrightness(float brightness);
@@ -26,7 +27,7 @@ void infoLedError();
 void blinkLed(uint8_t count, uint16_t interval = 200);
 void factoryReset();
 void resetESP();
-bool readJsonFile(const char* path, JsonDocument &doc);
-bool writeJsonFile(const char* path, JsonDocument &doc);
+bool readJsonFile(const char *path, JsonDocument &doc);
+bool writeJsonFile(const char *path, JsonDocument &doc);
 
 #endif // FUNCTIONS_H
