@@ -40,14 +40,14 @@ void long_press(Button2 &btn)
 void IRAM_ATTR radarInterrupt()
 {
     unsigned long currentMillis = millis();
-    
+
     // Debounce check
     if (currentMillis - lastMotionMillis < MOTION_DEBOUNCE_TIME)
     {
         return;
     }
     lastMotionMillis = currentMillis;
-    
+
     // Set value based on current pin state
     if (digitalRead(RADAR_OUT_PIN) == RADAR_ACTIVE_STATE)
     {

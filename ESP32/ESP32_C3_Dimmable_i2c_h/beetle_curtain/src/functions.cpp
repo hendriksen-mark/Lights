@@ -6,29 +6,38 @@
 
 unsigned long MasterPreviousMillis = 0;
 
-void set_Target_Pos(byte target_set) {
-  if (target_set > 100) target_set = 100;
+void set_Target_Pos(byte target_set)
+{
+  if (target_set > 100)
+    target_set = 100;
   target = target_set;
   long totalSteps = TOTALROND * MOTOR_STEPS * MICROSTEPS;
   uitvoeren = (totalSteps * (long)target) / 100L;
   // Note: send_change() will be called from main loop when request flag is set
 }
 
-void stable() {
+void stable()
+{
   LOG_DEBUG("stable");
   long i = 0;
-  if (target > pref_target && target >= 2) {
+  if (target > pref_target && target >= 2)
+  {
     i = 2 * MOTOR_STEPS * MICROSTEPS;
-  } else if ( target < pref_target && target >= 2) {
+  }
+  else if (target < pref_target && target >= 2)
+  {
     i = -2 * MOTOR_STEPS * MICROSTEPS;
   }
 
   stepper.move(i);
   stepper.runToPosition();
 
-  if (target > pref_target && target >= 2) {
+  if (target > pref_target && target >= 2)
+  {
     i = -2 * MOTOR_STEPS * MICROSTEPS;
-  } else if ( target < pref_target && target >= 2) {
+  }
+  else if (target < pref_target && target >= 2)
+  {
     i = 2 * MOTOR_STEPS * MICROSTEPS;
   }
 
@@ -37,8 +46,8 @@ void stable() {
   ismoved = false;
 }
 
-
-void homeing() {
+void homeing()
+{
   LOG_DEBUG("HOME");
   // setup non-blocking two-step homing: coarse then fine
   gohome = true;
@@ -55,8 +64,10 @@ void homeing() {
   homingTimestamp = homingStartTime;
 }
 
-void stopMotor() {
-  if (gohome == false) {
+void stopMotor()
+{
+  if (gohome == false)
+  {
     stepper.stop();
     digitalWrite(ENABLE, HIGH);
     prev_millis = millis();
@@ -68,8 +79,10 @@ void stopMotor() {
   }
 }
 
-void ask_master() {
-  if ((unsigned long)(millis() - MasterPreviousMillis) >= REQUEST_TIMEOUT) {
+void ask_master()
+{
+  if ((unsigned long)(millis() - MasterPreviousMillis) >= REQUEST_TIMEOUT)
+  {
     MasterPreviousMillis = millis();
     JsonDocument doc;
     doc["got_master"] = false;
@@ -84,8 +97,10 @@ void ask_master() {
   }
 }
 
-void send_change() {
-  if (master > 0) {
+void send_change()
+{
+  if (master > 0)
+  {
     JsonDocument doc;
     doc["got_master"] = true;
     doc["device"] = "curtain";
@@ -96,12 +111,15 @@ void send_change() {
     char buf[128];
     serializeJson(doc, buf, sizeof(buf));
     mesh.sendSingle(master, buf);
-  } else {
+  }
+  else
+  {
     ask_master();
   }
 }
 
-void senddebug() {
+void senddebug()
+{
   LOG_DEBUG("target :", target);
   LOG_DEBUG("current :", current);
   LOG_DEBUG("uitvoeren :", uitvoeren);

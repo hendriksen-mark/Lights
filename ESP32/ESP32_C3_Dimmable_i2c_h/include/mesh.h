@@ -35,7 +35,7 @@ void discoverBridgeMdns();
 bool saveConfig_mesh();
 bool loadConfig_mesh();
 void pollCurtainStatus();
-void sendCurtainCommand(bool homing, bool request, int targetPos, const char* logPath);
-void sendResponse(bool isRedirect, const String& content);
+void sendCurtainCommand(bool homing, bool request, int targetPos, const char *logPath);
+void sendResponse(bool isRedirect, const String &content);
 
 #endif // MESH_H

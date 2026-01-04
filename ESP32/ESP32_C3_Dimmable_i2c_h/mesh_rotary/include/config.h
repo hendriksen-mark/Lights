@@ -21,8 +21,8 @@
 #define CLICKS_PER_STEP 4
 
 // HLK-LD2410C Radar Sensor (for motion detection rooms)
-#define RADAR_OUT_PIN 3  // Digital OUT pin from radar sensor
-#define RADAR_ACTIVE_STATE HIGH  // Sensor OUT is HIGH when presence detected
+#define RADAR_OUT_PIN 3         // Digital OUT pin from radar sensor
+#define RADAR_ACTIVE_STATE HIGH // Sensor OUT is HIGH when presence detected
 
 #define REQUEST_TIMEOUT 2000
 #define MOTION_DEBOUNCE_TIME 500 // ms - prevent motion spam

@@ -9,7 +9,7 @@ String sendHttpRequest(int button, String mac, IPAddress bridgeIp, int bridgePor
 
   // Build URL
   String url = "http://" + bridgeIp.toString() + ":" + String(bridgePort) + "/switch";
-  
+
   while (retryCount < MAX_RETRIES)
   {
     JsonDocument doc;
@@ -53,20 +53,20 @@ String sendHttpRequest(int button, String mac, IPAddress bridgeIp, int bridgePor
     http.begin(url);
     http.addHeader("Content-Type", "application/json");
     http.setTimeout(5000); // 5 second timeout
-    
+
     int httpCode = http.POST(payload);
-    
+
     if (httpCode > 0)
     {
       if (httpCode == HTTP_CODE_OK)
       {
         String responseBody = http.getString();
         REMOTE_LOG_DEBUG("Response:", responseBody);
-        
+
         // Parse response JSON
         JsonDocument responseDoc;
         DeserializationError error = deserializeJson(responseDoc, responseBody);
-        
+
         if (!error)
         {
           if (responseDoc["success"].is<String>())
@@ -81,7 +81,7 @@ String sendHttpRequest(int button, String mac, IPAddress bridgeIp, int bridgePor
           {
             response = "unknown response format";
           }
-          
+
           // If we got a valid response, reset retry counter for next step
           retryCount = 0;
         }
@@ -107,9 +107,9 @@ String sendHttpRequest(int button, String mac, IPAddress bridgeIp, int bridgePor
       retryCount++;
       delay(RETRY_DELAY_MS);
     }
-    
+
     http.end();
-    
+
     // Avoid infinite loop - break if too many retries
     if (retryCount >= MAX_RETRIES)
     {
@@ -117,6 +117,6 @@ String sendHttpRequest(int button, String mac, IPAddress bridgeIp, int bridgePor
       return "Max retries exceeded";
     }
   }
-  
+
   return response;
 }

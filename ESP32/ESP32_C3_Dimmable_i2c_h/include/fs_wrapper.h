@@ -17,7 +17,8 @@
 #include <SD.h>
 #endif
 
-enum FsType {
+enum FsType
+{
     FS_NONE = 0,
     FS_LITTLEFS,
     FS_SD
@@ -43,7 +44,7 @@ bool fs_format();
 size_t fs_usedBytes();
 size_t fs_totalBytes();
 File fs_open_root();
-void listDir(const char * dirname, uint8_t levels);
+void listDir(const char *dirname, uint8_t levels);
 
 void log_file();
 
