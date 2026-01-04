@@ -56,10 +56,17 @@ function updateStatus() {
                 return;
             }
             $("#pow").prop("checked", data.on);
-            slider.noUiSlider.set(data.bri / 2.54);
+            // Handle both 0-254 and 1-254 brightness ranges
+            var briValue = data.bri;
+            if (briValue > 0) {
+                slider.noUiSlider.set(Math.round(briValue / 2.54));
+            } else {
+                slider.noUiSlider.set(0);
+            }
             if (InitReload)
                 location.reload();
             console.log('update state done');
+            console.log(data);
         },
         error: function () {
             console.log('error getting state');
@@ -112,8 +119,10 @@ function updateConfig() {
 
             $(".brand-logo").text(json.name);
             toggleSections($('input[type="checkbox"]'));
+            console.log(json);
         },
         error: function () {
+            console.log('error getting config');
             return;
         },
         timeout: 5000,
@@ -215,13 +224,17 @@ $(function () {
         refreshIntervalId = setInterval(updateStatus, refreshInterval);
 
         var value = values[handle];
+        var briValue = Math.round(value * 2.54);
+        // Ensure brightness is at least 1 if slider is above 0
+        if (briValue < 1 && value > 0) briValue = 1;
+        if (briValue > 254) briValue = 254;
         if (multipleLights) {
             postDataMultiple({
-                bri: value * 2.54
+                bri: briValue
             });
         } else {
             postData({
-                bri: value * 2.54
+                bri: briValue
             });
         }
     });
