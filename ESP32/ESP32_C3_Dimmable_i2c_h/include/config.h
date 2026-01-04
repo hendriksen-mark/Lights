@@ -45,6 +45,7 @@
 // ============================================
 // Ethernet Configuration
 // ============================================
+#define ETH_CHECK_INTERVAL 30000 // Check Ethernet every 30 seconds (millis)
 #ifndef W5500_INT_GPIO
 #define W5500_INT_GPIO 9 // GPIO pin for W5500 interrupt
 #endif
