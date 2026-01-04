@@ -9,6 +9,7 @@
 const char http_content_i2c[] PROGMEM = R"=====(
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -19,15 +20,19 @@ const char http_content_i2c[] PROGMEM = R"=====(
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
     <link rel="stylesheet" href="https://diyhue.org/cdn/nouislider.css" />
 </head>
+
 <body>
     <div class="wrapper">
         <nav class="nav-extended row" style="background-color: #26a69a !important;">
             <div class="nav-wrapper col s12">
                 <a href="#" class="brand-logo">DiyHue Dimmable I2C</a>
                 <ul id="nav-mobile" class="right hide-on-med-and-down" style="position: relative;z-index: 10;">
-                    <li><a target="_blank" href="https://github.com/diyhue"><i class="material-icons left">language</i>GitHub</a></li>
-                    <li><a target="_blank" href="https://diyhue.readthedocs.io/en/latest/"><i class="material-icons left">description</i>Documentation</a></li>
-                    <li><a target="_blank" href="https://diyhue.slack.com/"><i class="material-icons left">question_answer</i>Slack channel</a></li>
+                    <li><a target="_blank" href="https://github.com/diyhue"><i
+                                class="material-icons left">language</i>GitHub</a></li>
+                    <li><a target="_blank" href="https://diyhue.readthedocs.io/en/latest/"><i
+                                class="material-icons left">description</i>Documentation</a></li>
+                    <li><a target="_blank" href="https://diyhue.slack.com/"><i
+                                class="material-icons left">question_answer</i>Slack channel</a></li>
                 </ul>
             </div>
             <div class="nav-content">
@@ -115,6 +120,7 @@ const char http_content_i2c[] PROGMEM = R"=====(
     <script src="https://diyhue.org/cdn/nouislider.js"></script>
     <script src="https://diyhue.org/cdn/diyhue.js"></script>
 </body>
+
 </html>
 )=====";
 
