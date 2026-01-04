@@ -27,10 +27,12 @@ void functions_setup()
 		delay(500);
 		fs_format();
 		infoLedBusy();
+		REMOTE_LOG_INFO("Filesystem formatted");
 		delay(300);
 	}
 	else
 	{
+		REMOTE_LOG_INFO("Filesystem mounted:", fs_get_name());
 		listDir("/", 0); // Log root directory contents
 		log_file();
 	}
@@ -284,6 +286,7 @@ bool readJsonFile(const char *path, JsonDocument &doc)
 	// Read into string to avoid streaming issues
 	String content = file.readString();
 	file.close();
+	REMOTE_LOG_DEBUG("readJsonFile: content of file", path, String(content));
 	DeserializationError err = deserializeJson(doc, content);
 	if (err)
 	{

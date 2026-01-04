@@ -147,7 +147,7 @@ bool fs_exists(const char *path)
     bool ex = fsys->exists(path);
     if (!ex)
     {
-        REMOTE_LOG_DEBUG("fs_exists: not found on", FsName, path);
+        REMOTE_LOG_ERROR("fs_exists: not found on", FsName, path);
     }
     return ex;
 }

@@ -30,7 +30,7 @@ bool loadConfig_mesh()
   JsonDocument doc;
   if (!readJsonFile(MESH_CONFIG_PATH, doc))
   {
-    REMOTE_LOG_DEBUG("mesh config not found, using defaults");
+    REMOTE_LOG_INFO("Create new file with default values");
     return saveConfig_mesh();
   }
   // parse base address from BRIDGE_IP string and set default subip
@@ -82,7 +82,14 @@ void mesh_setup()
   newConnectionCallback(0);
 
   discoverBridgeMdns();
-  loadConfig_mesh();
+  if (loadConfig_mesh())
+  {
+    REMOTE_LOG_DEBUG("mesh config loaded");
+  }
+  else
+  {
+    REMOTE_LOG_DEBUG("mesh config load failed, using defaults");
+  }
 
   server_gordijn.on("/", handleRoot);
   server_gordijn.on("/setTargetPosTest/", set_Target_Pos_test);
