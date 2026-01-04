@@ -34,5 +34,6 @@ void set_PORT();
 void discoverBridgeMdns();
 bool saveConfig_mesh();
 bool loadConfig_mesh();
+void pollCurtainStatus();
 
 #endif // MESH_H
