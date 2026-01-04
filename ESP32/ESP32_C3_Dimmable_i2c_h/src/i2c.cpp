@@ -280,7 +280,7 @@ void i2c_setup()
 		if (restoreState_i2c())
 		{
 			REMOTE_LOG_DEBUG("I2C state restored");
-		} else
+		}
 		else
 		{
 			REMOTE_LOG_DEBUG("I2C state restore failed, using defaults");
