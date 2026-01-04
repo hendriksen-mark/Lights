@@ -111,8 +111,10 @@
 #define BRIDGE_PORT 80           // Default DIYhue Bridge port (can be changed via web interface)
 
 // ============================================
-// Sensor Types Configuration
+// Command Processing Configuration
 // ============================================
+#define MAX_RETRIES 3
+#define RETRY_DELAY_MS 500
 #define switchType "ZLLSwitch"
 #define motionType "ZLLPresence"
 

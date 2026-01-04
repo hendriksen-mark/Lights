@@ -1,131 +1,122 @@
 #include "processCommand.h"
 
-WiFiClient client;
-
 String sendHttpRequest(int button, String mac, IPAddress bridgeIp, int bridgePort)
 {
-  String msg;
-  msg.reserve(50); // Pre-allocate to reduce memory fragmentation
-  msg = "";
+  HTTPClient http;
+  String response = "";
+  bool isRegistered = false;
+  int retryCount = 0;
 
-  while (true)
+  // Build URL
+  String url = "http://" + bridgeIp.toString() + ":" + String(bridgePort) + "/switch";
+  
+  while (retryCount < MAX_RETRIES)
   {
-    if (!client.connect(bridgeIp, bridgePort))
-    {
-      // REMOTE_LOG_ERROR("Connection failed");
-      infoLedError(); // Show connection error
-      delay(100);
-      return "Connection failed";
-    }
-    REMOTE_LOG_INFO("Connected!");
-    REMOTE_LOG_DEBUG("msg:", msg);
-    String url;
-    url.reserve(100); // Pre-allocate to reduce memory fragmentation
-    url = "/switch";
-    // url += "?mac=";
-    // url += mac;
+    JsonDocument doc;
+    doc["mac"] = mac;
 
-    if (msg == "device not found" || msg == "no mac in list")
+    // First attempt or device not found - try registration
+    if (!isRegistered && (response == "" || response == "device not found"))
     {
-      // url = "/switch";
-      url += "?devicetype=";
-      if (button >= 1000)
+      doc["devicetype"] = (button >= 1000) ? switchType : motionType;
+      REMOTE_LOG_INFO("Registering device...");
+    }
+    else if (response == "device registered" || response == "device already registered")
+    {
+      // Device is registered, now send update
+      isRegistered = true;
+      doc.remove("devicetype");
+      doc["button"] = button;
+      doc["presence"] = true;
+      doc["battery"] = 100;
+      REMOTE_LOG_INFO("Updating device...");
+    }
+    else if (response == "command applied")
+    {
+      // Success!
+      blinkLed(1, 50);
+      return response;
+    }
+    else if (response == "unknown device" || response == "missing mac address" || response == "invalid json")
+    {
+      // Permanent errors
+      infoLedError();
+      return response;
+    }
+
+    // Serialize JSON
+    String payload;
+    serializeJson(doc, payload);
+    REMOTE_LOG_DEBUG("Payload:", payload);
+
+    // Make HTTP POST request
+    http.begin(url);
+    http.addHeader("Content-Type", "application/json");
+    http.setTimeout(5000); // 5 second timeout
+    
+    int httpCode = http.POST(payload);
+    
+    if (httpCode > 0)
+    {
+      if (httpCode == HTTP_CODE_OK)
       {
-        url += (String)switchType;
+        String responseBody = http.getString();
+        REMOTE_LOG_DEBUG("Response:", responseBody);
+        
+        // Parse response JSON
+        JsonDocument responseDoc;
+        DeserializationError error = deserializeJson(responseDoc, responseBody);
+        
+        if (!error)
+        {
+          if (responseDoc["success"].is<String>())
+          {
+            response = responseDoc["success"].as<String>();
+          }
+          else if (responseDoc["fail"].is<String>())
+          {
+            response = responseDoc["fail"].as<String>();
+          }
+          else
+          {
+            response = "unknown response format";
+          }
+          
+          // If we got a valid response, reset retry counter for next step
+          retryCount = 0;
+        }
+        else
+        {
+          REMOTE_LOG_ERROR("JSON parse error:", error.c_str());
+          response = "json parse error";
+          retryCount++;
+        }
       }
       else
       {
-        url += (String)motionType;
+        REMOTE_LOG_ERROR("HTTP error:", httpCode);
+        response = "HTTP error: " + String(httpCode);
+        retryCount++;
       }
-      url += "&mac=";
-      url += mac;
-    }
-    else if (msg == "command applied")
-    {
-      client.stop();
-      blinkLed(1, 50); // Quick success blink
-      return msg;
-    }
-    else if (msg == "unknown device" || msg == "missing mac address")
-    {
-      client.stop();
-      infoLedError(); // Show error for unknown device
-      delay(100);
-      return msg;
     }
     else
     {
-      int batteryPercent = 100;
-      // url = "/switch?mac=";
-      url += "?mac=";
-      url += mac;
-      url += "&button=";
-      url += button;
-      url += "&presence=true";
-      url += "&battery=";
-      url += batteryPercent;
+      REMOTE_LOG_ERROR("Connection failed:", http.errorToString(httpCode));
+      infoLedError();
+      response = "Connection failed";
+      retryCount++;
+      delay(RETRY_DELAY_MS);
     }
-    REMOTE_LOG_DEBUG("url:", url);
-
-    String message;
-    message.reserve(150); // Pre-allocate to reduce memory fragmentation
-    message = String("GET ");
-    message += url;
-    message += " HTTP/1.1\r\n";
-    message += "Host: ";
-    message += bridgeIp;
-    message += "\r\n";
-    message += "Connection: close\r\n\r\n";
-
-    client.println(message);
-
-    if (client.println() == 0)
+    
+    http.end();
+    
+    // Avoid infinite loop - break if too many retries
+    if (retryCount >= MAX_RETRIES)
     {
-      // REMOTE_LOG_ERROR("Failed to send request");
-      client.stop();
-      return "Failed to send request";
-    }
-
-    // Check HTTP status
-    char status[32] = {0};
-    client.readBytesUntil('\r', status, sizeof(status));
-    if (strcmp(status, "HTTP/1.1 200 OK") != 0)
-    {
-      // REMOTE_LOG_ERROR("Unexpected response:", status);
-      client.stop();
-      return "Unexpected response: ";
-    }
-
-    // Skip HTTP headers
-    char endOfHeaders[] = "\r\n\r\n";
-    if (!client.find(endOfHeaders))
-    {
-      // REMOTE_LOG_ERROR("Invalid response");
-      client.stop();
-      return "Invalid response";
-    }
-
-    // Allocate the JSON document
-    JsonDocument doc;
-
-    // Parse JSON object
-    DeserializationError error = deserializeJson(doc, client);
-    if (error)
-    {
-      // REMOTE_LOG_ERROR("deserializeJson() failed:", error.c_str());
-      client.stop();
-      return "deserializeJson() failed: ";
-    }
-    JsonObject obj = doc.as<JsonObject>();
-    if (obj["success"].is<String>())
-    {
-      msg = doc["success"].as<String>();
-    }
-    if (obj["fail"].is<String>())
-    {
-      msg = doc["fail"].as<String>();
+      infoLedError();
+      return "Max retries exceeded";
     }
   }
-  client.stop();
-  return msg;
+  
+  return response;
 }

@@ -4,7 +4,7 @@
 #pragma once
 
 #include <ArduinoJson.h>
-#include <WiFi.h>
+#include <HTTPClient.h>
 
 #include "config.h"
 #include "custom_log.h"
