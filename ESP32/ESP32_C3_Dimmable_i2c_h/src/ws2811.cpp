@@ -407,7 +407,7 @@ void lightEngine()
   }
 }
 
-void saveState_ws()
+bool saveState_ws()
 { // save the lights state using generic helper
   REMOTE_LOG_DEBUG("save ws state");
   JsonDocument json;
@@ -431,17 +431,17 @@ void saveState_ws()
       light["sat"] = lights[i].sat;
     }
   }
-  writeJsonFile(WS_STATE_PATH, json);
+  return writeJsonFile(WS_STATE_PATH, json);
 }
 
-void restoreState_ws()
+bool restoreState_ws()
 { // restore the lights state using generic helper
   REMOTE_LOG_DEBUG("restore ws state");
   JsonDocument json;
   if (!readJsonFile(WS_STATE_PATH, json))
   {
-    saveState_ws();
-    return;
+    REMOTE_LOG_INFO("Create new file with default values");
+    return saveState_ws();
   }
 
   for (JsonPair state : json.as<JsonObject>())
@@ -476,6 +476,7 @@ void restoreState_ws()
       }
     }
   }
+  return true;
 }
 
 bool saveConfig_ws()
@@ -514,7 +515,7 @@ bool loadConfig_ws()
   JsonDocument json;
   if (!readJsonFile(WS_CONFIG_PATH, json))
   {
-    REMOTE_LOG_DEBUG("Create new file with default values");
+    REMOTE_LOG_INFO("Create new file with default values");
     return saveConfig_ws();
   }
 
@@ -570,13 +571,13 @@ void ws_setup()
   REMOTE_LOG_DEBUG("Setup WS2811");
   infoLight(yellow);
 
-  if (!loadConfig_ws())
+  if (loadConfig_ws())
   {
-    REMOTE_LOG_DEBUG("Failed to load config");
+    REMOTE_LOG_DEBUG("ws config loaded");
   }
   else
   {
-    REMOTE_LOG_DEBUG("Config loaded");
+    REMOTE_LOG_ERROR("ws config load failed, using defaults");
   }
 
   if (lights[0].dividedLights == 0)
@@ -594,7 +595,14 @@ void ws_setup()
   {
   case 0:
     REMOTE_LOG_DEBUG("Startup: Restore previous state");
-    restoreState_ws();
+    if (restoreState_ws())
+    {
+      REMOTE_LOG_DEBUG("ws state restored");
+    }
+    else
+    {
+      REMOTE_LOG_DEBUG("ws state restore failed, using defaults");
+    }
     break;
   case 1:
     REMOTE_LOG_DEBUG("Startup: All lights ON");

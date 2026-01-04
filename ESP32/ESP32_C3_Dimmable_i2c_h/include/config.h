@@ -6,6 +6,18 @@
 // ============================================
 // General Configuration
 // ============================================
+#ifndef SD_MISO_PIN
+#define SD_MISO_PIN 5
+#endif
+#ifndef SD_MOSI_PIN
+#define SD_MOSI_PIN 6
+#endif
+#ifndef SD_SCLK_PIN
+#define SD_SCLK_PIN 7
+#endif
+#ifndef SD_CS_PIN
+#define SD_CS_PIN 15 // Chip Select pin for SD card
+#endif
 #ifndef DEVICE_NAME
 #define DEVICE_NAME "ESP32_Light"
 #endif

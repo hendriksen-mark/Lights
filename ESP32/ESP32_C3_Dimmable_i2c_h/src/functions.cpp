@@ -1,10 +1,5 @@
 #include "functions.h"
 
-// Compact selection of NeoPixel color feature based on token `INFO_LED_ORDER`.
-// Example: set `-DINFO_LED_ORDER=Grb` in build flags to select `NeoGrbFeature`.
-#ifndef INFO_LED_ORDER
-#define INFO_LED_ORDER Grb
-#endif
 #define PRIMITIVE_CAT3(a, b, c) a##b##c
 #define CAT3(a, b, c) PRIMITIVE_CAT3(a, b, c)
 typedef CAT3(Neo, INFO_LED_ORDER, Feature) InfoLedColorFeature;
@@ -12,7 +7,7 @@ typedef CAT3(Neo, INFO_LED_ORDER, Feature) InfoLedColorFeature;
 NeoPixelBus<InfoLedColorFeature, NeoEsp32Rmt0Ws2812xMethod> *strip_info = NULL;
 float info_led_brightness = 0.3; // Default brightness (30% to avoid being too bright)
 
-void functions_setup()
+void serialWait()
 {
 	// Give user time to open serial monitor: print a heartbeat during the 10s wait
 	const int waitMs = 10000;
@@ -23,20 +18,25 @@ void functions_setup()
 		REMOTE_LOG_INFO("Waiting for serial monitor...", (waitMs - i * intervalMs) / 1000, "seconds remaining");
 		infoLedPulse(white, 1, intervalMs); // Pulse white while waiting for serial monitor
 	}
+}
 
-	if (!LittleFS.begin())
+void functions_setup()
+{
+	// Initialize filesystem (tries preferred if set, falls back)
+	if (!fs_begin())
 	{
-		REMOTE_LOG_ERROR("Failed to mount file system");
-		infoLedError(); // Show error indication
+		REMOTE_LOG_ERROR("Failed to initialize any filesystem");
+		infoLedError();
 		delay(500);
-		LittleFS.format();
-		infoLedBusy(); // Show formatting in progress
+		fs_format();
+		infoLedBusy();
+		REMOTE_LOG_INFO("Filesystem formatted");
 		delay(300);
 	}
 	else
 	{
-		REMOTE_LOG_DEBUG("File system mounted");
-		LOG_ATTACH_FS_MANUAL(LittleFS, LOG_FILE_NAME, FILE_APPEND);
+		REMOTE_LOG_INFO("Filesystem mounted:", fs_get_name());
+		log_file();
 	}
 }
 
@@ -246,7 +246,9 @@ void factoryReset()
 	blinkLed(8, 100); // 8 fast blinks
 	delay(300);
 	infoLedBusy(); // Show formatting in progress
-	LittleFS.format();
+	// Emulate factory reset by removing all files from active FS
+	fs_format();
+	// WiFi.disconnect(false, true);
 	infoLedPulse(magenta, 2, 400); // Magenta pulses before restart
 	ESP.restart();
 }
@@ -264,21 +266,21 @@ void resetESP()
 // Generic JSON file helpers
 bool readJsonFile(const char *path, JsonDocument &doc)
 {
-	if (!LittleFS.exists(path))
+	if (!fs_exists(path))
 	{
-		REMOTE_LOG_DEBUG("readJsonFile: file not found", path);
+		REMOTE_LOG_ERROR("readJsonFile: file not found", path);
 		return false;
 	}
-	File file = LittleFS.open(path, "r");
+	File file = fs_open(path, "r");
 	if (!file)
 	{
-		REMOTE_LOG_DEBUG("readJsonFile: failed to open", path);
+		REMOTE_LOG_ERROR("readJsonFile: failed to open", path);
 		return false;
 	}
 	size_t size = file.size();
 	if (size == 0)
 	{
-		REMOTE_LOG_DEBUG("readJsonFile: empty file", path);
+		REMOTE_LOG_ERROR("readJsonFile: empty file", path);
 		file.close();
 		return false;
 	}
@@ -288,7 +290,7 @@ bool readJsonFile(const char *path, JsonDocument &doc)
 	DeserializationError err = deserializeJson(doc, content);
 	if (err)
 	{
-		REMOTE_LOG_DEBUG("readJsonFile: failed to parse", path);
+		REMOTE_LOG_ERROR("readJsonFile: failed to parse", path);
 		return false;
 	}
 	return true;
@@ -296,15 +298,15 @@ bool readJsonFile(const char *path, JsonDocument &doc)
 
 bool writeJsonFile(const char *path, JsonDocument &doc)
 {
-	File file = LittleFS.open(path, "w");
+	File file = fs_open(path, "w");
 	if (!file)
 	{
-		REMOTE_LOG_DEBUG("failed to open for write", path);
+		REMOTE_LOG_ERROR("failed to open for write", path);
 		return false;
 	}
 	if (serializeJson(doc, file) == 0)
 	{
-		REMOTE_LOG_DEBUG("failed to write json", path);
+		REMOTE_LOG_ERROR("failed to write json", path);
 		file.close();
 		return false;
 	}

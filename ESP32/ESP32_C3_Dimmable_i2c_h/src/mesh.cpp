@@ -24,13 +24,14 @@ int state_ont; // 0 1 2
 
 WebServer server_gordijn(PORDIJN_SERVER_PORT);
 
-void loadMeshConfig()
+bool loadConfig_mesh()
 {
+  REMOTE_LOG_DEBUG("load mesh config");
   JsonDocument doc;
   if (!readJsonFile(MESH_CONFIG_PATH, doc))
   {
-    REMOTE_LOG_DEBUG("mesh config not found, using defaults");
-    return;
+    REMOTE_LOG_INFO("Create new file with default values");
+    return saveConfig_mesh();
   }
   // parse base address from BRIDGE_IP string and set default subip
   IPAddress base;
@@ -42,7 +43,6 @@ void loadMeshConfig()
     if (v >= 0 && v <= 255)
     {
       subip = v;
-      REMOTE_LOG_DEBUG("Loaded mesh subip:", subip);
     }
   }
   base[3] = subip;
@@ -53,24 +53,18 @@ void loadMeshConfig()
     if (v > 0 && v <= 65535)
     {
       bridgePort = v;
-      REMOTE_LOG_DEBUG("Loaded mesh bridge port:", bridgePort);
     }
   }
+  return true;
 }
 
-void saveMeshConfig()
+bool saveConfig_mesh()
 {
+  REMOTE_LOG_DEBUG("save mesh config");
   JsonDocument doc;
   doc["subip"] = subip;
   doc["bridge"] = bridgePort;
-  if (!writeJsonFile(MESH_CONFIG_PATH, doc))
-  {
-    REMOTE_LOG_DEBUG("Failed to save mesh config");
-  }
-  else
-  {
-    REMOTE_LOG_DEBUG("Saved mesh config");
-  }
+  return writeJsonFile(MESH_CONFIG_PATH, doc);
 }
 
 void mesh_setup()
@@ -88,7 +82,14 @@ void mesh_setup()
   newConnectionCallback(0);
 
   discoverBridgeMdns();
-  loadMeshConfig();
+  if (loadConfig_mesh())
+  {
+    REMOTE_LOG_DEBUG("mesh config loaded");
+  }
+  else
+  {
+    REMOTE_LOG_DEBUG("mesh config load failed, using defaults");
+  }
 
   server_gordijn.on("/", handleRoot);
   server_gordijn.on("/setTargetPosTest/", set_Target_Pos_test);
@@ -103,11 +104,11 @@ void mesh_setup()
   server_gordijn.on("/info", handleinfo);
   server_gordijn.on("/setIP/", set_IP);
   server_gordijn.on("/setPORT/", set_PORT);
-  server_gordijn.on("/discover/", []()
-                    {
+  server_gordijn.on("/discover/", []() {
     discoverBridgeMdns();
     server_gordijn.sendHeader("Location", "/", true); // Redirect to our html web page
-    server_gordijn.send(302, "text/plane", ""); });
+    server_gordijn.send(302, "text/plane", "");
+  });
   server_gordijn.on("/reset", []() { // trigger manual reset
     server_gordijn.send(200, "text/html", "reset");
     resetESP();
@@ -491,7 +492,7 @@ void set_IP()
     base[3] = subip;
     bridgeIp = base;
   }
-  saveMeshConfig();
+  saveConfig_mesh();
   REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/setIP", bridgeIp.toString());
   server_gordijn.sendHeader("Location", "/", true); // Redirect to our html web page
   server_gordijn.send(302, "text/plane", "");
@@ -506,7 +507,7 @@ void set_PORT()
       bridgePort = server_gordijn.arg(i).toInt();
     }
   }
-  saveMeshConfig();
+  saveConfig_mesh();
   REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/setPORT", String(bridgePort));
   server_gordijn.sendHeader("Location", "/", true); // Redirect to our html web page
   server_gordijn.send(302, "text/plane", "");

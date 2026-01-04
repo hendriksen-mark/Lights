@@ -13,6 +13,7 @@ void setup()
   REMOTE_LOG_INFO("Start ESP32");
   ChangeNeoPixels_info();
   infoLedFadeIn(white, 500); // Smooth startup indication
+  serialWait();
   functions_setup();
   delay(200);
 
