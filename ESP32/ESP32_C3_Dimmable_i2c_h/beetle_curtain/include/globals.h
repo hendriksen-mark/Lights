@@ -1,3 +1,6 @@
+#ifndef GLOBALS_H
+#define GLOBALS_H
+
 #pragma once
 
 #include <Arduino.h>
@@ -46,3 +49,5 @@ constexpr unsigned long HOMING_TIMEOUT_MS = 30000;
 
 extern volatile unsigned long homingStartTime;
 extern volatile unsigned long homingTimestamp;
+
+#endif // GLOBALS_H

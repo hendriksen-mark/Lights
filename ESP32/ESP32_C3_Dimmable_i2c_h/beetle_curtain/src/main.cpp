@@ -60,7 +60,7 @@ void receivedCallback(uint32_t from, String &msg)
     master = uint32_t(root["master"]);
   }
 
-  if (root["device"] == "curtain")
+  if (root["device"] == DEVICE_NAME)
   {
     if (root["target"].is<int>())
     {
@@ -92,6 +92,7 @@ void setup()
   // mesh.setDebugMsgTypes( ERROR | MESH_STATUS | COMMUNICATION );
   mesh.init(MESH_PREFIX, MESH_PASSWORD, MESH_PORT);
   mesh.onReceive(&receivedCallback);
+  mesh.initOTAReceive(DEVICE_NAME);
 
   configureRAdriver(SW_RX, SW_TX, R_SENSE, DRIVER_ADDRESS, R_CURRENT, 100);
   pinMode(HOME_SWITCH, INPUT);

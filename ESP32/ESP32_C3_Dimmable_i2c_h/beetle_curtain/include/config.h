@@ -1,3 +1,10 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
+#pragma once
+
+#define DEVICE_NAME "curtain"
+
 #define MESH_PREFIX "HomeMesh"
 #define MESH_PASSWORD "Qwertyuiop1"
 #define MESH_PORT 5555
@@ -25,3 +32,5 @@
 #define UART_STEALTH_MODE 1
 #define GUIDE_MICROSTEPPING       MICROSTEPS
 #define R_CURRENT 1500//mA
+
+#endif // CONFIG_H

@@ -86,7 +86,7 @@ void ask_master()
     MasterPreviousMillis = millis();
     JsonDocument doc;
     doc["got_master"] = false;
-    doc["device"] = "curtain";
+    doc["device"] = DEVICE_NAME;
     doc["curtain_id"] = uint32_t(mesh.getNodeId());
     doc["target"] = target;
     doc["current"] = current;
@@ -103,7 +103,7 @@ void send_change()
   {
     JsonDocument doc;
     doc["got_master"] = true;
-    doc["device"] = "curtain";
+    doc["device"] = DEVICE_NAME;
     doc["curtain_id"] = uint32_t(mesh.getNodeId());
     doc["target"] = target;
     doc["current"] = current;

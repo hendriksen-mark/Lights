@@ -1,3 +1,6 @@
+#ifndef FUNCTIONS_H
+#define FUNCTIONS_H
+
 #pragma once
 
 #include "globals.h"
@@ -11,3 +14,5 @@ void send_change();
 void stable();
 void homeing();
 void stopMotor();
+
+#endif // FUNCTIONS_H
