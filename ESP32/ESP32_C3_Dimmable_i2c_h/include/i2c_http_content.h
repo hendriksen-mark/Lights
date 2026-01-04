@@ -13,16 +13,17 @@ const char http_content_i2c[] PROGMEM = R"=====(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>I2C Dimmable Light - DiyHue</title>
-    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/diyhue/Lights/master/HTML/diyhue.png" sizes="32x32">
-    <link href="https://raw.githubusercontent.com/diyhue/Lights/master/HTML/icons" rel="stylesheet">
-    <link rel="stylesheet" href="https://raw.githubusercontent.com/diyhue/Lights/master/HTML/materialize.min.css">
-    <link rel="stylesheet" href="https://raw.githubusercontent.com/diyhue/Lights/master/HTML/nouislider.css" />
+    <link rel="icon" type="image/png"
+        href="https://diyhue.org/wp-content/uploads/2019/11/cropped-Zeichenfl%C3%A4che-4-1-32x32.png" sizes="32x32">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link rel="stylesheet" href="https://diyhue.org/cdn/nouislider.css" />
 </head>
 <body>
     <div class="wrapper">
         <nav class="nav-extended row" style="background-color: #26a69a !important;">
             <div class="nav-wrapper col s12">
-                <a href="#" class="brand-logo">DiyHue</a>
+                <a href="#" class="brand-logo">DiyHue Dimmable I2C</a>
                 <ul id="nav-mobile" class="right hide-on-med-and-down" style="position: relative;z-index: 10;">
                     <li><a target="_blank" href="https://github.com/diyhue"><i class="material-icons left">language</i>GitHub</a></li>
                     <li><a target="_blank" href="https://diyhue.readthedocs.io/en/latest/"><i class="material-icons left">description</i>Documentation</a></li>
@@ -104,9 +105,9 @@ const char http_content_i2c[] PROGMEM = R"=====(
         </div>
     </div>
 
-    <script src="https://raw.githubusercontent.com/diyhue/Lights/master/HTML/jquery.min.js"></script>
-    <script src="https://raw.githubusercontent.com/diyhue/Lights/master/HTML/materialize.min.js"></script>
-    <script src="https://raw.githubusercontent.com/diyhue/Lights/master/HTML/nouislider.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="https://diyhue.org/cdn/nouislider.js"></script>
     <script>
         // Define wNumb globally for noUiSlider compatibility
         var wNumb = window.wNumb || function(options) {
