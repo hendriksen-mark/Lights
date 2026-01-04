@@ -401,6 +401,9 @@ void i2c_setup()
 	server_i2c.on("/config", HTTP_GET, []()
 				  {
 		JsonDocument cfg;
+		cfg["name"] = LIGHT_NAME_I2C;
+		cfg["lightscount"] = LIGHT_COUNT_I2C;
+		cfg["pixelcount"] = 0; // I2C lights don't use pixels
 		cfg["startup"] = startup_i2c;
 		cfg["scene"] = scene_i2c;
 		String out;
