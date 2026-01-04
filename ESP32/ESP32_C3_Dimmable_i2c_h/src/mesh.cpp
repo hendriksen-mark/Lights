@@ -106,11 +106,11 @@ void mesh_setup()
   server_gordijn.on("/info", handleinfo);
   server_gordijn.on("/setIP/", set_IP);
   server_gordijn.on("/setPORT/", set_PORT);
-  server_gordijn.on("/discover/", []() {
+  server_gordijn.on("/discover/", []()
+                    {
     discoverBridgeMdns();
     server_gordijn.sendHeader("Location", "/", true); // Redirect to our html web page
-    server_gordijn.send(302, "text/plane", "");
-  });
+    server_gordijn.send(302, "text/plane", ""); });
   server_gordijn.on("/reset", []() { // trigger manual reset
     server_gordijn.send(200, "text/html", "reset");
     resetESP();
@@ -143,12 +143,12 @@ void send_change()
 void pollCurtainStatus()
 {
   unsigned long currentMillis = millis();
-  
+
   // Check if it's time to poll
   if (currentMillis - lastCurtainPoll >= CURTAIN_POLL_INTERVAL)
   {
     lastCurtainPoll = currentMillis;
-    
+
     // Only poll if we have a curtain connected
     if (curtain_id > 0)
     {
@@ -322,6 +322,38 @@ void sendData(String msg)
   }
 }
 
+// Helper function to create and send curtain command
+void sendCurtainCommand(bool homing, bool request, int targetPos = -1, const char *logPath = "")
+{
+  JsonDocument doc;
+  doc["device"] = "curtain";
+  doc["homing"] = homing;
+  doc["request"] = request;
+  if (targetPos >= 0)
+  {
+    doc["target"] = targetPos;
+  }
+  String msg;
+  msg.reserve(256);
+  serializeJson(doc, msg);
+  sendData(msg);
+  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), logPath, msg);
+}
+
+// Helper to send response: redirect or plain text
+void sendResponse(bool isRedirect, const String &content = "")
+{
+  if (isRedirect)
+  {
+    server_gordijn.sendHeader("Location", "/", true);
+    server_gordijn.send(302, "text/plane", "");
+  }
+  else
+  {
+    server_gordijn.send(200, "text/plain", content);
+  }
+}
+
 void set_Target_Pos_test()
 {
   for (uint8_t i = 0; i < server_gordijn.args(); i++)
@@ -331,18 +363,8 @@ void set_Target_Pos_test()
       target = server_gordijn.arg(i).toInt();
     }
   }
-  JsonDocument doc;
-  doc["device"] = "curtain";
-  doc["homing"] = false;
-  doc["request"] = true;
-  doc["target"] = target;
-  String msg;
-  msg.reserve(256);
-  serializeJson(doc, msg);
-  sendData(msg);
-  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/setTargetPosTest", msg);
-  server_gordijn.sendHeader("Location", "/", true); // Redirect to our html web page
-  server_gordijn.send(302, "text/plane", "");
+  sendCurtainCommand(false, true, target, "/setTargetPosTest");
+  sendResponse(true); // Redirect
 }
 
 void set_Target_Pos()
@@ -354,119 +376,58 @@ void set_Target_Pos()
       target = server_gordijn.arg(i).toInt();
     }
   }
-  JsonDocument doc;
-  doc["device"] = "curtain";
-  doc["homing"] = false;
-  doc["request"] = true;
-  doc["target"] = target;
-  String msg;
-  msg.reserve(256);
-  serializeJson(doc, msg);
-  sendData(msg);
-  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/setTargetPos", msg);
-  server_gordijn.send(200, "text/plain", "OK");
+  sendCurtainCommand(false, true, target, "/setTargetPos");
+  sendResponse(false, "OK");
 }
 
 void homeing()
 {
-  JsonDocument doc;
-  doc["device"] = "curtain";
-  doc["homing"] = true;
-  doc["request"] = false;
-  String msg;
-  msg.reserve(256);
-  serializeJson(doc, msg);
-  sendData(msg);
-  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/homeing", msg);
-  server_gordijn.sendHeader("Location", "/", true); // Redirect to our html web page
-  server_gordijn.send(302, "text/plane", "");
+  sendCurtainCommand(true, false, -1, "/homeing");
+  sendResponse(true); // Redirect
 }
 
 void get_current_pos_test()
 {
-  JsonDocument doc;
-  doc["device"] = "curtain";
-  doc["homing"] = false;
-  doc["request"] = true;
-  String msg;
-  msg.reserve(256);
-  serializeJson(doc, msg);
-  sendData(msg);
-  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/getCurrentPosTest", msg);
-  server_gordijn.sendHeader("Location", "/", true); // Redirect to our html web page
-  server_gordijn.send(302, "text/plane", "");
+  sendCurtainCommand(false, true, -1, "/getCurrentPosTest");
+  sendResponse(true); // Redirect
 }
 
 void get_current_pos()
 {
-  JsonDocument doc;
-  doc["device"] = "curtain";
-  doc["homing"] = false;
-  doc["request"] = true;
-  String msg;
-  msg.reserve(256);
-  serializeJson(doc, msg);
-  sendData(msg);
-  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/getCurrentPos", msg);
-  server_gordijn.send(200, "text/plain", (String)current_ont);
+  // NOTE: This endpoint returns the last cached value from current_ont.
+  // The request is sent to the curtain device, but due to HTTP's synchronous nature,
+  // we cannot wait for the mesh response. The actual updated value will be received
+  // in receivedCallback() and cached in current_ont for the next request.
+  // For real-time accuracy, poll this endpoint repeatedly or implement WebSocket/async pattern.
+  sendCurtainCommand(false, true, -1, "/getCurrentPos");
+  sendResponse(false, (String)current_ont);
 }
 
 void get_target_pos_test()
 {
-  JsonDocument doc;
-  doc["device"] = "curtain";
-  doc["homing"] = false;
-  doc["request"] = true;
-  String msg;
-  msg.reserve(256);
-  serializeJson(doc, msg);
-  sendData(msg);
-  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/getTargetPosTest", msg);
-  server_gordijn.sendHeader("Location", "/", true); // Redirect to our html web page
-  server_gordijn.send(302, "text/plane", "");
+  sendCurtainCommand(false, true, -1, "/getTargetPosTest");
+  sendResponse(true); // Redirect
 }
 
 void get_target_pos()
 {
-  JsonDocument doc;
-  doc["device"] = "curtain";
-  doc["homing"] = false;
-  doc["request"] = true;
-  String msg;
-  msg.reserve(256);
-  serializeJson(doc, msg);
-  sendData(msg);
-  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/getTargetPos", msg);
-  server_gordijn.send(200, "text/plain", (String)target_ont);
+  // NOTE: Returns cached target_ont value. See get_current_pos() comment for details.
+  sendCurtainCommand(false, true, -1, "/getTargetPos");
+  sendResponse(false, (String)target_ont);
 }
 
 void get_state_test()
 {
-  JsonDocument doc;
-  doc["device"] = "curtain";
-  doc["homing"] = false;
-  doc["request"] = true;
-  String msg;
-  msg.reserve(256);
-  serializeJson(doc, msg);
-  sendData(msg);
-  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/getStateTest", msg);
-  server_gordijn.sendHeader("Location", "/", true); // Redirect to our html web page
-  server_gordijn.send(302, "text/plane", "");
+  sendCurtainCommand(false, true, -1, "/getStateTest");
+  sendResponse(true); // Redirect
 }
 
 void get_state()
 {
-  JsonDocument doc;
-  doc["device"] = "curtain";
-  doc["homing"] = false;
-  doc["request"] = true;
-  String msg;
-  msg.reserve(256);
-  serializeJson(doc, msg);
-  sendData(msg);
-  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/getState", msg);
-  server_gordijn.send(200, "text/plain", (String)state_ont);
+  // NOTE: Returns cached state_ont value (0=stopped, 1=opening, 2=closing).
+  // See get_current_pos() comment for async limitations.
+  sendCurtainCommand(false, true, -1, "/getState");
+  sendResponse(false, (String)state_ont);
 }
 
 void handleinfo()
