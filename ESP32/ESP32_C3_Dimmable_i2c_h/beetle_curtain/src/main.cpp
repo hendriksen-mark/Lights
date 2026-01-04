@@ -28,6 +28,12 @@ bool ismoved = false;
 volatile bool gohome = false;
 unsigned long prev_millis;
 volatile bool stopRequested = false;
+
+// Flags for non-blocking mesh response
+bool statusRequested = false;
+bool newTargetReceived = false;
+bool homeRequested = false;
+byte pendingTarget = 0;
 volatile unsigned long lastHomeEvent = 0;
 volatile bool homingActive = false;
 volatile uint8_t homingStage = 0;
@@ -52,13 +58,17 @@ void receivedCallback(uint32_t from, String& msg) {
 
     if (root["device"] == "curtain") {
     if (root["target"].is<int>()) {
-      set_Target_Pos(byte(root["target"]));
+      // Don't call set_Target_Pos() here - just set flag
+      pendingTarget = byte(root["target"]);
+      newTargetReceived = true;
     }
     if (root["homing"].is<bool>() && root["homing"].as<bool>()) {
-      homeing();
+      // Don't call homeing() here - just set flag
+      homeRequested = true;
     }
     if (root["request"].is<bool>() && root["request"].as<bool>()) {
-      send_change();
+      // Don't call send_change() here - just set flag
+      statusRequested = true;
     }
   }
 }
@@ -98,6 +108,24 @@ void setup() {
 
 void loop() {
   mesh.update();
+  
+  // Process mesh requests after mesh.update() but before motor control
+  // This ensures stepper.run() isn't interrupted by callbacks
+  if (newTargetReceived) {
+    newTargetReceived = false;
+    set_Target_Pos(pendingTarget);
+  }
+  
+  if (homeRequested) {
+    homeRequested = false;
+    ishome = true; // Let existing home logic handle it
+  }
+  
+  if (statusRequested) {
+    statusRequested = false;
+    send_change();
+  }
+  
   if (master == 0) {
     ask_master();
   }
@@ -202,9 +230,16 @@ void loop() {
     } else {
       current = 0;
     }
+    // Update state: 1 = opening (increasing), 2 = closing (decreasing)
+    if (stepper.targetPosition() > stepper.currentPosition()) {
+      state = 1; // opening
+    } else {
+      state = 2; // closing
+    }
     //current = (stepper.currentPosition() / (TOTALROND * MOTOR_STEPS * MICROSTEPS)) * 100.000L;
   }
   else {
+    state = 0; // stopped
     if (ismoved == true) {
       stable();
     }

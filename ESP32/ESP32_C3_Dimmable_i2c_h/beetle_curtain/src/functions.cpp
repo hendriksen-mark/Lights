@@ -11,7 +11,7 @@ void set_Target_Pos(byte target_set) {
   target = target_set;
   long totalSteps = TOTALROND * MOTOR_STEPS * MICROSTEPS;
   uitvoeren = (totalSteps * (long)target) / 100L;
-  send_change();
+  // Note: send_change() will be called from main loop when request flag is set
 }
 
 void stable() {
