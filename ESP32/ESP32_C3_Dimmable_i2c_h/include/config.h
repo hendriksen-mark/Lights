@@ -104,7 +104,8 @@
 #define MESH_CONNECT_MODE WIFI_AP_STA
 #define MESH_CHANNEL 1
 #define MESH_HIDDEN true
-#define PORDIJN_SERVER_PORT 82
+#define CURTAIN_SERVER_PORT 82
+#define CURTAIN_POLL_INTERVAL 2000
 
 #define BRIDGE_IP "192.168.1.25" // DIYhue Bridge IP as a string; last octet can be changed via web interface
 #define BRIDGE_PORT 80           // Default DIYhue Bridge port (can be changed via web interface)
