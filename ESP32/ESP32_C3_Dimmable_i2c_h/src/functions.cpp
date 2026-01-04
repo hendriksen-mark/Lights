@@ -5,8 +5,8 @@
 #ifndef INFO_LED_ORDER
 #define INFO_LED_ORDER Grb
 #endif
-#define PRIMITIVE_CAT3(a,b,c) a##b##c
-#define CAT3(a,b,c) PRIMITIVE_CAT3(a,b,c)
+#define PRIMITIVE_CAT3(a, b, c) a##b##c
+#define CAT3(a, b, c) PRIMITIVE_CAT3(a, b, c)
 typedef CAT3(Neo, INFO_LED_ORDER, Feature) InfoLedColorFeature;
 
 NeoPixelBus<InfoLedColorFeature, NeoEsp32Rmt0Ws2812xMethod> *strip_info = NULL;

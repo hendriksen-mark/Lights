@@ -8,7 +8,6 @@
 #include <cmath>
 #include <NeoPixelBus.h>
 
-
 extern RgbColor red;
 extern RgbColor green;
 extern RgbColor blue;

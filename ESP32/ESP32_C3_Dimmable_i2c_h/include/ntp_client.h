@@ -14,10 +14,11 @@
 // NTP packet structure
 #define NTP_PACKET_SIZE 48
 
-struct NTPTime {
-    unsigned long epoch;        // Unix timestamp (seconds since 1970)
-    unsigned long lastUpdate;   // millis() when time was last updated
-    bool valid;                 // Whether time is valid
+struct NTPTime
+{
+    unsigned long epoch;      // Unix timestamp (seconds since 1970)
+    unsigned long lastUpdate; // millis() when time was last updated
+    bool valid;               // Whether time is valid
 };
 
 // NTP client functions

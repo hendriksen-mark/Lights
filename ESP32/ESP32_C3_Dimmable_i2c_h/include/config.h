@@ -27,20 +27,19 @@
 // ============================================
 // LOG Server Configuration
 // ============================================
-#define LOG_SERVER_PORT     2001
-#define MAX_LOG_CONNECTIONS 1   // Log clients (reduced to fit socket limit)
-#define LOG_CLIENT_TIMEOUT  60000  // 60 seconds in milliseconds (longer for log clients)
+#define LOG_SERVER_PORT 2001
+#define MAX_LOG_CONNECTIONS 1    // Log clients (reduced to fit socket limit)
+#define LOG_CLIENT_TIMEOUT 60000 // 60 seconds in milliseconds (longer for log clients)
 
 // ============================================
 // NTP Time Configuration
 // ============================================
-#define NTP_ENABLED         true            // Enable NTP time synchronization
-#define NTP_SERVER          "pool.ntp.org"  // NTP server to use
-#define NTP_UPDATE_INTERVAL 3600000         // Update every hour (3600 seconds)
-#define NTP_TIMEZONE_OFFSET 1               // UTC+1 for Netherlands (CET)
-#define NTP_DST_OFFSET      1               // Additional hour for DST (CEST)
-#define NTP_TIMEOUT         10000           // 10 second timeout for NTP requests
-
+#define NTP_ENABLED true            // Enable NTP time synchronization
+#define NTP_SERVER "pool.ntp.org"   // NTP server to use
+#define NTP_UPDATE_INTERVAL 3600000 // Update every hour (3600 seconds)
+#define NTP_TIMEZONE_OFFSET 1       // UTC+1 for Netherlands (CET)
+#define NTP_DST_OFFSET 1            // Additional hour for DST (CEST)
+#define NTP_TIMEOUT 10000           // 10 second timeout for NTP requests
 
 // ============================================
 // Ethernet Configuration
@@ -57,12 +56,12 @@
 #define LIGHT_PROTOCOL_WS "native_multi"
 #define LIGHT_MODEL_WS "LST002"
 #define LIGHT_TYPE_WS "ws2812_strip"
-#define LIGHT_NAME_MAX_LENGTH 32   // Longer name will get stripped
-#define LIGHT_PORT_WS 81           // Web server port for WS2811 lights
-#define ENTERTAINMENT_TIMEOUT 1500 // Entertainment stream timeout (millis)
-#define LIGHT_COUNT_WS 9           // Number of WS2811 lights
-#define PIXEL_COUNT_WS 9           // Number of pixels per WS2811 light
-#define TRANSITION_LEDS_WS 0       // Number of transition leds between virtual lights
+#define LIGHT_NAME_MAX_LENGTH 32      // Longer name will get stripped
+#define LIGHT_PORT_WS 81              // Web server port for WS2811 lights
+#define ENTERTAINMENT_TIMEOUT 1500    // Entertainment stream timeout (millis)
+#define LIGHT_COUNT_WS 9              // Number of WS2811 lights
+#define PIXEL_COUNT_WS 9              // Number of pixels per WS2811 light
+#define TRANSITION_LEDS_WS 0          // Number of transition leds between virtual lights
 #define TRANSITION_FRAME_MS_DEFAULT 6 // Default ms between transition frames
 #ifndef DATA_PIN
 #define DATA_PIN 4 // WS2811 data pin
@@ -96,7 +95,7 @@
 #define PORDIJN_SERVER_PORT 82
 
 #define BRIDGE_IP "192.168.1.25" // DIYhue Bridge IP as a string; last octet can be changed via web interface
-#define BRIDGE_PORT 80 // Default DIYhue Bridge port (can be changed via web interface)
+#define BRIDGE_PORT 80           // Default DIYhue Bridge port (can be changed via web interface)
 
 // ============================================
 // Sensor Types Configuration

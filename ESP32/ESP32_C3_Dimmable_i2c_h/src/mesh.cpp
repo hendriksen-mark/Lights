@@ -103,11 +103,11 @@ void mesh_setup()
   server_gordijn.on("/info", handleinfo);
   server_gordijn.on("/setIP/", set_IP);
   server_gordijn.on("/setPORT/", set_PORT);
-  server_gordijn.on("/discover/", []() {
+  server_gordijn.on("/discover/", []()
+                    {
     discoverBridgeMdns();
     server_gordijn.sendHeader("Location", "/", true); // Redirect to our html web page
-    server_gordijn.send(302, "text/plane", "");
-  });
+    server_gordijn.send(302, "text/plane", ""); });
   server_gordijn.on("/reset", []() { // trigger manual reset
     server_gordijn.send(200, "text/html", "reset");
     resetESP();

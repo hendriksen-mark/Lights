@@ -24,10 +24,10 @@ extern unsigned long totalLogBytesSent;
 // Function declarations
 void initializeLogServer();
 void handleNewLogConnections();
-void sendToAllLogClients(const String& logMessage);
+void sendToAllLogClients(const String &logMessage);
 void handleLogClientCommunication();
 void cleanupLogClients();
 int getConnectedLogClientCount();
-void logToRemoteClients(const char* message);
+void logToRemoteClients(const char *message);
 
 #endif // LOG_SERVER_H

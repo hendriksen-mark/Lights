@@ -31,22 +31,21 @@ void ESP_Server_setup()
 void ota_setup()
 {
 	ArduinoOTA
-		.onStart([]() {
+		.onStart([]()
+				 {
 			String type;
 			if (ArduinoOTA.getCommand() == U_FLASH)
 				type = "sketch";
 			else // U_SPIFFS
 				type = "filesystem";
 
-			REMOTE_LOG_DEBUG("Start updating " + type);
-		})
-		.onEnd([]() {
-			REMOTE_LOG_DEBUG("End");
-		})
-		.onProgress([](unsigned int progress, unsigned int total) {
-			REMOTE_LOG_INFO("Progress: " + String((progress / (total / 100))) + "%");
-		})
-		.onError([](ota_error_t error) {
+			REMOTE_LOG_DEBUG("Start updating " + type); })
+		.onEnd([]()
+			   { REMOTE_LOG_DEBUG("End"); })
+		.onProgress([](unsigned int progress, unsigned int total)
+					{ REMOTE_LOG_INFO("Progress: " + String((progress / (total / 100))) + "%"); })
+		.onError([](ota_error_t error)
+				 {
 			REMOTE_LOG_ERROR("Error[%u]: ", error);
 			switch (error)
 			{
@@ -67,8 +66,7 @@ void ota_setup()
 				break;
 			default:
 				break;
-			}
-		})
+			} })
 		.setHostname(DEVICE_NAME)
 		.begin();
 }

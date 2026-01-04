@@ -10,7 +10,7 @@
 #include "custom_log.h"
 #include "config.h"
 
-void setup_file(WebServer& server_instance);
+void setup_file(WebServer &server_instance);
 void handleFSInfo();
 String formatBytes(size_t bytes);
 void handleFileUpload();

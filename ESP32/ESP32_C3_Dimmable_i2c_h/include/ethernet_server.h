@@ -11,7 +11,6 @@
 #include "functions.h"
 #include "config.h"
 
-// Forward declarations only - no W5500 includes in header
 void ESP_Server_setup();
 void ota_setup();
 void ethernet_loop();
