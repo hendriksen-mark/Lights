@@ -26,16 +26,35 @@ static String urlEncode(const String &str)
 }
 
 // Common technical information for all pages
-const String technicalInfo = "<div class='info-card'>"
-                             "<h2>Technical Information</h2>"
-                             "<p>ESP32 LittleFS is a flat file system that supports a limited number of files due to memory constraints.</p>"
-                             "<p>Limitations:</p>"
-                             "<ul>"
-                             "<li>Maximum of 32 characters for filenames (including path)</li>"
-                             "<li>No support for directories (although '/' can be used in filenames to simulate directories)</li>"
-                             "<li>Limited space depending on your ESP32 flash partition scheme</li>"
-                             "</ul>"
-                             "</div>";
+static String technicalInfo()
+{
+    if (fs_get_current() == FS_LITTLEFS)
+    {
+        return String("<div class='info-card'>") +
+               "<h2>Technical Information</h2>" +
+               "<p>ESP32 LittleFS is a flat file system that supports a limited number of files due to memory constraints.</p>" +
+               "<p>Limitations:</p>" +
+               "<ul>" +
+               "<li>Maximum of 32 characters for filenames (including path)</li>" +
+               "<li>No support for directories (although '/' can be used in filenames to simulate directories)</li>" +
+               "<li>Limited space depending on your ESP32 flash partition scheme</li>" +
+               "</ul>" +
+               "</div>";
+    }
+    else if (fs_get_current() == FS_SD)
+    {
+        return String("<div class='info-card'>") +
+               "<h2>Technical Information</h2>" +
+               "<p>Files are stored on an attached SD card (SPI). Ensure the card is inserted and the CS pin is configured correctly.</p>" +
+               "<p>Notes:</p>" +
+               "<ul>" +
+               "<li>Filename length limits depend on the filesystem on the SD card (FAT32 typically supports long names).</li>" +
+               "<li>Directories are supported on SD cards.</li>" +
+               "</ul>" +
+               "</div>";
+    }
+    return String("<div class='info-card'><h2>Technical Information</h2><p>No filesystem mounted.</p></div>");
+}
 
 // Common CSS for all pages
 const String commonCSS = "<style>"
@@ -61,11 +80,11 @@ void setup_file(WebServer &server_instance)
     html += commonCSS;
     html += "</head><body>";
     html += "<h1>ESP32 WebFS</h1>";
-    html += "<p>ESP32 WebFS provides a web-based interface to manage the LittleFS on your ESP32. </p>";
+    html += "<p>ESP32 WebFS provides a web-based interface to manage files on " + fs_get_name() + ". </p>";
     html += "<p><a href='/list'>View Files</a></p>";
     html += "<p><a href='/delete'>Delete Files</a></p>";
     html += "<p><a href='/download'>Download Files</a></p>";
-    html += "<p><a href='/fs-info'>View LittleFS Information</a></p>";
+    html += "<p><a href='/fs-info'>View " + fs_get_name() + " Information</a></p>";
     html += "<h2>Upload New File</h2>";
     html += "<strong>Note:</strong> Only files smaller than 300 KB can be uploaded. Attempting to upload larger files may cause the system to freeze.";
     html += "<form method='post' action='/upload' enctype='multipart/form-data' onsubmit='return validateForm()'>";
@@ -92,7 +111,7 @@ void setup_file(WebServer &server_instance)
     html += "}";
     html += "</script>";
     html += "<p><a href='/'>Back to Light</a></p>";
-    html += technicalInfo;
+    html += technicalInfo();
     html += siteFooter;
     html += "</body></html>";
     server->send(200, "text/html", html); });
@@ -111,7 +130,7 @@ void setup_file(WebServer &server_instance)
                // This is the upload handler (called during upload)
                handleFileUpload);
 
-    // Route to list all files in LittleFS
+    // Route to list all files on SD or LittleFS
     server->on("/list", HTTP_GET, handleFileList);
 
     // Route to view the delete files page
@@ -126,7 +145,7 @@ void setup_file(WebServer &server_instance)
     // Route to handle file download
     server->on("/download-file", HTTP_GET, handleFileDownload);
 
-    // Route to display LittleFS file system information
+    // Route to display SD or LittleFS file system information
     server->on("/fs-info", HTTP_GET, handleFSInfo);
 
     // Add handler for viewing file contents
@@ -138,14 +157,15 @@ void setup_file(WebServer &server_instance)
       // Debug output
       REMOTE_LOG_DEBUG("Attempting to view file:", fileName);
 
-      // Ensure filename has a leading slash for LittleFS
-      if (!fileName.startsWith("/")) {
+      // Ensure filename has a leading slash
+      if (!fileName.startsWith("/"))
+      {
         fileName = "/" + fileName;
       }
 
       REMOTE_LOG_DEBUG("Normalized filename:", fileName);
 
-      if (LittleFS.exists(fileName)) {
+      if (fs_exists(fileName.c_str())) {
         // Determine content type based on file extension
         String contentType = "text/plain";
         if (fileName.endsWith(".htm") || fileName.endsWith(".html")) contentType = "text/html";
@@ -160,7 +180,7 @@ void setup_file(WebServer &server_instance)
         else if (fileName.endsWith(".zip")) contentType = "application/zip";
         else if (fileName.endsWith(".json")) contentType = "application/json";
 
-        File file = LittleFS.open(fileName, "r");
+        File file = fs_open(fileName.c_str(), "r");
         if (file) {
           // For text files, you can use readString
           if (contentType.startsWith("text/") ||
@@ -203,21 +223,21 @@ void setup_file(WebServer &server_instance)
     } });
 }
 
-// Function to handle displaying LittleFS file system information
+// Function to handle displaying SD or LittleFS file system information
 void handleFSInfo()
 {
-    // Get LittleFS information
-    size_t totalBytes = LittleFS.totalBytes();
-    size_t usedBytes = LittleFS.usedBytes();
+    // Get SD LittleFS information
+    size_t totalBytes = fs_totalBytes();
+    size_t usedBytes = fs_usedBytes();
     size_t freeBytes = totalBytes - usedBytes;
 
     // Calculate usage percentages
     float usagePercent = (float)usedBytes / (float)totalBytes * 100.0;
     float freePercent = 100.0 - usagePercent;
 
-    // Count total files in LittleFS
+    // Count total files in SD or LittleFS
     int fileCount = 0;
-    File root = LittleFS.open("/");
+    File root = fs_open_root();
     if (root.isDirectory())
     {
         File file = root.openNextFile();
@@ -233,10 +253,10 @@ void handleFSInfo()
     }
 
     // Format the HTML output
-    String html = "<html><head><title>LittleFS Information</title>";
+    String html = "<html><head><title>" + fs_get_name() + " Information</title>";
     html += commonCSS;
     html += "</head><body>";
-    html += "<h1>LittleFS File System Information</h1>";
+    html += "<h1>" + fs_get_name() + " File System Information</h1>";
 
     // Storage utilization card
     html += "<div class='info-card'>";
@@ -258,7 +278,7 @@ void handleFSInfo()
     html += "<p><a href='/'>Back to Light</a></p>";
 
     // Technical information card - now using the common variable
-    html += technicalInfo;
+    html += technicalInfo();
     html += siteFooter;
     html += "</body></html>";
 
@@ -289,7 +309,12 @@ void handleFileUpload()
     if (upload.status == UPLOAD_FILE_START)
     {
         // Start a new upload
-        String filename = "/" + upload.filename;
+        String filename = upload.filename;
+        // Ensure filename has a leading slash
+        if (!filename.startsWith("/"))
+        {
+            filename = "/" + filename;
+        }
         REMOTE_LOG_DEBUG("handleFileUpload Name:", filename);
         uploadAborted = false;
 
@@ -311,7 +336,7 @@ void handleFileUpload()
             return;
         }
 
-        uploadFile = LittleFS.open(filename, FILE_WRITE);
+        uploadFile = fs_open(filename.c_str(), "w");
         if (!uploadFile)
         {
             REMOTE_LOG_ERROR("Failed to open file for upload:", filename.c_str());
@@ -334,7 +359,7 @@ void handleFileUpload()
                 REMOTE_LOG_ERROR("Aborting upload: exceeded max size during upload");
                 uploadAborted = true;
                 uploadFile.close();
-                LittleFS.remove(String("/") + upload.filename);
+                fs_remove((upload.filename).c_str());
                 uploadFile = File();
                 return;
             }
@@ -351,9 +376,14 @@ void handleFileUpload()
             {
                 uploadFile.close();
             }
-            String partial = "/" + upload.filename;
-            if (LittleFS.exists(partial))
-                LittleFS.remove(partial);
+            String partial = upload.filename;
+            // Ensure filename has a leading slash
+            if (!partial.startsWith("/"))
+            {
+                partial = "/" + partial;
+            }
+            if (fs_exists(partial.c_str()))
+                fs_remove(partial.c_str());
             REMOTE_LOG_ERROR("Upload aborted and partial file removed");
         }
         else
@@ -369,12 +399,11 @@ void handleFileUpload()
 
 void handleFileList()
 {
-    String path = "/";
-    File root = LittleFS.open(path);
+    File root = fs_open_root();
     String output = "<html><head><title>ESP32 File List</title>";
     output += commonCSS;
     output += "</head><body>";
-    output += "<h1>LittleFS File List</h1>";
+    output += "<h1>" + fs_get_name() + " File List</h1>";
 
     // Adding the note about viewable file types
     output += "<div class='info-card'>";
@@ -410,7 +439,7 @@ void handleFileList()
     output += "<p><a href='/'>Back to Light</a></p>";
 
     // Add technical information before footer
-    output += technicalInfo;
+    output += technicalInfo();
     output += siteFooter;
     output += "</body></html>";
 
@@ -419,12 +448,11 @@ void handleFileList()
 
 void handleDeletePage()
 {
-    String path = "/";
-    File root = LittleFS.open(path);
+    File root = fs_open_root();
     String output = "<html><head><title>Delete Files</title>";
     output += commonCSS;
     output += "</head><body>";
-    output += "<h1>Delete LittleFS Files</h1>";
+    output += "<h1>Delete " + fs_get_name() + " Files</h1>";
     output += "<form method='post' action='/delete-file'>";
     output += "<table border='1'><tr><th>Select</th><th>Name</th><th>Size</th></tr>";
     if (root.isDirectory())
@@ -450,7 +478,7 @@ void handleDeletePage()
     output += "<p><a href='/'>Back to Light</a></p>";
 
     // Add technical information before footer
-    output += technicalInfo;
+    output += technicalInfo();
     output += siteFooter;
     output += "</body></html>";
 
@@ -472,7 +500,7 @@ void handleDeleteFile()
             {
                 String fileName = server->arg(i);
 
-                // Ensure filename has a leading slash for LittleFS
+                // Ensure filename has a leading slash
                 if (!fileName.startsWith("/"))
                 {
                     fileName = "/" + fileName;
@@ -481,9 +509,9 @@ void handleDeleteFile()
                 REMOTE_LOG_INFO("Attempting to delete file: %s\n", fileName.c_str());
 
                 // Make sure the file exists before attempting to delete
-                if (LittleFS.exists(fileName))
+                if (fs_exists(fileName.c_str()))
                 {
-                    if (LittleFS.remove(fileName))
+                    if (fs_remove(fileName.c_str()))
                     {
                         deletedCount++;
                         REMOTE_LOG_INFO("Successfully deleted file: %s\n", fileName.c_str());
@@ -518,7 +546,7 @@ void handleDeleteFile()
     output += "<p><a href='/delete'>Back to Delete Files</a></p>";
 
     // Add technical information before footer
-    output += technicalInfo;
+    output += technicalInfo();
     output += siteFooter;
     output += "</body></html>";
 
@@ -528,12 +556,11 @@ void handleDeleteFile()
 // Handle download page
 void handleDownloadPage()
 {
-    String path = "/";
-    File root = LittleFS.open(path);
+    File root = fs_open_root();
     String output = "<html><head><title>Download Files</title>";
     output += commonCSS;
     output += "</head><body>";
-    output += "<h1>Download LittleFS Files</h1>";
+    output += "<h1>Download " + fs_get_name() + " Files</h1>";
     output += "<table border='1'><tr><th>Name</th><th>Size</th><th>Action</th></tr>";
     if (root.isDirectory())
     {
@@ -557,7 +584,7 @@ void handleDownloadPage()
     output += "<p><a href='/'>Back to Light</a></p>";
 
     // Add technical information before footer
-    output += technicalInfo;
+    output += technicalInfo();
     output += siteFooter;
     output += "</body></html>";
 
@@ -571,7 +598,7 @@ void handleFileDownload()
     {
         String fileName = server->arg("name");
 
-        // Ensure filename has a leading slash for LittleFS
+        // Ensure filename has a leading slash
         if (!fileName.startsWith("/"))
         {
             fileName = "/" + fileName;
@@ -579,9 +606,9 @@ void handleFileDownload()
 
         REMOTE_LOG_INFO("Attempting to download file:", fileName.c_str());
 
-        if (LittleFS.exists(fileName))
+        if (fs_exists(fileName.c_str()))
         {
-            File file = LittleFS.open(fileName, "r");
+            File file = fs_open(fileName.c_str(), "r");
             if (file)
             {
                 // Get file size
