@@ -7,9 +7,11 @@
 // Define globals declared in the header
 int value = 0;
 bool change = false;
+unsigned long MasterPreviousMillis = 0;
 
-// mac0 definition (7 entries, 6-byte MACs)
-byte mac0[][NUMBER_OF_MAC] = {
+// mac0 definition (entries, each is MAC_BYTES bytes)
+// Number of bytes per MAC is defined by MAC_BYTES in include/globals.h
+const uint8_t mac0[][MAC_BYTES] = {
   { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xE9 },
   { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xEA },
   { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xEB },

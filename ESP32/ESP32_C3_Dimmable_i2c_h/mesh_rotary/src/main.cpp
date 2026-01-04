@@ -7,7 +7,6 @@
 painlessMesh mesh;
 
 uint32_t master = 0;
-unsigned long MasterPreviousMillis = 0;
 
 ESPRotary r;
 Button2 b;

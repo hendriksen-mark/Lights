@@ -6,45 +6,45 @@
 
 void showDirection(ESPRotary& r) {
   if (r.directionToString(r.getDirection()) == "RIGHT") {
-    value = 1000;
+    value = ROTARY_RIGHT;
   } else if (r.directionToString(r.getDirection()) == "LEFT") {
-    value = 2000;
+    value = ROTARY_LEFT;
   }
   change = true;
 }
 
 void initial_press(Button2& btn) {
   if (room <= badkamer) {
-    value = 3000;
+    value = PRESS_SHORT;
   } else {
-    value = true;
+    value = MOTION_DETECTED;
   }
   change = true;
 }
 
 void repeat(Button2& btn) {
   if (room <= badkamer) {
-    value = 3001;
+    value = PRESS_REPEAT;
   } else {
-    value = true;
+    value = MOTION_DETECTED;
   }
   change = true;
 }
 
 void long_release(Button2& btn) {
   if (room <= badkamer) {
-    value = 3003;
+    value = PRESS_LONG_RELEASE;
   } else {
-    value = true;
+    value = MOTION_DETECTED;
   }
   change = true;
 }
 
 void long_press(Button2& btn) {
   if (room <= badkamer) {
-    value = 3010;
+    value = PRESS_LONG_PRESS;
   } else {
-    value = true;
+    value = MOTION_DETECTED;
   }
   change = true;
 }

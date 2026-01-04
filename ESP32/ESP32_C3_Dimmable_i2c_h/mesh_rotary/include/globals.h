@@ -13,8 +13,20 @@ extern int value;
 extern bool change;
 extern unsigned long MasterPreviousMillis;
 
-#define NUMBER_OF_MAC 7
-extern byte mac0[][NUMBER_OF_MAC];
+// Value codes for actions and motion
+enum ValueCode {
+    ROTARY_RIGHT = 1000,
+    ROTARY_LEFT  = 2000,
+    PRESS_SHORT  = 3000,
+    PRESS_REPEAT = 3001,
+    PRESS_LONG_RELEASE = 3003,
+    PRESS_LONG_PRESS = 3010,
+    MOTION_DETECTED = 1,
+};
+
+// Number of bytes in a MAC address
+constexpr size_t MAC_BYTES = 6;
+extern const uint8_t mac0[][MAC_BYTES];
 
 enum RoomType {
     slaapkamer = 0,

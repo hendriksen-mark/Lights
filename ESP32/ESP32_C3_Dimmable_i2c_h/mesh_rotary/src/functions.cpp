@@ -39,7 +39,13 @@ void send_change() {
     doc["got_master"] = true;
     doc["device"] = "switch";
     doc["room_mac"] = macToStr(mac0[room]);
-    doc["value"] = value;
+    // For motion-configured rooms, include a motion boolean for clarity
+    if (room == gang_beweging || room == badkamer_beweging) {
+      doc["motion"] = (value == MOTION_DETECTED);
+      doc["value"] = value; // keep compatibility
+    } else {
+      doc["value"] = value;
+    }
     char buf[128];
     serializeJson(doc, buf, sizeof(buf));
     mesh.sendSingle(master, buf);
@@ -50,7 +56,7 @@ void send_change() {
 
 String macToStr(const uint8_t* mac) {
   String result;
-  for (int i = 0; i < 6; ++i) {
+  for (int i = 0; i < (int)MAC_BYTES; ++i) {
     if (mac[i] < 0x10) result += F("0");
     result += String(mac[i], 16);
     if (i < 5)
