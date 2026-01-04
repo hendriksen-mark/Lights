@@ -35,3 +35,27 @@ void long_press(Button2 &btn)
 {
     setValue(isMotionDetector((RoomType)room) ? MOTION_DETECTED : PRESS_LONG_PRESS);
 }
+
+// Interrupt handler for HLK-LD2410C radar sensor
+void IRAM_ATTR radarInterrupt()
+{
+    unsigned long currentMillis = millis();
+    
+    // Debounce check
+    if (currentMillis - lastMotionMillis < MOTION_DEBOUNCE_TIME)
+    {
+        return;
+    }
+    lastMotionMillis = currentMillis;
+    
+    // Set value based on current pin state
+    if (digitalRead(RADAR_OUT_PIN) == RADAR_ACTIVE_STATE)
+    {
+        value = MOTION_DETECTED;
+    }
+    else
+    {
+        value = MOTION_CLEARED;
+    }
+    change = true;
+}

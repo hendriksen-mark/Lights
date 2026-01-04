@@ -21,6 +21,7 @@ extern unsigned long lastMotionMillis;
 enum ValueCode : uint16_t
 {
     MOTION_DETECTED = 1,
+    MOTION_CLEARED = 2,
     ROTARY_RIGHT = 1000,
     ROTARY_LEFT = 2000,
     PRESS_SHORT = 3000,
