@@ -10,13 +10,13 @@
 #include "config.h"
 #include "custom_log.h"
 #include "processCommand.h"
+#include "mesh_http_content.h"
 
 void mesh_setup();
 void mesh_loop();
 void send_change();
 void newConnectionCallback(uint32_t nodeId);
 void receivedCallback(uint32_t from, String &msg);
-void handleRoot();
 void sendData(String msg);
 void set_Target_Pos_test();
 void set_Target_Pos();
