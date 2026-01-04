@@ -22,7 +22,9 @@ bool fout = false;
 
 int state_ont; // 0 1 2
 
-WebServer server_gordijn(PORDIJN_SERVER_PORT);
+unsigned long lastCurtainPoll = 0;
+
+WebServer server_gordijn(CURTAIN_SERVER_PORT);
 
 bool loadConfig_mesh()
 {
@@ -124,6 +126,7 @@ void mesh_loop()
   server_gordijn.handleClient();
   mesh.update();
   send_change();
+  pollCurtainStatus();
 }
 
 void send_change()
@@ -134,6 +137,31 @@ void send_change()
     REMOTE_LOG_DEBUG("room_mac:", room_mac);
     REMOTE_LOG_ERROR(sendHttpRequest(value, room_mac, bridgeIp, bridgePort));
     change = false;
+  }
+}
+
+void pollCurtainStatus()
+{
+  unsigned long currentMillis = millis();
+  
+  // Check if it's time to poll
+  if (currentMillis - lastCurtainPoll >= CURTAIN_POLL_INTERVAL)
+  {
+    lastCurtainPoll = currentMillis;
+    
+    // Only poll if we have a curtain connected
+    if (curtain_id > 0)
+    {
+      JsonDocument doc;
+      doc["device"] = "curtain";
+      doc["homing"] = false;
+      doc["request"] = true;
+      String msg;
+      msg.reserve(256);
+      serializeJson(doc, msg);
+      sendData(msg);
+      REMOTE_LOG_DEBUG("Polling curtain status, ID:", curtain_id);
+    }
   }
 }
 
