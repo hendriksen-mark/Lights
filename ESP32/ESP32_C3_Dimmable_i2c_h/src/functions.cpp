@@ -20,7 +20,7 @@ void functions_setup()
 	int loops = waitMs / intervalMs;
 	for (int i = 0; i < loops; ++i)
 	{
-		REMOTE_LOG_INFO("Waiting for serial monitor...");
+		REMOTE_LOG_INFO("Waiting for serial monitor...", (waitMs - i * intervalMs) / 1000, "seconds remaining");
 		infoLedPulse(white, 1, intervalMs); // Pulse white while waiting for serial monitor
 	}
 
@@ -36,6 +36,7 @@ void functions_setup()
 	else
 	{
 		REMOTE_LOG_DEBUG("File system mounted");
+		LOG_ATTACH_FS_MANUAL(LittleFS, LOG_FILE_NAME, FILE_APPEND);
 	}
 }
 
