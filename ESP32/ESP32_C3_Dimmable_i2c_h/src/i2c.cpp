@@ -2,7 +2,7 @@
 
 struct state
 {
-	bool lightState;
+	bool lightState, reachable;
 	int bri, lightadress;
 };
 
@@ -114,30 +114,37 @@ void process_lightdata_i2c(uint8_t light)
 	{
 	case 0:
 		REMOTE_LOG_DEBUG("wire code:", "success");
+		lights_i2c[light].reachable = true;
 		break;
 	case 1:
 		REMOTE_LOG_DEBUG("wire code:", "data too long to fit in transmit buffer");
 		infoLedError(); // Quick error indication
-		delay(100);
+		lights_i2c[light].reachable = false;
 		break;
 	case 2:
 		REMOTE_LOG_DEBUG("wire code:", "received NO ACK on transmit of address");
 		infoLedError(); // Quick error indication
-		delay(100);
+		lights_i2c[light].reachable = false;
 		break;
 	case 3:
 		REMOTE_LOG_DEBUG("wire code:", "received NO ACK on transmit of data");
 		infoLedError(); // Quick error indication
-		delay(100);
+		lights_i2c[light].reachable = false;
 		break;
 	case 4:
 		REMOTE_LOG_DEBUG("wire code:", "other error");
+		infoLedError(); // Quick error indication
+		lights_i2c[light].reachable = false;
 		break;
 	case 5:
 		REMOTE_LOG_DEBUG("wire code:", "timeout");
+		infoLedError(); // Quick error indication
+		lights_i2c[light].reachable = false;
 		break;
 	default:
 		REMOTE_LOG_DEBUG("wire code:", "unknown error");
+		infoLedError(); // Quick error indication
+		lights_i2c[light].reachable = false;
 		break;
 	}
 }
@@ -162,10 +169,12 @@ void request_lightdata(uint8_t light)
 			serializeJson(json, output);
 
 			REMOTE_LOG_DEBUG("Light:", light, "state fetched:", output);
+			lights_i2c[light].reachable = true;
 		}
 		else
 		{
 			REMOTE_LOG_ERROR("Light:", light, "partial read");
+			lights_i2c[light].reachable = false;
 		}
 	}
 	else if (light_rec > 0)
@@ -174,10 +183,12 @@ void request_lightdata(uint8_t light)
 		size_t read = Wire.readBytes(buff, min((int)sizeof(buff), light_rec));
 		(void)read;
 		REMOTE_LOG_ERROR("Light:", light, "unexpected byte count:", light_rec);
+		lights_i2c[light].reachable = false;
 	}
 	else
 	{
 		REMOTE_LOG_ERROR("Light:", light, "no response");
+		lights_i2c[light].reachable = false;
 	}
 }
 
@@ -363,6 +374,7 @@ void i2c_setup()
 		JsonDocument root;
 		root["on"] = lights_i2c[light].lightState;
 		root["bri"] = lights_i2c[light].bri;
+		root["reachable"] = lights_i2c[light].reachable;
 		String output;
 		output.reserve(50); // Pre-allocate to reduce memory fragmentation
 		serializeJson(root, output);
