@@ -1,3 +1,16 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
+#pragma once
+
+// ============================================
+// Configuration
+// ============================================
+#define STEP_MS 6 // milliseconds per step in transitions
+
+// ============================================
+// Select the light by uncommenting one of these
+// ============================================
 // #define woonkamer_1
 // #define woonkamer_2
 // #define woonkamer_3
@@ -6,6 +19,9 @@
 // #define gang
 #define badkamer
 
+// ============================================
+// Do not edit below this line unless necessary, linked to i2c.cpp line 15
+// ============================================
 #ifdef woonkamer_1
 #define ADRESS 9
 #define PIN 1
@@ -40,3 +56,5 @@
 #define ADRESS 15
 #define PIN 4
 #endif
+
+#endif // CONFIG_H

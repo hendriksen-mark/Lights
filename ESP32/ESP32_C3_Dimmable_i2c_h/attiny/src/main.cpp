@@ -3,8 +3,6 @@
 
 #include <config.h>
 
-// Small, focused refactor: safer types, bounds checks, and non-blocking transition.
-
 struct LightState
 {
     bool on = false; // target on/off state
@@ -22,7 +20,6 @@ static float transitionTime = 0.0; // in steps (will be scaled)
 static uint8_t recdata[4];
 
 // Non-blocking step timing
-static const unsigned long STEP_MS = 6;
 static unsigned long lastStepMillis = 0;
 
 static void applyAnalogWrite()
