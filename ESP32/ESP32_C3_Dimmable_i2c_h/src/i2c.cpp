@@ -181,7 +181,7 @@ void request_lightdata(uint8_t light)
 	}
 }
 
-void saveState_i2c()
+bool saveState_i2c()
 {
 	REMOTE_LOG_DEBUG("save i2c state");
 	JsonDocument json;
@@ -191,17 +191,16 @@ void saveState_i2c()
 		light["on"] = lights_i2c[i].lightState;
 		light["bri"] = lights_i2c[i].bri;
 	}
-	writeJsonFile(I2C_STATE_PATH, json);
+	return writeJsonFile(I2C_STATE_PATH, json);
 }
 
-void restoreState_i2c()
+bool restoreState_i2c()
 {
 	REMOTE_LOG_DEBUG("restore i2c state");
 	JsonDocument json;
 	if (!readJsonFile(I2C_STATE_PATH, json))
 	{
-		saveState_i2c();
-		return;
+		return saveState_i2c();
 	}
 	for (JsonPair state : json.as<JsonObject>())
 	{
@@ -213,6 +212,7 @@ void restoreState_i2c()
 		if (values["bri"].is<int>())
 			lights_i2c[lightId].bri = (int)values["bri"];
 	}
+	return true;
 }
 
 bool saveConfig_i2c()
@@ -225,18 +225,18 @@ bool saveConfig_i2c()
 	return writeJsonFile(I2C_CONFIG_PATH, json);
 }
 
-void restoreConfig_i2c()
+bool loadConfig_i2c()
 {
-	REMOTE_LOG_DEBUG("restore i2c config");
+	REMOTE_LOG_DEBUG("load i2c config");
 	JsonDocument json;
 	if (!readJsonFile(I2C_CONFIG_PATH, json))
 	{
 		REMOTE_LOG_DEBUG("Create new file with default values");
-		saveConfig_i2c();
-		return;
+		return saveConfig_i2c();
 	}
 	startup_i2c = (uint8_t)json["startup"];
 	scene_i2c = (uint8_t)json["scene"];
+	return true;
 }
 
 void i2c_setup()
@@ -245,7 +245,7 @@ void i2c_setup()
 	REMOTE_LOG_DEBUG("Setup I2C");
 	infoLight(cyan);
 
-	restoreConfig_i2c();
+	loadConfig_i2c();
 
 	// Assign I2C addresses to each light in the struct
 	for (int i = 0; i < LIGHT_COUNT_I2C; i++)

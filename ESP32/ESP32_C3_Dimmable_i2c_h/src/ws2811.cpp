@@ -407,7 +407,7 @@ void lightEngine()
   }
 }
 
-void saveState_ws()
+bool saveState_ws()
 { // save the lights state using generic helper
   REMOTE_LOG_DEBUG("save ws state");
   JsonDocument json;
@@ -431,17 +431,16 @@ void saveState_ws()
       light["sat"] = lights[i].sat;
     }
   }
-  writeJsonFile(WS_STATE_PATH, json);
+  return writeJsonFile(WS_STATE_PATH, json);
 }
 
-void restoreState_ws()
+bool restoreState_ws()
 { // restore the lights state using generic helper
   REMOTE_LOG_DEBUG("restore ws state");
   JsonDocument json;
   if (!readJsonFile(WS_STATE_PATH, json))
   {
-    saveState_ws();
-    return;
+    return saveState_ws();
   }
 
   for (JsonPair state : json.as<JsonObject>())
@@ -476,6 +475,7 @@ void restoreState_ws()
       }
     }
   }
+  return true;
 }
 
 bool saveConfig_ws()

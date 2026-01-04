@@ -21,9 +21,9 @@ void i2c_setup();
 void i2c_loop();
 
 // Persistence for I2C lights
-void saveState_i2c();
-void restoreState_i2c();
+bool saveState_i2c();
+bool restoreState_i2c();
 bool saveConfig_i2c();
-void restoreConfig_i2c();
+bool loadConfig_i2c();
 
 #endif // I2C_H
