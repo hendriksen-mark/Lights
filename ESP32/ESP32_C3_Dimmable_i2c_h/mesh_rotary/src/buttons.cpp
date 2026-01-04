@@ -4,47 +4,34 @@
 #include "include/functions.h"
 #endif
 
-void showDirection(ESPRotary& r) {
-  if (r.directionToString(r.getDirection()) == "RIGHT") {
-    value = ROTARY_RIGHT;
-  } else if (r.directionToString(r.getDirection()) == "LEFT") {
-    value = ROTARY_LEFT;
-  }
-  change = true;
+// Helper function to set value and trigger change
+static inline void setValue(int newValue)
+{
+    value = newValue;
+    change = true;
 }
 
-void initial_press(Button2& btn) {
-  if (room <= badkamer) {
-    value = PRESS_SHORT;
-  } else {
-    value = MOTION_DETECTED;
-  }
-  change = true;
+void showDirection(ESPRotary &r)
+{
+    setValue(r.directionToString(r.getDirection()) == "RIGHT" ? ROTARY_RIGHT : ROTARY_LEFT);
 }
 
-void repeat(Button2& btn) {
-  if (room <= badkamer) {
-    value = PRESS_REPEAT;
-  } else {
-    value = MOTION_DETECTED;
-  }
-  change = true;
+void initial_press(Button2 &btn)
+{
+    setValue(isMotionDetector((RoomType)room) ? MOTION_DETECTED : PRESS_SHORT);
 }
 
-void long_release(Button2& btn) {
-  if (room <= badkamer) {
-    value = PRESS_LONG_RELEASE;
-  } else {
-    value = MOTION_DETECTED;
-  }
-  change = true;
+void repeat(Button2 &btn)
+{
+    setValue(isMotionDetector((RoomType)room) ? MOTION_DETECTED : PRESS_REPEAT);
 }
 
-void long_press(Button2& btn) {
-  if (room <= badkamer) {
-    value = PRESS_LONG_PRESS;
-  } else {
-    value = MOTION_DETECTED;
-  }
-  change = true;
+void long_release(Button2 &btn)
+{
+    setValue(isMotionDetector((RoomType)room) ? MOTION_DETECTED : PRESS_LONG_RELEASE);
+}
+
+void long_press(Button2 &btn)
+{
+    setValue(isMotionDetector((RoomType)room) ? MOTION_DETECTED : PRESS_LONG_PRESS);
 }
