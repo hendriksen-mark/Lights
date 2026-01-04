@@ -93,6 +93,7 @@ inline void handleRoot()
 
   message += "<br><br>";
   message += "<a href=\"/info\"\"><button>Info</button></a>";
+  message += "<a href=\"/ota\"\"><button>OTA Update</button></a>";
   message += "<a href=\"/\"\"><button>RELOAD PAGE</button></a><br/>";
   message += "<br><br>";
   message += "<a href=\"/reset\"\"><button>RESET</button></a><br/>";

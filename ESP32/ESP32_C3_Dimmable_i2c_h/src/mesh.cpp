@@ -7,6 +7,14 @@ int bridgePort = BRIDGE_PORT;
 
 painlessMesh mesh;
 
+// OTA Management
+String otaFirmwarePath = "";
+String otaDeviceName = "";
+String otaHardware = "";
+File otaFile;
+std::shared_ptr<Task> otaTask = nullptr;
+bool otaActive = false;
+
 int value;
 String room_mac;
 bool change = false;
@@ -69,6 +77,166 @@ bool saveConfig_mesh()
   return writeJsonFile(MESH_CONFIG_PATH, doc);
 }
 
+// List all .bin files on SD card in /firmware directory
+String listFirmwareFiles()
+{
+  String files = "";
+  if (!fs_exists("/firmware"))
+  {
+    return "No /firmware directory found";
+  }
+
+  File dir = fs_open("/firmware", "r");
+  if (!dir || !dir.isDirectory())
+  {
+    return "Failed to open /firmware directory";
+  }
+
+  while (true)
+  {
+    File entry = dir.openNextFile();
+    if (!entry)
+      break;
+
+    if (!entry.isDirectory())
+    {
+      String name = entry.name();
+      if (name.endsWith(".bin"))
+      {
+        files += name + " (" + String(entry.size()) + " bytes)<br>";
+      }
+    }
+    entry.close();
+  }
+  dir.close();
+
+  if (files.length() == 0)
+  {
+    return "No .bin files found in /firmware";
+  }
+  return files;
+}
+
+// Parse firmware filename: firmware_<hardware>_<role>.bin
+// Returns true if valid, fills hardware and role
+bool parseFirmwareName(const String &filename, String &hardware, String &role)
+{
+  // Remove path if present
+  String name = filename;
+  int lastSlash = name.lastIndexOf('/');
+  if (lastSlash >= 0)
+  {
+    name = name.substring(lastSlash + 1);
+  }
+
+  // Check format: firmware_<hardware>_<role>.bin
+  if (!name.startsWith("firmware_") || !name.endsWith(".bin"))
+  {
+    return false;
+  }
+
+  int firstUnderscore = name.indexOf('_');
+  int secondUnderscore = name.indexOf('_', firstUnderscore + 1);
+  int dotPos = name.lastIndexOf('.');
+
+  if (firstUnderscore < 0 || secondUnderscore < 0 || dotPos < 0)
+  {
+    return false;
+  }
+
+  hardware = name.substring(firstUnderscore + 1, secondUnderscore);
+  role = name.substring(secondUnderscore + 1, dotPos);
+
+  // Validate hardware
+  if (hardware != "ESP8266" && hardware != "ESP32")
+  {
+    return false;
+  }
+
+  return true;
+}
+
+// Start OTA update broadcast
+void startOTA(const String &firmwarePath)
+{
+  if (otaActive && otaTask)
+  {
+    REMOTE_LOG_ERROR("OTA already active, stopping previous OTA");
+    otaTask->disable();
+    otaTask = nullptr;
+    if (otaFile)
+      otaFile.close();
+    otaActive = false;
+  }
+
+  String fullPath = "/firmware/" + firmwarePath;
+  if (!fs_exists(fullPath.c_str()))
+  {
+    REMOTE_LOG_ERROR("Firmware file not found:", fullPath);
+    return;
+  }
+
+  String hardware, role;
+  if (!parseFirmwareName(firmwarePath, hardware, role))
+  {
+    REMOTE_LOG_ERROR("Invalid firmware filename format:", firmwarePath);
+    return;
+  }
+
+  otaFile = fs_open(fullPath.c_str(), FILE_READ);
+  if (!otaFile)
+  {
+    REMOTE_LOG_ERROR("Failed to open firmware file:", fullPath);
+    return;
+  }
+
+  REMOTE_LOG_INFO("Starting OTA for device:", role, "hardware:", hardware, "size:", otaFile.size());
+
+  // Calculate MD5
+  MD5Builder md5;
+  md5.begin();
+  md5.addStream(otaFile, otaFile.size());
+  md5.calculate();
+  String md5hash = md5.toString();
+
+  REMOTE_LOG_INFO("Firmware MD5:", md5hash);
+
+  // Initialize OTA send with lambda to read data
+  mesh.initOTASend(
+      [](painlessmesh::plugin::ota::DataRequest pkg, char *buffer)
+      {
+        otaFile.seek(OTA_PART_SIZE * pkg.partNo);
+        size_t bytesRead = otaFile.readBytes(buffer, OTA_PART_SIZE);
+        return min((unsigned)OTA_PART_SIZE, (unsigned)(otaFile.size() - (OTA_PART_SIZE * pkg.partNo)));
+      },
+      OTA_PART_SIZE);
+
+  // Offer OTA to network
+  size_t numParts = (otaFile.size() + OTA_PART_SIZE - 1) / OTA_PART_SIZE;
+  otaTask = mesh.offerOTA(role, hardware, md5hash, numParts, false);
+
+  otaFirmwarePath = firmwarePath;
+  otaDeviceName = role;
+  otaHardware = hardware;
+  otaActive = true;
+
+  REMOTE_LOG_INFO("OTA broadcast started. Will send for 60 minutes.");
+}
+
+// Stop OTA broadcast
+void stopOTA()
+{
+  if (otaActive && otaTask)
+  {
+    otaTask->disable();
+    otaTask = nullptr;
+    if (otaFile)
+      otaFile.close();
+    otaActive = false;
+    REMOTE_LOG_INFO("OTA broadcast stopped");
+  }
+}
+
 void mesh_setup()
 {
   REMOTE_LOG_DEBUG("Setup Mesh");
@@ -115,6 +283,14 @@ void mesh_setup()
     server_gordijn.send(200, "text/html", "reset");
     resetESP();
   });
+
+  // OTA endpoints
+  server_gordijn.on("/ota", handleOTAPage);
+  server_gordijn.on("/ota/list", handleOTAList);
+  server_gordijn.on("/ota/start", handleOTAStart);
+  server_gordijn.on("/ota/stop", handleOTAStop);
+  server_gordijn.on("/ota/status", handleOTAStatus);
+  server_gordijn.on("/ota/upload", HTTP_POST, handleOTAUploadResponse, handleOTAUpload);
 
   server_gordijn.onNotFound(handleNotFound);
 
@@ -416,6 +592,159 @@ void set_PORT()
   REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/setPORT", String(bridgePort));
   server_gordijn.sendHeader("Location", "/", true); // Redirect to our html web page
   server_gordijn.send(302, "text/plane", "");
+}
+
+// OTA Web Handlers
+void handleOTAPage()
+{
+  String html = "<!DOCTYPE HTML><html><head><title>OTA Update</title></head><body>";
+  html += "<h1>Mesh OTA Update</h1>";
+  html += "<h2>Current OTA Status</h2>";
+  if (otaActive)
+  {
+    html += "<p style='color:green;'><b>OTA Active</b></p>";
+    html += "<p>Firmware: " + otaFirmwarePath + "</p>";
+    html += "<p>Device: " + otaDeviceName + "</p>";
+    html += "<p>Hardware: " + otaHardware + "</p>";
+    html += "<a href='/ota/stop'><button>Stop OTA</button></a>";
+  }
+  else
+  {
+    html += "<p style='color:gray;'>No OTA active</p>";
+  }
+
+  html += "<h2>Available Firmware</h2>";
+  html += "<p>" + listFirmwareFiles() + "</p>";
+
+  html += "<h2>Start OTA Update</h2>";
+  html += "<p>Firmware naming: <code>firmware_&lt;ESP32|ESP8266&gt;_&lt;devicename&gt;.bin</code></p>";
+  html += "<p>Examples:</p>";
+  html += "<ul>";
+  html += "<li><code>firmware_ESP32_curtain.bin</code> - for beetle_curtain devices</li>";
+  html += "<li><code>firmware_ESP32_keuken.bin</code> - for mesh_rotary in kitchen</li>";
+  html += "<li><code>firmware_ESP32_slaapkamer.bin</code> - for mesh_rotary in bedroom</li>";
+  html += "</ul>";
+
+  html += "<form action='/ota/start' method='GET'>";
+  html += "Firmware filename: <input type='text' name='file' placeholder='firmware_ESP32_curtain.bin' size='40'><br><br>";
+  html += "<input type='submit' value='Start OTA Broadcast'>";
+  html += "</form>";
+
+  html += "<h2>Upload New Firmware</h2>";
+  html += "<form method='POST' action='/ota/upload' enctype='multipart/form-data'>";
+  html += "<input type='file' name='firmware' accept='.bin'><br><br>";
+  html += "<input type='submit' value='Upload'>";
+  html += "</form>";
+
+  html += "<br><br><a href='/'><button>Back to Main</button></a>";
+  html += "</body></html>";
+
+  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/ota");
+  server_gordijn.send(200, "text/html", html);
+}
+
+void handleOTAList()
+{
+  String files = listFirmwareFiles();
+  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/ota/list");
+  server_gordijn.send(200, "text/plain", files);
+}
+
+void handleOTAStart()
+{
+  if (!server_gordijn.hasArg("file"))
+  {
+    server_gordijn.send(400, "text/plain", "Missing 'file' parameter");
+    return;
+  }
+
+  String filename = server_gordijn.arg("file");
+  startOTA(filename);
+
+  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/ota/start", filename);
+  server_gordijn.sendHeader("Location", "/ota", true);
+  server_gordijn.send(302, "text/plain", "");
+}
+
+void handleOTAStop()
+{
+  stopOTA();
+  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/ota/stop");
+  server_gordijn.sendHeader("Location", "/ota", true);
+  server_gordijn.send(302, "text/plain", "");
+}
+
+void handleOTAStatus()
+{
+  String status = "{";
+  status += "\"active\":" + String(otaActive ? "true" : "false") + ",";
+  status += "\"firmware\":\"" + otaFirmwarePath + "\",";
+  status += "\"device\":\"" + otaDeviceName + "\",";
+  status += "\"hardware\":\"" + otaHardware + "\"";
+  status += "}";
+
+  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/ota/status");
+  server_gordijn.send(200, "application/json", status);
+}
+
+void handleOTAUpload()
+{
+  HTTPUpload &upload = server_gordijn.upload();
+
+  if (upload.status == UPLOAD_FILE_START)
+  {
+    String filename = upload.filename;
+    if (!filename.endsWith(".bin"))
+    {
+      REMOTE_LOG_ERROR("Invalid file type, must be .bin");
+      return;
+    }
+
+    // Validate firmware name format
+    String hardware, role;
+    if (!parseFirmwareName(filename, hardware, role))
+    {
+      REMOTE_LOG_ERROR("Invalid firmware filename format:", filename);
+      return;
+    }
+
+    // Create /firmware directory if it doesn't exist
+    if (!fs_exists("/firmware"))
+    {
+      fs_mkdir("/firmware");
+    }
+
+    String path = "/firmware/" + filename;
+    REMOTE_LOG_INFO("Uploading firmware:", path);
+
+    otaFile = fs_open(path.c_str(), FILE_WRITE);
+    if (!otaFile)
+    {
+      REMOTE_LOG_ERROR("Failed to create file:", path);
+    }
+  }
+  else if (upload.status == UPLOAD_FILE_WRITE)
+  {
+    if (otaFile)
+    {
+      otaFile.write(upload.buf, upload.currentSize);
+    }
+  }
+  else if (upload.status == UPLOAD_FILE_END)
+  {
+    if (otaFile)
+    {
+      otaFile.close();
+      REMOTE_LOG_INFO("Upload complete:", upload.totalSize, "bytes");
+    }
+  }
+}
+
+void handleOTAUploadResponse()
+{
+  REMOTE_LOG_DEBUG("from:", server_gordijn.client().remoteIP().toString(), "/ota/upload");
+  server_gordijn.sendHeader("Location", "/ota", true);
+  server_gordijn.send(302, "text/plain", "Upload complete, redirecting...");
 }
 
 void discoverBridgeMdns()

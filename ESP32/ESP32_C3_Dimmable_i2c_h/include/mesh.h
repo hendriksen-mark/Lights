@@ -6,11 +6,13 @@
 #include <painlessMesh.h>
 #include <ArduinoJson.h>
 #include <WebServer.h>
+#include <MD5Builder.h>
 
 #include "config.h"
 #include "custom_log.h"
 #include "processCommand.h"
 #include "mesh_http_content.h"
+#include "fs_wrapper.h"
 
 void mesh_setup();
 void mesh_loop();
@@ -37,5 +39,18 @@ bool loadConfig_mesh();
 void pollCurtainStatus();
 void sendCurtainCommand(bool homing, bool request, int targetPos, const char *logPath);
 void sendResponse(bool isRedirect, const String &content);
+
+// OTA functions
+String listFirmwareFiles();
+bool parseFirmwareName(const String &filename, String &hardware, String &role);
+void startOTA(const String &firmwarePath);
+void stopOTA();
+void handleOTAPage();
+void handleOTAList();
+void handleOTAStart();
+void handleOTAStop();
+void handleOTAStatus();
+void handleOTAUpload();
+void handleOTAUploadResponse();
 
 #endif // MESH_H

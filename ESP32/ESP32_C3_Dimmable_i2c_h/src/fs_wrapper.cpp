@@ -154,6 +154,11 @@ bool fs_exists(const char *path)
     return ex;
 }
 
+bool fs_exists(const String &path)
+{
+    return fs_exists(path.c_str());
+}
+
 File fs_open(const char *path, const char *mode)
 {
     if (!fsys)
@@ -164,6 +169,11 @@ File fs_open(const char *path, const char *mode)
     return fsys->open(path, mode);
 }
 
+File fs_open(const String &path, const char *mode)
+{
+    return fs_open(path.c_str(), mode);
+}
+
 bool fs_remove(const char *path)
 {
     if (!fsys)
@@ -172,6 +182,26 @@ bool fs_remove(const char *path)
         return false;
     }
     return fsys->remove(path);
+}
+
+bool fs_remove(const String &path)
+{
+    return fs_remove(path.c_str());
+}
+
+bool fs_mkdir(const char *path)
+{
+    if (!fsys)
+    {
+        REMOTE_LOG_ERROR("fs_mkdir: no filesystem mounted", path);
+        return false;
+    }
+    return fsys->mkdir(path);
+}
+
+bool fs_mkdir(const String &path)
+{
+    return fs_mkdir(path.c_str());
 }
 
 bool fs_format()

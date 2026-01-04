@@ -40,6 +40,8 @@ File fs_open(const char *path, const char *mode);
 File fs_open(const String &path, const char *mode);
 bool fs_remove(const char *path);
 bool fs_remove(const String &path);
+bool fs_mkdir(const char *path);
+bool fs_mkdir(const String &path);
 bool fs_format();
 size_t fs_usedBytes();
 size_t fs_totalBytes();
