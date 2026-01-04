@@ -211,15 +211,15 @@ void setup_file(WebServer &server_instance)
           REMOTE_LOG_DEBUG("File viewed successfully");
         } else {
           server->send(500, "text/plain", "Failed to open file");
-          REMOTE_LOG_ERROR("Failed to open file for viewing");
+          REMOTE_LOG_ERROR("Failed to open file for viewing", fileName.c_str());
         }
       } else {
         server->send(404, "text/plain", "File not found");
-        REMOTE_LOG_ERROR("File not found");
+        REMOTE_LOG_ERROR("File not found for viewing", fileName.c_str());
       }
     } else {
       server->send(400, "text/plain", "Missing name parameter");
-      REMOTE_LOG_ERROR("Missing name parameter");
+      REMOTE_LOG_ERROR("Missing name parameter, used args", server->args());
     } });
 }
 
