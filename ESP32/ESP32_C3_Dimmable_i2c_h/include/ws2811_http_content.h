@@ -25,7 +25,7 @@ const char htmlContent_ws[] PROGMEM = R"=====(
     <div class="wrapper">
         <nav class="nav-extended row" style="background-color: #26a69a !important;">
             <div class="nav-wrapper col s12">
-                <a href="#" class="brand-logo">DiyHue</a>
+                <a href="#" class="brand-logo">DiyHue WS2811</a>
                 <ul id="nav-mobile" class="right hide-on-med-and-down" style="position: relative;z-index: 10;">
                     <li><a target="_blank" href="https://github.com/diyhue"><i
                                 class="material-icons left">language</i>GitHub</a></li>
