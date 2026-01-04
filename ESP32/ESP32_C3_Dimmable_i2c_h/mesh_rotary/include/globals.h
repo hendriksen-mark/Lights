@@ -12,8 +12,8 @@
 
 extern painlessMesh mesh;
 extern uint32_t master;
-extern int value;
-extern bool change;
+extern volatile int value;
+extern volatile bool change;
 extern unsigned long MasterPreviousMillis;
 extern unsigned long lastMotionMillis;
 

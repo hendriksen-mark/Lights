@@ -5,8 +5,8 @@
 #endif
 
 // Define globals declared in the header
-int value = 0;
-bool change = false;
+volatile int value = 0;
+volatile bool change = false;
 unsigned long MasterPreviousMillis = 0;
 unsigned long lastMotionMillis = 0;
 
