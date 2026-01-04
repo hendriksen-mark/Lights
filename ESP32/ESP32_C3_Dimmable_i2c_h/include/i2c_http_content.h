@@ -68,6 +68,11 @@ const char http_content_i2c[] PROGMEM = R"=====(
                                 <input type="text" id="bri" class="js-range-slider" name="bri" value="" />
                             </div>
                         </div>
+                        <!-- Hidden canvases to prevent diyhue.js errors (I2C lights don't support color) -->
+                        <div style="display:none;">
+                            <canvas id="hue" width="320" height="320"></canvas>
+                            <canvas id="ct" width="320" height="50"></canvas>
+                        </div>
                     </form>
                 </div>
 
@@ -108,20 +113,7 @@ const char http_content_i2c[] PROGMEM = R"=====(
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script src="https://diyhue.org/cdn/nouislider.js"></script>
-    <script>
-        // Define wNumb globally for noUiSlider compatibility
-        var wNumb = window.wNumb || function(options) {
-            return {
-                to: function(value) {
-                    return options.decimals ? value.toFixed(options.decimals) : Math.round(value);
-                },
-                from: function(value) {
-                    return parseFloat(value);
-                }
-            };
-        };
-    </script>
-    <script src="https://raw.githubusercontent.com/diyhue/Lights/master/HTML/diyhue.js"></script>
+    <script src="https://diyhue.org/cdn/diyhue.js"></script>
 </body>
 </html>
 )=====";

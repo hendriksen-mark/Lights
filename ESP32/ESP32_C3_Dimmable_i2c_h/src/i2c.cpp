@@ -281,6 +281,7 @@ void i2c_setup()
 		{
 			REMOTE_LOG_DEBUG("I2C state restored");
 		} else
+		else
 		{
 			REMOTE_LOG_DEBUG("I2C state restore failed, using defaults");
 		}
@@ -317,49 +318,110 @@ void i2c_setup()
 		}
 		else
 		{
-			for (JsonPair state : root.as<JsonObject>())
+			// Check if this is single-light format (e.g., {"on":true,"bri":254})
+			// or multi-light format (e.g., {"1":{"on":true},"2":{"bri":254}})
+			bool isSingleLightFormat = false;
+			JsonObject rootObj = root.as<JsonObject>();
+
+			// Detect single-light format by checking if first key is a state property
+			if (rootObj.size() > 0)
 			{
-				const char *key = state.key().c_str();
-				int light = atoi(key) - 1;
-				JsonObject values = state.value();
+				const char *firstKey = rootObj.begin()->key().c_str();
+				if (strcmp(firstKey, "on") == 0 || strcmp(firstKey, "bri") == 0 ||
+					strcmp(firstKey, "bri_inc") == 0 || strcmp(firstKey, "alert") == 0 ||
+					strcmp(firstKey, "transitiontime") == 0)
+				{
+					isSingleLightFormat = true;
+				}
+			}
+
+			if (isSingleLightFormat)
+			{
+				// Handle single light format - apply to ALL lights
 				transitiontime_i2c = 4;
 
-				if (values["on"].is<int>() || values["on"].is<bool>())
+				if (rootObj["transitiontime"].is<float>() || rootObj["transitiontime"].is<int>())
 				{
-					if (values["on"])
+					transitiontime_i2c = (int)rootObj["transitiontime"];
+				}
+
+				// Apply changes to all lights
+				for (int light = 0; light < LIGHT_COUNT_I2C; light++)
+				{
+					if (rootObj["on"].is<int>() || rootObj["on"].is<bool>())
 					{
-						lights_i2c[light].lightState = true;
+						lights_i2c[light].lightState = rootObj["on"] ? true : false;
 					}
-					else
+
+					if (rootObj["bri"].is<float>() || rootObj["bri"].is<int>())
 					{
-						lights_i2c[light].lightState = false;
+						lights_i2c[light].bri = (int)rootObj["bri"];
 					}
-				}
 
-				if (values["bri"].is<float>() || values["bri"].is<int>())
-				{
-					lights_i2c[light].bri = (int)values["bri"];
-				}
+					if (rootObj["bri_inc"].is<float>() || rootObj["bri_inc"].is<int>())
+					{
+						lights_i2c[light].bri += (int)rootObj["bri_inc"];
+						if (lights_i2c[light].bri > 255)
+							lights_i2c[light].bri = 255;
+						else if (lights_i2c[light].bri < 1)
+							lights_i2c[light].bri = 1;
+					}
 
-				if (values["bri_inc"].is<float>() || values["bri_inc"].is<int>())
-				{
-					lights_i2c[light].bri += (int)values["bri_inc"];
-					if (lights_i2c[light].bri > 255)
-						lights_i2c[light].bri = 255;
-					else if (lights_i2c[light].bri < 1)
-						lights_i2c[light].bri = 1;
-				}
+					if (rootObj["alert"].is<const char *>() && rootObj["alert"] == "select")
+					{
+						send_alert(light);
+					}
 
-				if (values["alert"].is<const char *>() && values["alert"] == "select")
-				{
-					send_alert(light);
+					process_lightdata_i2c(light);
 				}
+			}
+			else
+			{
+				// Handle multi-light format
+				for (JsonPair state : rootObj)
+				{
+					const char *key = state.key().c_str();
+					int light = atoi(key) - 1;
+					JsonObject values = state.value();
+					transitiontime_i2c = 4;
 
-				if (values["transitiontime"].is<float>() || values["transitiontime"].is<int>())
-				{
-					transitiontime_i2c = (int)values["transitiontime"];
+					if (values["on"].is<int>() || values["on"].is<bool>())
+					{
+						if (values["on"])
+						{
+							lights_i2c[light].lightState = true;
+						}
+						else
+						{
+							lights_i2c[light].lightState = false;
+						}
+					}
+
+					if (values["bri"].is<float>() || values["bri"].is<int>())
+					{
+						lights_i2c[light].bri = (int)values["bri"];
+					}
+
+					if (values["bri_inc"].is<float>() || values["bri_inc"].is<int>())
+					{
+						lights_i2c[light].bri += (int)values["bri_inc"];
+						if (lights_i2c[light].bri > 255)
+							lights_i2c[light].bri = 255;
+						else if (lights_i2c[light].bri < 1)
+							lights_i2c[light].bri = 1;
+					}
+
+					if (values["alert"].is<const char *>() && values["alert"] == "select")
+					{
+						send_alert(light);
+					}
+
+					if (values["transitiontime"].is<float>() || values["transitiontime"].is<int>())
+					{
+						transitiontime_i2c = (int)values["transitiontime"];
+					}
+					process_lightdata_i2c(light);
 				}
-				process_lightdata_i2c(light);
 			}
 			String output;
 			serializeJson(root, output);
