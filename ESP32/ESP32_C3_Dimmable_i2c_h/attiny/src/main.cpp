@@ -15,7 +15,7 @@ struct LightState
     float currentBri = 0.0f; // current brightness
 };
 
-static LightState lights[1];
+static LightState light;
 
 static bool dataAvailable = false;
 static float transitionTime = 0.0; // in steps (will be scaled)
@@ -27,9 +27,9 @@ static unsigned long lastStepMillis = 0;
 
 static void applyAnalogWrite()
 {
-    int out = (int)round(lights[0].currentBri);
+    int out = (int)round(light.currentBri);
     out = constrain(out, 0, 255);
-    analogWrite(lights[0].pin, out);
+    analogWrite(light.pin, out);
 }
 
 static void computeStepLevel()
@@ -39,25 +39,25 @@ static void computeStepLevel()
     if (steps <= 0.0)
     {
         // No stepping — apply target immediately to avoid stuck transitions
-        if (lights[0].on)
+        if (light.on)
         {
-            lights[0].currentBri = lights[0].bri;
+            light.currentBri = light.bri;
         }
         else
         {
-            lights[0].currentBri = 0.0f;
+            light.currentBri = 0.0f;
         }
-        lights[0].stepLevel = 0.0f;
+        light.stepLevel = 0.0f;
         applyAnalogWrite();
         return;
     }
-    if (lights[0].on)
+    if (light.on)
     {
-        lights[0].stepLevel = ((float)lights[0].bri - lights[0].currentBri) / steps;
+        light.stepLevel = ((float)light.bri - light.currentBri) / steps;
     }
     else
     {
-        lights[0].stepLevel = lights[0].currentBri / steps;
+        light.stepLevel = light.currentBri / steps;
     }
 }
 
@@ -70,15 +70,15 @@ static void lightEngine()
 
     bool transitioned = false;
 
-    if (lights[0].on)
+    if (light.on)
     {
-        if ((int)lights[0].bri != (int)round(lights[0].currentBri))
+        if ((int)light.bri != (int)round(light.currentBri))
         {
-            lights[0].currentBri += lights[0].stepLevel;
-            if ((lights[0].stepLevel > 0.0f && lights[0].currentBri > lights[0].bri) ||
-                (lights[0].stepLevel < 0.0f && lights[0].currentBri < lights[0].bri))
+            light.currentBri += light.stepLevel;
+            if ((light.stepLevel > 0.0f && light.currentBri > light.bri) ||
+                (light.stepLevel < 0.0f && light.currentBri < light.bri))
             {
-                lights[0].currentBri = lights[0].bri;
+                light.currentBri = light.bri;
             }
             applyAnalogWrite();
             transitioned = true;
@@ -86,11 +86,11 @@ static void lightEngine()
     }
     else
     {
-        if ((int)round(lights[0].currentBri) != 0)
+        if ((int)round(light.currentBri) != 0)
         {
-            lights[0].currentBri -= lights[0].stepLevel;
-            if (lights[0].currentBri < 0.0f)
-                lights[0].currentBri = 0.0f;
+            light.currentBri -= light.stepLevel;
+            if (light.currentBri < 0.0f)
+                light.currentBri = 0.0f;
             applyAnalogWrite();
             transitioned = true;
         }
@@ -120,28 +120,28 @@ void receiveEvent(int howMany)
 
 void requestEvent()
 {
-    uint8_t cur = (uint8_t)constrain((int)round(lights[0].currentBri), 0, 255);
+    uint8_t cur = (uint8_t)constrain((int)round(light.currentBri), 0, 255);
     Wire.write(cur);
-    Wire.write(lights[0].on ? 1 : 0);
+    Wire.write(light.on ? 1 : 0);
 }
 
 static void processData()
 {
-    lights[0].bri = recdata[0];
-    lights[0].on = (recdata[1] != 0);
+    light.bri = recdata[0];
+    light.on = (recdata[1] != 0);
     transitionTime = ((uint16_t)recdata[2] << 8) | recdata[3];
     // If transitionTime is zero, apply the new state immediately
     if (transitionTime == 0.0f)
     {
-        if (lights[0].on)
+        if (light.on)
         {
-            lights[0].currentBri = lights[0].bri;
+            light.currentBri = light.bri;
         }
         else
         {
-            lights[0].currentBri = 0.0f;
+            light.currentBri = 0.0f;
         }
-        lights[0].stepLevel = 0.0f;
+        light.stepLevel = 0.0f;
         applyAnalogWrite();
     }
     else
@@ -153,11 +153,11 @@ static void processData()
 
 void setup()
 {
-    Wire.begin(lights[0].adress);
+    Wire.begin(light.adress);
     Wire.onReceive(receiveEvent);
     Wire.onRequest(requestEvent);
 
-    pinMode(lights[0].pin, OUTPUT);
+    pinMode(light.pin, OUTPUT);
     applyAnalogWrite();
     lastStepMillis = millis();
 }
