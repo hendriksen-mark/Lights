@@ -117,8 +117,8 @@ void receiveEvent(int howMany)
 
 void requestEvent()
 {
-    uint8_t cur = (uint8_t)constrain((int)round(light.currentBri), 0, 255);
-    Wire.write(cur);
+    uint8_t bri = (uint8_t)constrain((int)round(light.bri), 0, 255);
+    Wire.write(bri);
     Wire.write(light.on ? 1 : 0);
 }
 
