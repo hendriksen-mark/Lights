@@ -47,7 +47,15 @@ static void computeStepLevel()
         return;
     }
     int16_t target = light.on ? ((int16_t)light.bri << 4) : 0;
-    light.stepLevel = (target - light.currentBri) / (int16_t)steps;
+    int16_t delta = target - light.currentBri;
+    int16_t s = (int16_t)steps;
+    int16_t step = delta / s; // may be zero if delta < s
+    if (step == 0 && delta != 0)
+    {
+        // ensure we make progress by at least one LSB in fixed point
+        step = (delta > 0) ? 1 : -1;
+    }
+    light.stepLevel = step;
 }
 
 static void lightEngine()
