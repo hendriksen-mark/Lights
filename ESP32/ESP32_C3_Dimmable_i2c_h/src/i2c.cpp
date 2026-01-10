@@ -117,32 +117,32 @@ void process_lightdata_i2c(uint8_t light)
 		lights_i2c[light].reachable = true;
 		break;
 	case 1:
-		REMOTE_LOG_DEBUG("wire code:", "data too long to fit in transmit buffer");
+		REMOTE_LOG_ERROR("wire code:", "data too long to fit in transmit buffer");
 		infoLedError(); // Quick error indication
 		lights_i2c[light].reachable = false;
 		break;
 	case 2:
-		REMOTE_LOG_DEBUG("wire code:", "received NO ACK on transmit of address");
+		REMOTE_LOG_ERROR("wire code:", "received NO ACK on transmit of address");
 		infoLedError(); // Quick error indication
 		lights_i2c[light].reachable = false;
 		break;
 	case 3:
-		REMOTE_LOG_DEBUG("wire code:", "received NO ACK on transmit of data");
+		REMOTE_LOG_ERROR("wire code:", "received NO ACK on transmit of data");
 		infoLedError(); // Quick error indication
 		lights_i2c[light].reachable = false;
 		break;
 	case 4:
-		REMOTE_LOG_DEBUG("wire code:", "other error");
+		REMOTE_LOG_ERROR("wire code:", "other error");
 		infoLedError(); // Quick error indication
 		lights_i2c[light].reachable = false;
 		break;
 	case 5:
-		REMOTE_LOG_DEBUG("wire code:", "timeout");
+		REMOTE_LOG_ERROR("wire code:", "timeout");
 		infoLedError(); // Quick error indication
 		lights_i2c[light].reachable = false;
 		break;
 	default:
-		REMOTE_LOG_DEBUG("wire code:", "unknown error");
+		REMOTE_LOG_ERROR("wire code:", "unknown error");
 		infoLedError(); // Quick error indication
 		lights_i2c[light].reachable = false;
 		break;
