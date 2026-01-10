@@ -6,6 +6,7 @@ Usage: python upload_to_master.py <firmware_path> <master_address> <firmware_nam
 import sys
 import urllib.request
 import urllib.error
+import urllib.parse
 from io import BytesIO
 import os
 
@@ -46,7 +47,20 @@ def upload_firmware(firmware_path, master_address, firmware_name):
             if response.status in [200, 302]:
                 print(f"✓ Upload successful!")
                 print(f"  Status: {response.status}")
-                return 0
+                # After successful upload, instruct master to push firmware to slave
+                try:
+                    start_url = f"http://{master_address}/ota/start?file={urllib.parse.quote(firmware_name)}"
+                    print(f"Triggering master to push firmware to slave: {start_url}")
+                    with urllib.request.urlopen(start_url, timeout=15) as start_resp:
+                        if start_resp.status == 200:
+                            print("✓ Master triggered OTA to slave successfully.")
+                            return 0
+                        else:
+                            print(f"✗ Master OTA trigger failed with status: {start_resp.status}")
+                            return 1
+                except urllib.error.URLError as e:
+                    print(f"✗ Failed to trigger master OTA: {e}")
+                    return 1
             else:
                 print(f"✗ Upload failed with status: {response.status}")
                 return 1
