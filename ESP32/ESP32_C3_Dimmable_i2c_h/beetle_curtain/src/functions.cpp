@@ -79,42 +79,36 @@ void stopMotor()
   }
 }
 
-void ask_master()
+void send_change(bool toMaster = false)
 {
-  if ((unsigned long)(millis() - MasterPreviousMillis) >= REQUEST_TIMEOUT)
+  // Check timeout only when broadcasting (looking for master)
+  if (!toMaster && (unsigned long)(millis() - MasterPreviousMillis) < REQUEST_TIMEOUT)
+  {
+    return;
+  }
+  
+  if (!toMaster)
   {
     MasterPreviousMillis = millis();
-    JsonDocument doc;
-    doc["got_master"] = false;
-    doc["device"] = DEVICE_NAME;
-    doc["curtain_id"] = uint32_t(mesh.getNodeId());
-    doc["target"] = target;
-    doc["current"] = current;
-    doc["state"] = state;
-    char buf[128];
-    serializeJson(doc, buf, sizeof(buf));
-    mesh.sendBroadcast(buf);
   }
-}
 
-void send_change()
-{
-  if (master > 0)
+  JsonDocument doc;
+  doc["got_master"] = toMaster;
+  doc["device"] = DEVICE_NAME;
+  doc["curtain_id"] = uint32_t(mesh.getNodeId());
+  doc["target"] = target;
+  doc["current"] = current;
+  doc["state"] = state;
+  char buf[128];
+  serializeJson(doc, buf, sizeof(buf));
+  
+  if (toMaster && master > 0)
   {
-    JsonDocument doc;
-    doc["got_master"] = true;
-    doc["device"] = DEVICE_NAME;
-    doc["curtain_id"] = uint32_t(mesh.getNodeId());
-    doc["target"] = target;
-    doc["current"] = current;
-    doc["state"] = state;
-    char buf[128];
-    serializeJson(doc, buf, sizeof(buf));
     mesh.sendSingle(master, buf);
   }
   else
   {
-    ask_master();
+    mesh.sendBroadcast(buf);
   }
 }
 

@@ -137,12 +137,12 @@ void loop()
   if (statusRequested)
   {
     statusRequested = false;
-    send_change();
+    send_change(true);
   }
 
   if (master == 0)
   {
-    ask_master();
+    send_change(false);
   }
 
   if (stopRequested)
