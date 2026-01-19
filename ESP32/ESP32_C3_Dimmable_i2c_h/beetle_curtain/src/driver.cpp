@@ -1,5 +1,5 @@
 #include <new>
-#if defined(ARDUINO_ESP32C3_DEV)
+#if defined(ARDUINO_ESP32C3_M1_I_KIT)
 #include "driver.h"
 #else
 #include "include/driver.h"
