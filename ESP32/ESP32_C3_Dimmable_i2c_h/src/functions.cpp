@@ -237,6 +237,8 @@ void infoLedError()
 	}
 	infoLight(red);	  // Set to red first
 	blinkLed(3, 100); // Three fast blinks
+	delay(200);		  // Brief pause before returning to idle
+	infoLedIdle();	  // Return to idle state (dim blue)
 }
 
 void factoryReset()
