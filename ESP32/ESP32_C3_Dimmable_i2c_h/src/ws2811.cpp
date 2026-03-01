@@ -573,7 +573,7 @@ void ws_setup()
 
   if (loadConfig_ws())
   {
-    REMOTE_LOG_DEBUG("ws config loaded");
+    REMOTE_LOG_INFO("ws config loaded");
   }
   else
   {
@@ -601,7 +601,7 @@ void ws_setup()
     }
     else
     {
-      REMOTE_LOG_DEBUG("ws state restore failed, using defaults");
+      REMOTE_LOG_ERROR("ws state restore failed, using defaults");
     }
     break;
   case 1:
@@ -633,6 +633,7 @@ void ws_setup()
 
     if (error)
     {
+      REMOTE_LOG_ERROR("from:", server_ws.client().remoteIP().toString(), "/state put", server_ws.arg("plain"));
       server_ws.send(404, "text/plain", "FAIL. " + server_ws.arg("plain"));
     }
     else
@@ -883,7 +884,7 @@ void ws_setup()
     }
     else
     {
-      REMOTE_LOG_DEBUG("from:", server_ws.client().remoteIP().toString(), "/get_state_save", "failed to read file");
+      REMOTE_LOG_ERROR("from:", server_ws.client().remoteIP().toString(), "/get_state_save", "failed to read file");
       server_ws.send(404, "text/plain", "Failed to read file");
     }
   });
@@ -899,7 +900,7 @@ void ws_setup()
     }
     else
     {
-      REMOTE_LOG_DEBUG("from:", server_ws.client().remoteIP().toString(), "/get_config_save", "failed to read file");
+      REMOTE_LOG_ERROR("from:", server_ws.client().remoteIP().toString(), "/get_config_save", "failed to read file");
       server_ws.send(404, "text/plain", "Failed to read file");
     }
   });

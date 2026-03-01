@@ -21,7 +21,7 @@ void initializeNTP()
     }
     else
     {
-        REMOTE_LOG_WARN("Failed to get initial NTP time");
+        REMOTE_LOG_ERROR("Failed to get initial NTP time");
     }
 }
 
@@ -34,7 +34,7 @@ bool updateNTPTime()
     WiFiUDP tempNtpUdp;
     if (!tempNtpUdp.begin(8888))
     {
-        REMOTE_LOG_WARN("Failed to create temporary NTP socket");
+        REMOTE_LOG_ERROR("Failed to create temporary NTP socket");
         return false;
     }
 
@@ -100,7 +100,7 @@ bool updateNTPTime()
 
     if (!success)
     {
-        REMOTE_LOG_WARN("NTP request timeout");
+        REMOTE_LOG_ERROR("NTP request timeout");
     }
 
     return success;

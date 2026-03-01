@@ -259,11 +259,11 @@ void i2c_setup()
 
 	if (loadConfig_i2c())
 	{
-		REMOTE_LOG_DEBUG("I2C config loaded");
+		REMOTE_LOG_INFO("I2C config loaded");
 	}
 	else
 	{
-		REMOTE_LOG_DEBUG("I2C config load failed, using defaults");
+		REMOTE_LOG_ERROR("I2C config load failed, using defaults");
 	}
 
 	// Assign I2C addresses to each light in the struct
@@ -566,7 +566,7 @@ void i2c_setup()
 		}
 		else
 		{
-			REMOTE_LOG_DEBUG("from:", server_i2c.client().remoteIP().toString(), "/get_state_save", "failed to read file");
+			REMOTE_LOG_ERROR("from:", server_i2c.client().remoteIP().toString(), "/get_state_save", "failed to read file");
 			server_i2c.send(404, "text/plain", "Failed to read file");
 		}
 	});
@@ -582,7 +582,7 @@ void i2c_setup()
 		}
 		else
 		{
-			REMOTE_LOG_DEBUG("from:", server_i2c.client().remoteIP().toString(), "/get_config_save", "failed to read file");
+			REMOTE_LOG_ERROR("from:", server_i2c.client().remoteIP().toString(), "/get_config_save", "failed to read file");
 			server_i2c.send(404, "text/plain", "Failed to read file");
 		}
 	});

@@ -199,7 +199,7 @@ void startOTA(const String &firmwarePath)
   md5.calculate();
   String md5hash = md5.toString();
 
-  REMOTE_LOG_INFO("Firmware MD5:", md5hash);
+  REMOTE_LOG_DEBUG("Firmware MD5:", md5hash);
 
   // Initialize OTA send with lambda to read data
   mesh.initOTASend(
@@ -258,7 +258,7 @@ void mesh_setup()
   }
   else
   {
-    REMOTE_LOG_DEBUG("mesh config load failed, using defaults");
+    REMOTE_LOG_ERROR("mesh config load failed, using defaults");
   }
 
   server_gordijn.on("/", handleRoot);
@@ -274,11 +274,11 @@ void mesh_setup()
   server_gordijn.on("/info", handleinfo);
   server_gordijn.on("/setIP/", set_IP);
   server_gordijn.on("/setPORT/", set_PORT);
-  server_gordijn.on("/discover/", []()
-                    {
+  server_gordijn.on("/discover/", []() {
     discoverBridgeMdns();
     server_gordijn.sendHeader("Location", "/", true); // Redirect to our html web page
-    server_gordijn.send(302, "text/plane", ""); });
+    server_gordijn.send(302, "text/plane", "");
+  });
   server_gordijn.on("/reset", []() { // trigger manual reset
     server_gordijn.send(200, "text/html", "reset");
     resetESP();
