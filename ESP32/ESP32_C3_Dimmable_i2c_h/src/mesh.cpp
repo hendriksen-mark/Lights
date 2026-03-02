@@ -23,12 +23,10 @@ uint32_t curtain_id = 0;
 byte target;  // 0-100%
 byte current; // 0-100%
 
-byte target_ont;  // 0-100%
-byte current_ont; // 0-100%
+byte target_rec;  // 0-100%
+byte current_rec; // 0-100%
 
-bool fout = false;
-
-int state_ont; // 0 1 2
+int state_rec; // 0 1 2
 
 unsigned long lastCurtainPoll = 0;
 
@@ -385,9 +383,9 @@ void receivedCallback(uint32_t from, String &msg)
     if (root["device"] == "curtain")
     {
       curtain_id = uint32_t(root["curtain_id"]);
-      target_ont = (int)root["target"];
-      current_ont = (int)root["current"];
-      state_ont = (int)root["state"];
+      target_rec = (int)root["target"];
+      current_rec = (int)root["current"];
+      state_rec = (int)root["state"];
     }
   }
   else
@@ -484,13 +482,13 @@ void get_current_pos_test()
 
 void get_current_pos()
 {
-  // NOTE: This endpoint returns the last cached value from current_ont.
+  // NOTE: This endpoint returns the last cached value from current_rec.
   // The request is sent to the curtain device, but due to HTTP's synchronous nature,
   // we cannot wait for the mesh response. The actual updated value will be received
-  // in receivedCallback() and cached in current_ont for the next request.
+  // in receivedCallback() and cached in current_rec for the next request.
   // For real-time accuracy, poll this endpoint repeatedly or implement WebSocket/async pattern.
   sendCurtainCommand(false, true, -1, "/getCurrentPos");
-  sendResponse(false, (String)current_ont);
+  sendResponse(false, (String)current_rec);
 }
 
 void get_target_pos_test()
@@ -501,9 +499,9 @@ void get_target_pos_test()
 
 void get_target_pos()
 {
-  // NOTE: Returns cached target_ont value. See get_current_pos() comment for details.
+  // NOTE: Returns cached target_rec value. See get_current_pos() comment for details.
   sendCurtainCommand(false, true, -1, "/getTargetPos");
-  sendResponse(false, (String)target_ont);
+  sendResponse(false, (String)target_rec);
 }
 
 void get_state_test()
@@ -514,10 +512,10 @@ void get_state_test()
 
 void get_state()
 {
-  // NOTE: Returns cached state_ont value (0=stopped, 1=opening, 2=closing).
+  // NOTE: Returns cached state_rec value (0=stopped, 1=opening, 2=closing).
   // See get_current_pos() comment for async limitations.
   sendCurtainCommand(false, true, -1, "/getState");
-  sendResponse(false, (String)state_ont);
+  sendResponse(false, (String)state_rec);
 }
 
 void handleinfo()

@@ -12,10 +12,9 @@ extern int subip;
 extern IPAddress bridgeIp;
 extern int bridgePort;
 extern byte target;
-extern byte target_ont;
-extern byte current_ont;
-extern int state_ont;
-extern bool fout;
+extern byte target_rec;
+extern byte current_rec;
+extern int state_rec;
 extern WebServer server_gordijn;
 
 inline void handleRoot()
@@ -27,16 +26,13 @@ inline void handleRoot()
   message += target;
   message += "<br>";
   message += "rep Target Pos  = ";
-  message += target_ont;
+  message += target_rec;
   message += "<br>";
   message += "rep Current Pos  = ";
-  message += current_ont;
+  message += current_rec;
   message += "<br>";
   message += "rep State  = ";
-  message += state_ont;
-  message += "<br>";
-  message += "error  = ";
-  message += fout;
+  message += state_rec;
   message += "<br><br>";
 
   message += "<form action=\"/setTargetPosTest/\">";
