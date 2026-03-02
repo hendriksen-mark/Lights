@@ -288,17 +288,25 @@ void handleFSInfo()
 // Helper function to format bytes to KB, MB, etc.
 String formatBytes(size_t bytes)
 {
-    if (bytes < 1024)
+    if (bytes < pow(1024, 1))
     {
         return String(bytes) + " B";
     }
-    else if (bytes < (1024 * 1024))
+    else if (bytes < pow(1024, 2))
     {
-        return String(bytes / 1024.0, 2) + " KB";
+        return String(bytes / pow(1024, 1), 2) + " KB";
     }
-    else if (bytes < (1024 * 1024 * 1024))
+    else if (bytes < pow(1024, 3))
     {
-        return String(bytes / 1024.0 / 1024.0, 2) + " MB";
+        return String(bytes / pow(1024, 2), 2) + " MB";
+    }
+    else if (bytes < pow(1024, 4))
+    {
+        return String(bytes / pow(1024, 3), 2) + " GB";
+    }
+    else if (bytes < pow(1024, 5))
+    {
+        return String(bytes / pow(1024, 4), 2) + " TB";
     }
     return String(bytes) + " B";
 }
@@ -426,7 +434,7 @@ void handleFileList()
             {
                 // Get the filename with the leading slash
                 String fileName = String(file.name());
-                output += "<tr><td>" + fileName + "</td><td>" + String(file.size()) + " bytes</td>";
+                output += "<tr><td>" + fileName + "</td><td>" + formatBytes(file.size()) + "</td>";
                 // Pass the full filename including the slash in the URL (URL-encoded)
                 String fileUrl = urlEncode(fileName);
                 output += "<td><a href='/file?name=" + fileUrl + "'>View</a></td></tr>";
@@ -465,7 +473,7 @@ void handleDeletePage()
                 String fileName = String(file.name());
                 // Make sure the value includes the leading slash in the filename
                 output += "<tr><td><input type='checkbox' name='files' value='" + fileName + "'></td>";
-                output += "<td>" + fileName + "</td><td>" + String(file.size()) + " bytes</td></tr>";
+                output += "<td>" + fileName + "</td><td>" + formatBytes(file.size()) + "</td></tr>";
             }
             file = root.openNextFile();
         }
@@ -571,7 +579,7 @@ void handleDownloadPage()
             {
                 String fileName = String(file.name());
                 output += "<tr><td>" + fileName + "</td>";
-                output += "<td>" + String(file.size()) + " bytes</td>";
+                output += "<td>" + formatBytes(file.size()) + "</td>";
                 String fileUrl = urlEncode(fileName);
                 output += "<td><a href='/download-file?name=" + fileUrl + "'>Download</a></td></tr>";
             }
@@ -621,7 +629,7 @@ void handleFileDownload()
                     downloadName = fileName.substring(1);
                 }
 
-                REMOTE_LOG_INFO("File exists, size:", String(fileSize));
+                REMOTE_LOG_INFO("File exists, size:", formatBytes(fileSize));
 
                 // Use the ESP-specific API for sending raw data
                 WiFiClient client = server->client();
