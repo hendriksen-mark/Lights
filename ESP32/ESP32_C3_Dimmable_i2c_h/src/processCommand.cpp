@@ -1,6 +1,6 @@
 #include "processCommand.h"
 
-String sendHttpRequest(int button, String mac, IPAddress bridgeIp, int bridgePort)
+void sendHttpRequest(int button, String mac, IPAddress bridgeIp, int bridgePort)
 {
   HTTPClient http;
   String response = "";
@@ -9,6 +9,10 @@ String sendHttpRequest(int button, String mac, IPAddress bridgeIp, int bridgePor
 
   // Build URL
   String url = "http://" + bridgeIp.toString() + ":" + String(bridgePort) + "/switch";
+
+  REMOTE_LOG_DEBUG("value:", button);
+  REMOTE_LOG_DEBUG("room_mac:", mac);
+  REMOTE_LOG_DEBUG("URL:", url);
 
   while (retryCount < MAX_RETRIES)
   {
@@ -35,13 +39,15 @@ String sendHttpRequest(int button, String mac, IPAddress bridgeIp, int bridgePor
     {
       // Success!
       blinkLed(1, 50);
-      return response;
+      REMOTE_LOG_DEBUG("Response:", response);
+      return;
     }
     else if (response == "unknown device" || response == "missing mac address" || response == "invalid json")
     {
       // Permanent errors
       infoLedError();
-      return response;
+      REMOTE_LOG_ERROR("Response:", response);
+      return;
     }
 
     // Serialize JSON
@@ -71,14 +77,17 @@ String sendHttpRequest(int button, String mac, IPAddress bridgeIp, int bridgePor
         {
           if (responseDoc["success"].is<String>())
           {
+            REMOTE_LOG_DEBUG("Response success:", responseDoc["success"].as<String>());
             response = responseDoc["success"].as<String>();
           }
           else if (responseDoc["fail"].is<String>())
           {
+            REMOTE_LOG_ERROR("Response fail:", responseDoc["fail"].as<String>());
             response = responseDoc["fail"].as<String>();
           }
           else
           {
+            REMOTE_LOG_ERROR("Response unknown:", responseDoc.as<String>());
             response = "unknown response format";
           }
 
@@ -88,14 +97,12 @@ String sendHttpRequest(int button, String mac, IPAddress bridgeIp, int bridgePor
         else
         {
           REMOTE_LOG_ERROR("JSON parse error:", error.c_str());
-          response = "json parse error";
           retryCount++;
         }
       }
       else
       {
-        REMOTE_LOG_ERROR("HTTP error:", httpCode);
-        response = "HTTP error: " + String(httpCode);
+        REMOTE_LOG_ERROR("HTTP error:", httpCode);     
         retryCount++;
       }
     }
@@ -103,7 +110,6 @@ String sendHttpRequest(int button, String mac, IPAddress bridgeIp, int bridgePor
     {
       REMOTE_LOG_ERROR("Connection failed:", http.errorToString(httpCode));
       infoLedError();
-      response = "Connection failed";
       retryCount++;
       delay(RETRY_DELAY_MS);
     }
@@ -114,9 +120,10 @@ String sendHttpRequest(int button, String mac, IPAddress bridgeIp, int bridgePor
     if (retryCount >= MAX_RETRIES)
     {
       infoLedError();
-      return "Max retries exceeded";
+      REMOTE_LOG_ERROR("Max retries exceeded");
+      return;
     }
   }
 
-  return response;
+  return;
 }

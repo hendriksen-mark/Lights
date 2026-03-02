@@ -10,6 +10,6 @@
 #include "custom_log.h"
 #include "ethernet_server.h"
 
-String sendHttpRequest(int button, String mac, IPAddress bridgeIp, int bridgePort);
+void sendHttpRequest(int button, String mac, IPAddress bridgeIp, int bridgePort);
 
 #endif // PROCESS_COMMAND_H

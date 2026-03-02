@@ -309,9 +309,7 @@ void send_change()
 {
   if (change == true)
   {
-    REMOTE_LOG_DEBUG("value:", value);
-    REMOTE_LOG_DEBUG("room_mac:", room_mac);
-    REMOTE_LOG_ERROR(sendHttpRequest(value, room_mac, bridgeIp, bridgePort));
+    sendHttpRequest(value, room_mac, bridgeIp, bridgePort);
     change = false;
   }
 }
