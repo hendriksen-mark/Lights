@@ -5,34 +5,62 @@
 #include "include/driver.h"
 #endif
 
-static uint8_t driver_storage[sizeof(TMC2209Stepper)];
-static TMC2209Stepper *driver = nullptr;
+static TMC2209Stepper *driver1 = nullptr;
+static TMC2209Stepper *driver2 = nullptr;
 
-void configureRAdriver(uint16_t RA_SW_RX, uint16_t RA_SW_TX, float rsense, byte driveraddress, int rmscurrent, int stallvalue)
+void configureDualDrivers()
 {
-  driver = reinterpret_cast<TMC2209Stepper *>(driver_storage);
-  // new (driver) TMC2209Stepper(RA_SW_RX, RA_SW_TX, rsense, driveraddress);
-  HardwareSerial SerialDriver(Serial1);
-  new (driver) TMC2209Stepper(&SerialDriver, rsense, driveraddress);
-  SerialDriver.begin(19200, SERIAL_8N1, RA_SW_RX, RA_SW_TX);
-  driver->begin();
-  driver->mstep_reg_select(true);
-  driver->pdn_disable(true);
-  driver->toff(0);
-#if USE_VREF == 0 // By default, Vref is ignored when using UART to specify rms current.
-  driver->I_scale_analog(false);
+  // Initialize shared UART serial
+  static HardwareSerial SerialDriver(1);
+  SerialDriver.begin(19200, SERIAL_8N1, SW_RX, SW_TX);
+
+  // Configure Driver 1 (Left Motor)
+  if (driver1 == nullptr) {
+    driver1 = new TMC2209Stepper(&SerialDriver, R_SENSE, DRIVER_ADDRESS_1);
+  }
+  driver1->begin();
+  driver1->mstep_reg_select(true);
+  driver1->pdn_disable(true);
+  driver1->toff(0);
+#if USE_VREF == 0
+  driver1->I_scale_analog(false);
 #endif
-  LOG_DEBUG("[MOUNT]: Requested RA motor rms_current:", rmscurrent, " mA");
-  driver->rms_current(rmscurrent, 1.0f); // holdMultiplier = 1 to set ihold = irun
-  driver->toff(1);
-  driver->en_spreadCycle(UART_STEALTH_MODE == 0);
-  driver->blank_time(24);
-  driver->semin(0);                                                       // disable CoolStep so that current is consistent
-  driver->microsteps(GUIDE_MICROSTEPPING == 1 ? 0 : GUIDE_MICROSTEPPING); // System starts in tracking mode
-  driver->fclktrim(4);
-  driver->TCOOLTHRS(0xFFFFF); // xFFFFF);
-  driver->SGTHRS(stallvalue);
-  LOG_DEBUG("[MOUNT]: Actual RA motor rms_current:", driver->rms_current(), " mA");
-  LOG_DEBUG("[MOUNT]: Actual RA CS value:", driver->cs_actual());
-  LOG_DEBUG("[MOUNT]: Actual RA vsense:", driver->vsense());
+  LOG_DEBUG("[DRIVER1]: Requested motor rms_current:", R_CURRENT, " mA");
+  driver1->rms_current(R_CURRENT, 1.0f);
+  driver1->toff(1);
+  driver1->en_spreadCycle(UART_STEALTH_MODE == 0);
+  driver1->blank_time(24);
+  driver1->semin(0);
+  driver1->microsteps(GUIDE_MICROSTEPPING == 1 ? 0 : GUIDE_MICROSTEPPING);
+  driver1->fclktrim(4);
+  driver1->TCOOLTHRS(0xFFFFF);
+  driver1->SGTHRS(STALL_VALUE);
+  LOG_DEBUG("[DRIVER1]: Actual motor rms_current:", driver1->rms_current(), " mA");
+  LOG_DEBUG("[DRIVER1]: Actual CS value:", driver1->cs_actual());
+  LOG_DEBUG("[DRIVER1]: Actual vsense:", driver1->vsense());
+
+  // Configure Driver 2 (Right Motor)
+  if (driver2 == nullptr) {
+    driver2 = new TMC2209Stepper(&SerialDriver, R_SENSE, DRIVER_ADDRESS_2);
+  }
+  driver2->begin();
+  driver2->mstep_reg_select(true);
+  driver2->pdn_disable(true);
+  driver2->toff(0);
+#if USE_VREF == 0
+  driver2->I_scale_analog(false);
+#endif
+  LOG_DEBUG("[DRIVER2]: Requested motor rms_current:", R_CURRENT, " mA");
+  driver2->rms_current(R_CURRENT, 1.0f);
+  driver2->toff(1);
+  driver2->en_spreadCycle(UART_STEALTH_MODE == 0);
+  driver2->blank_time(24);
+  driver2->semin(0);
+  driver2->microsteps(GUIDE_MICROSTEPPING == 1 ? 0 : GUIDE_MICROSTEPPING);
+  driver2->fclktrim(4);
+  driver2->TCOOLTHRS(0xFFFFF);
+  driver2->SGTHRS(STALL_VALUE);
+  LOG_DEBUG("[DRIVER2]: Actual motor rms_current:", driver2->rms_current(), " mA");
+  LOG_DEBUG("[DRIVER2]: Actual CS value:", driver2->cs_actual());
+  LOG_DEBUG("[DRIVER2]: Actual vsense:", driver2->vsense());
 }

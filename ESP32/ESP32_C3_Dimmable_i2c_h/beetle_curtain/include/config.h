@@ -18,19 +18,21 @@
 #define DIR 7
 #define STEP 21
 #define ENABLE 6
-#define DRIVER_ADDRESS 0b00  // Set by MS1/MS2. LOW/LOW in this case
+#define DRIVER_ADDRESS_1 0b00 // Left motor driver - MS1/MS2 = LOW/LOW
+#define DRIVER_ADDRESS_2 0b01 // Right motor driver - MS1/MS2 = HIGH/LOW
 #define R_SENSE 0.11f
-#define SW_RX            4
-#define SW_TX            5
-#define RA_INVERT_DIR 1
+#define SW_RX 4
+#define SW_TX 5
+#define RA_INVERT_DIR true
 
 #define MOTOR_STEPS 200l
 #define MICROSTEPS 16l
-#define MOTORSPEED 625//*16=10000 // speed voor full step
-#define MOTORACC 400//*16=3200 // Acceleration voor full step
+#define MOTORSPEED 625 //*16=10000 // speed voor full step
+#define MOTORACC 400   //*16=3200 // Acceleration voor full step
 
-#define UART_STEALTH_MODE 1
-#define GUIDE_MICROSTEPPING       MICROSTEPS
-#define R_CURRENT 1500//mA
+#define UART_STEALTH_MODE true
+#define GUIDE_MICROSTEPPING MICROSTEPS
+#define R_CURRENT 1500 // mA
+#define STALL_VALUE 100 // TMC2209 stall threshold (0-255, higher = more sensitive)
 
 #endif // CONFIG_H

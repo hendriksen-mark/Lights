@@ -94,7 +94,7 @@ void setup()
   mesh.onReceive(&receivedCallback);
   mesh.initOTAReceive(DEVICE_NAME);
 
-  configureRAdriver(SW_RX, SW_TX, R_SENSE, DRIVER_ADDRESS, R_CURRENT, 100);
+  configureDualDrivers();
   pinMode(HOME_SWITCH, INPUT);
 
   stepper.setPinsInverted(RA_INVERT_DIR, false, false);
