@@ -52,7 +52,7 @@ void homeing()
   // setup non-blocking two-step homing: coarse then fine
   gohome = true;
   stepper.setCurrentPosition(0);
-  digitalWrite(ENABLE, LOW);
+  stepper.enableOutputs();
   // coarse approach
   stepper.setMaxSpeed(MOTORSPEED * HOMING_FAST_MULT);
   stepper.setAcceleration(MOTORACC * HOMING_FAST_MULT);
@@ -69,7 +69,7 @@ void stopMotor()
   if (gohome == false)
   {
     stepper.stop();
-    digitalWrite(ENABLE, HIGH);
+    stepper.disableOutputs();
     prev_millis = millis();
     ishome = true;
     if (DEBUG == true)

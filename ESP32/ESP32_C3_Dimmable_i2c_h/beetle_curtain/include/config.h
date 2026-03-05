@@ -23,7 +23,9 @@
 #define R_SENSE 0.11f
 #define SW_RX 4
 #define SW_TX 5
-#define RA_INVERT_DIR true
+#define INVERT_DIR true
+#define INVERT_STEP false
+#define INVERT_ENABLE true
 
 #define MOTOR_STEPS 200l
 #define MICROSTEPS 16l

@@ -83,8 +83,7 @@ void receivedCallback(uint32_t from, String &msg)
 
 void setup()
 {
-  pinMode(ENABLE, OUTPUT);
-  digitalWrite(ENABLE, LOW);
+  stepper.disableOutputs();
 
   totalstep = (TOTALROND * MOTOR_STEPS * MICROSTEPS) / 100L; // steps representing 1%
 
@@ -97,7 +96,8 @@ void setup()
   configureDualDrivers();
   pinMode(HOME_SWITCH, INPUT);
 
-  stepper.setPinsInverted(RA_INVERT_DIR, false, false);
+  stepper.setEnablePin(ENABLE);
+  stepper.setPinsInverted(INVERT_DIR, INVERT_STEP, INVERT_ENABLE);
   stepper.setMaxSpeed(MOTORSPEED * 8);   // 3200
   stepper.setAcceleration(MOTORACC * 8); // 3200
   stepper.setSpeed(MOTORSPEED * 8);
@@ -171,7 +171,6 @@ void loop()
           pref_target = target;
           current = target;
           stepper.disableOutputs();
-          digitalWrite(ENABLE, HIGH);
           homingActive = false;
           homingStage = 0;
         }
@@ -270,7 +269,7 @@ void loop()
 
   if (stepper.targetPosition() != stepper.currentPosition())
   {
-    digitalWrite(ENABLE, LOW);
+    stepper.enableOutputs();
     stepper.run();
     ismoved = true;
     if (totalstep != 0)
@@ -305,9 +304,6 @@ void loop()
       current = target;
       senddebug();
     }
-    if (digitalRead(ENABLE) != HIGH)
-    {
-      digitalWrite(ENABLE, HIGH);
-    }
+    stepper.disableOutputs();
   }
 }
