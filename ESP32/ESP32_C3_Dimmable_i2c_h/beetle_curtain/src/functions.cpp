@@ -1,10 +1,65 @@
-#if defined(ARDUINO_ESP32C3_M1_I_KIT)
+#if defined(ESP_PLATFORM)
 #include "functions.h"
 #else
 #include "include/functions.h"
 #endif
 
 unsigned long MasterPreviousMillis = 0;
+
+void serialWait()
+{
+	// Give user time to open serial monitor: print a heartbeat during the 10s wait
+	pinMode(LED_PIN, OUTPUT);
+  const int waitMs = 10000;
+	const int intervalMs = 500;
+	int loops = waitMs / intervalMs;
+	for (int i = 0; i < loops; ++i)
+	{
+		LOG_INFO("Waiting for serial monitor...", (waitMs - i * intervalMs) / 1000, "seconds remaining");
+		infoLedPulse(1, intervalMs); // Pulse white while waiting for serial monitor
+	}
+}
+
+void infoLedPulse(uint8_t pulses, uint16_t pulseDuration)
+{
+	for (uint8_t p = 0; p < pulses; p++)
+	{
+		infoLedFadeIn(pulseDuration / 2);
+		infoLedFadeOut(pulseDuration / 2);
+		if (p < pulses - 1)
+		{
+			delay(pulseDuration / 4); // Short pause between pulses
+		}
+	}
+}
+
+void infoLedFadeIn(uint16_t duration)
+{
+
+	uint8_t steps = 50;
+	uint16_t stepDelay = duration / steps;
+
+	for (uint8_t i = 0; i <= steps; i++)
+	{
+		float progress = (float)i / steps;
+    analogWrite(LED_PIN, (uint8_t)(progress * 255));
+		delay(stepDelay);
+	}
+}
+
+void infoLedFadeOut(uint16_t duration)
+{
+	uint8_t steps = 50;
+	uint16_t stepDelay = duration / steps;
+
+	for (uint8_t i = steps; i > 0; i--)
+	{
+		float progress = (float)i / steps;
+    analogWrite(LED_PIN, (uint8_t)(progress * 255));
+		delay(stepDelay);
+	}
+  analogWrite(LED_PIN, 0); // Ensure LED is fully off at the end
+}
 
 void set_Target_Pos(byte target_set)
 {

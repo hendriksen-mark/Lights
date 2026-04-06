@@ -11,21 +11,23 @@
 
 #define REQUEST_TIMEOUT 2000
 
-#define HOME_SWITCH 22
+#define LED_PIN 8 // Define the GPIO for the LED on SuperMini
+
+#define HOME_SWITCH 4
 
 #define TOTALROND 123l
 
-#define DIR 7
-#define STEP 21
-#define ENABLE 6
+#define DIR 6
+#define STEP 7
+#define ENABLE 21
 #define DRIVER_ADDRESS_1 0b00 // Left motor driver - MS1/MS2 = LOW/LOW
 #define DRIVER_ADDRESS_2 0b01 // Right motor driver - MS1/MS2 = HIGH/LOW
 #define R_SENSE 0.11f
-#define SW_RX 4
-#define SW_TX 5
+#define SW_RX 9
+#define SW_TX 8
 #define INVERT_DIR true
 #define INVERT_STEP false
-#define INVERT_ENABLE true
+#define INVERT_ENABLE false
 
 #define MOTOR_STEPS 200l
 #define MICROSTEPS 16l

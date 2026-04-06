@@ -1,4 +1,4 @@
-#if defined(ARDUINO_ESP32C3_M1_I_KIT)
+#if defined(ESP_PLATFORM)
 #include "functions.h"
 #include "driver.h"
 #else
@@ -83,11 +83,10 @@ void receivedCallback(uint32_t from, String &msg)
 
 void setup()
 {
-  stepper.disableOutputs();
-
   totalstep = (TOTALROND * MOTOR_STEPS * MICROSTEPS) / 100L; // steps representing 1%
 
   Serial.begin(115200);
+  serialWait();
   // mesh.setDebugMsgTypes( ERROR | MESH_STATUS | COMMUNICATION );
   mesh.init(MESH_PREFIX, MESH_PASSWORD, MESH_PORT);
   mesh.onReceive(&receivedCallback);
@@ -98,6 +97,7 @@ void setup()
 
   stepper.setEnablePin(ENABLE);
   stepper.setPinsInverted(INVERT_DIR, INVERT_STEP, INVERT_ENABLE);
+  stepper.disableOutputs();
   stepper.setMaxSpeed(MOTORSPEED * 8);   // 3200
   stepper.setAcceleration(MOTORACC * 8); // 3200
   stepper.setSpeed(MOTORSPEED * 8);
