@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <TMCStepper.h>
+#include <TMC2209.h>
 
 #include "globals.h"
 #include "config.h"

@@ -93,6 +93,7 @@ void setup()
   mesh.initOTAReceive(DEVICE_NAME);
 
   configureDualDrivers();
+  
   pinMode(HOME_SWITCH, INPUT);
 
   stepper.setEnablePin(ENABLE);
