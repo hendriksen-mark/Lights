@@ -263,6 +263,7 @@ void mesh_setup()
   server_gordijn.on("/setTargetPosTest/", set_Target_Pos_test);
   server_gordijn.on("/CurrentPosTest", get_current_pos_test);
   server_gordijn.on("/getTargetPosTest", get_target_pos_test);
+  server_gordijn.on("/getCurtainID", get_curtain_id);
   server_gordijn.on("/StateTest", get_state_test);
   server_gordijn.on("/Home", homeing);
   server_gordijn.on("/setTargetPos/", set_Target_Pos);
@@ -472,6 +473,12 @@ void homeing()
 {
   sendCurtainCommand(true, false, -1, "/homeing");
   sendResponse(true); // Redirect
+}
+
+void get_curtain_id()
+{
+  sendCurtainCommand(false, true, -1, "/getCurtainID");
+  sendResponse(true); 
 }
 
 void get_current_pos_test()

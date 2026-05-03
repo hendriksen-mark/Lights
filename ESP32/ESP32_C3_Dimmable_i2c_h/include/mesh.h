@@ -23,6 +23,7 @@ void sendData(String msg);
 void set_Target_Pos_test();
 void set_Target_Pos();
 void homeing();
+void get_curtain_id();
 void get_current_pos_test();
 void get_current_pos();
 void get_target_pos_test();

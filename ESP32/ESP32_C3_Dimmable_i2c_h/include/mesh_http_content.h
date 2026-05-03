@@ -11,6 +11,7 @@
 extern int subip;
 extern IPAddress bridgeIp;
 extern int bridgePort;
+extern uint32_t curtain_id;
 extern byte target;
 extern byte target_rec;
 extern byte current_rec;
@@ -22,6 +23,9 @@ inline void handleRoot()
   String message = "<!DOCTYPE HTML>";
   message += "<html>";
   message += "<h1 align=center>Curtain control over ethernet+mesh</h1><br><br>";
+  message += "curtain ID = ";
+  message += curtain_id;
+  message += "<br>";
   message += "set Target Pos  = ";
   message += target;
   message += "<br>";
@@ -51,6 +55,7 @@ inline void handleRoot()
   message += "<a href=\"/CurrentPosTest\"\"><button>GET Current Pos TEST</button></a>";
   message += "<a href=\"/getTargetPosTest\"\"><button>GET Target Pos TEST</button></a>";
   message += "<a href=\"/StateTest\"\"><button>GET State TEST</button></a>";
+  message += "<a href=\"/getCurtainID\"\"><button>GET Curtain ID</button></a>";
 
   message += "<a href=\"/Home\"\"><button>Home curtain</button></a>";
 
