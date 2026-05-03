@@ -8,18 +8,32 @@
 #include <painlessMesh.h>
 #include <ArduinoJson.h>
 #include <DebugLog.h>
+#include <NeoPixelBus.h>
 
 #include "config.h"
 
+// Error codes for LED status indication
+enum LedErrorCode {
+  LED_OK = 0,              // Green - normal operation
+  LED_MESH_DISCONNECTED,   // Red - mesh connection lost
+  LED_HOMING_TIMEOUT,      // Yellow - homing timeout
+  LED_MOTOR_STALL,         // Orange - motor stall detected
+  LED_GENERAL_ERROR        // Magenta - general error
+};
+
 extern AccelStepper stepper;
 extern painlessMesh mesh;
+extern NeoPixelBus<NeoGrbFeature, NeoEsp32Rmt0Ws2812xMethod> statusLED;
 extern uint32_t master;
 extern byte target;
 extern byte pref_target;
 extern byte current;
+extern byte pendingTarget;
+extern bool newTargetReceived;
+extern bool homeRequested;
+extern bool statusRequested;
 extern int state;
 extern long uitvoeren;
-extern long totalstep;
 extern volatile bool ishome;
 extern bool ismoved;
 extern volatile bool gohome;
@@ -44,6 +58,8 @@ constexpr double MM_PER_MICROSTEP = MM_PER_RACK_REV / (double)STEPS_PER_RACK_REV
 constexpr long HOMING_COARSE_STEPS = STEPS_PER_RACK_REV;               // 1 rack rev (~122 mm)
 constexpr long HOMING_BACKOFF_STEPS = (long)(10.0 / MM_PER_MICROSTEP); // ~10 mm backoff
 constexpr long HOMING_FINE_STEPS = (long)(5.0 / MM_PER_MICROSTEP);     // ~5 mm fine approach
+constexpr long HOMING_ZERO_OFFSET_STEPS = HOMING_ZERO_OFFSET_TURNS * MOTOR_STEPS * MICROSTEPS;
+constexpr long HOMING_SEARCH_STEPS = TOTALSTEPS + HOMING_ZERO_OFFSET_STEPS + HOMING_BACKOFF_STEPS;
 constexpr unsigned long HOMING_DEBOUNCE_MS = 50;
 constexpr unsigned long HOMING_TIMEOUT_MS = 30000;
 

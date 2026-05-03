@@ -9,7 +9,6 @@ unsigned long MasterPreviousMillis = 0;
 void serialWait()
 {
 	// Give user time to open serial monitor: print a heartbeat during the 10s wait
-	pinMode(LED_PIN, OUTPUT);
   const int waitMs = 10000;
 	const int intervalMs = 500;
 	int loops = waitMs / intervalMs;
@@ -17,6 +16,58 @@ void serialWait()
 	{
 		LOG_INFO("Waiting for serial monitor...", (waitMs - i * intervalMs) / 1000, "seconds remaining");
 		infoLedPulse(1, intervalMs); // Pulse white while waiting for serial monitor
+	}
+}
+
+void setLedColor(uint32_t color)
+{
+	// Extract RGB from 32-bit color (0x00RRGGBB format)
+	uint8_t r = (color >> 16) & 0xFF;
+	uint8_t g = (color >> 8) & 0xFF;
+	uint8_t b = color & 0xFF;
+	statusLED.SetPixelColor(0, RgbColor(r, g, b));
+	statusLED.Show();
+}
+
+void setLedColorRGB(uint8_t r, uint8_t g, uint8_t b)
+{
+	statusLED.SetPixelColor(0, RgbColor(r, g, b));
+	statusLED.Show();
+}
+
+void setLedError(LedErrorCode errorCode)
+{
+	switch (errorCode)
+	{
+		case LED_OK:
+			setLedColorRGB(0, 255, 0); // Green - normal operation
+			break;
+		case LED_MESH_DISCONNECTED:
+			setLedColorRGB(255, 0, 0); // Red - mesh connection lost
+			break;
+		case LED_HOMING_TIMEOUT:
+			setLedColorRGB(255, 255, 0); // Yellow - homing timeout
+			break;
+		case LED_MOTOR_STALL:
+			setLedColorRGB(255, 128, 0); // Orange - motor stall
+			break;
+		case LED_GENERAL_ERROR:
+			setLedColorRGB(255, 0, 255); // Magenta - general error
+			break;
+		default:
+			setLedColorRGB(255, 0, 0); // Red for unknown errors
+			break;
+	}
+}
+
+void ledBlink(uint32_t color, uint8_t times, uint16_t duration)
+{
+	for (uint8_t i = 0; i < times; i++)
+	{
+		setLedColor(color);
+		delay(duration / 2);
+		setLedColor(0); // Turn off
+		delay(duration / 2);
 	}
 }
 
@@ -35,14 +86,14 @@ void infoLedPulse(uint8_t pulses, uint16_t pulseDuration)
 
 void infoLedFadeIn(uint16_t duration)
 {
-
 	uint8_t steps = 50;
 	uint16_t stepDelay = duration / steps;
 
 	for (uint8_t i = 0; i <= steps; i++)
 	{
 		float progress = (float)i / steps;
-    analogWrite(LED_PIN, (uint8_t)(progress * 255));
+		uint8_t brightness = (uint8_t)(progress * 255);
+		setLedColorRGB(brightness, brightness, brightness); // White fade
 		delay(stepDelay);
 	}
 }
@@ -55,10 +106,11 @@ void infoLedFadeOut(uint16_t duration)
 	for (uint8_t i = steps; i > 0; i--)
 	{
 		float progress = (float)i / steps;
-    analogWrite(LED_PIN, (uint8_t)(progress * 255));
+		uint8_t brightness = (uint8_t)(progress * 255);
+		setLedColorRGB(brightness, brightness, brightness); // White fade
 		delay(stepDelay);
 	}
-  analogWrite(LED_PIN, 0); // Ensure LED is fully off at the end
+	setLedColor(0); // Ensure LED is fully off at the end
 }
 
 void set_Target_Pos(byte target_set)
@@ -66,9 +118,16 @@ void set_Target_Pos(byte target_set)
   if (target_set > 100)
     target_set = 100;
   target = target_set;
-  long totalSteps = TOTALROND * MOTOR_STEPS * MICROSTEPS;
-  uitvoeren = (totalSteps * (long)target) / 100L;
+  // Home is 0%. Higher percentages move away from home (negative direction).
+  uitvoeren = -((TOTALSTEPS * (long)target) / 100L);
   // Note: send_change() will be called from main loop when request flag is set
+}
+
+void restoreNormalMotionProfile()
+{
+  stepper.setMaxSpeed(MOTORSPEED * MICROSTEPS);
+  stepper.setAcceleration(MOTORACC * MICROSTEPS);
+  stepper.setSpeed(MOTORSPEED * MICROSTEPS);
 }
 
 void stable()
@@ -77,11 +136,11 @@ void stable()
   long i = 0;
   if (target > pref_target && target >= 2)
   {
-    i = 2 * MOTOR_STEPS * MICROSTEPS;
+    i = -2 * MOTOR_STEPS * MICROSTEPS;
   }
   else if (target < pref_target && target >= 2)
   {
-    i = -2 * MOTOR_STEPS * MICROSTEPS;
+    i = 2 * MOTOR_STEPS * MICROSTEPS;
   }
 
   stepper.move(i);
@@ -89,11 +148,11 @@ void stable()
 
   if (target > pref_target && target >= 2)
   {
-    i = -2 * MOTOR_STEPS * MICROSTEPS;
+    i = 2 * MOTOR_STEPS * MICROSTEPS;
   }
   else if (target < pref_target && target >= 2)
   {
-    i = 2 * MOTOR_STEPS * MICROSTEPS;
+    i = -2 * MOTOR_STEPS * MICROSTEPS;
   }
 
   stepper.move(i);
@@ -104,17 +163,28 @@ void stable()
 void homeing()
 {
   LOG_DEBUG("HOME");
-  // setup non-blocking two-step homing: coarse then fine
+  // setup non-blocking homing: long search to trigger, then right-offset zeroing
   gohome = true;
-  stepper.setCurrentPosition(0);
+  stopRequested = false;
   stepper.enableOutputs();
-  // coarse approach
   stepper.setMaxSpeed(MOTORSPEED * HOMING_FAST_MULT);
   stepper.setAcceleration(MOTORACC * HOMING_FAST_MULT);
   stepper.setSpeed(MOTORSPEED * HOMING_FAST_MULT);
-  stepper.moveTo(-HOMING_COARSE_STEPS);
+
+  // If the sensor is already active, skip coarse approach and go straight to backoff/fine approach.
+  if (digitalRead(HOME_SWITCH) == LOW)
+  {
+    stepper.moveTo(stepper.currentPosition());
+    homingStage = 32;
+  }
+  else
+  {
+    // Coarse search: always move far enough to reach trigger from any commanded position.
+    stepper.move(HOMING_SEARCH_STEPS);
+    homingStage = 1;
+  }
+
   homingActive = true;
-  homingStage = 1;
   homingStartTime = millis();
   homingTimestamp = homingStartTime;
 }
@@ -156,6 +226,7 @@ void send_change(bool toMaster = false)
   doc["state"] = state;
   char buf[128];
   serializeJson(doc, buf, sizeof(buf));
+  LOG_DEBUG("Sending status update:", buf);
   
   if (toMaster && master > 0)
   {
